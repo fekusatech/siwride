@@ -4,7 +4,7 @@
     import { Input } from '@/components/ui/input';
     import { cn } from '@/lib/utils';
 
-    let { class: className = '', ...rest } = $props();
+    let { class: className = '', value = $bindable(), ...rest } = $props();
 
     let showPassword = $state(false);
 </script>
@@ -13,6 +13,7 @@
     <Input
         type={showPassword ? 'text' : 'password'}
         class={cn('pr-10', className)}
+        bind:value
         {...rest}
     />
     <button

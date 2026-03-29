@@ -11,12 +11,20 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['firstname', 'lastname', 'email', 'phone', 'password', 'image', 'status'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    /**
+     * Get the user's full name.
+     */
+    public function name(): string
+    {
+        return "{$this->firstname} {$this->lastname}";
+    }
 
     /**
      * Get the attributes that should be cast.

@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/svelte';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import AppLayout from '@/layouts/AppLayout.svelte';
 import AuthLayout from '@/layouts/AuthLayout.svelte';
 import SettingsLayout from '@/layouts/settings/Layout.svelte';
@@ -8,9 +9,13 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
+    resolve: (name) => resolvePageComponent(`./pages/${name}.svelte`, import.meta.glob('./pages/**/*.svelte')),
+
+
     layout: (name) => {
+
         switch (true) {
-            case name === 'Welcome':
+            case name === 'Welcome' || name.startsWith('Admin/') || name.startsWith('Public/'):
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
