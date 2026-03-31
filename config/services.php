@@ -40,9 +40,9 @@ return [
     ],
 
     'whatsapp' => [
-        'api_url' => env('WA_API_URL', 'http://localhost:3001/api/v1'),
+        'api_url' => env('WA_API_URL', 'https://api-wa.greenenergiutama.cloud/api/v1'),
         'api_key' => env('WA_API_KEY'),
-        'session_id' => env('WA_SESSION_ID', 'Test1'),
+        'session_id' => env('WA_SESSION_ID', 'Test'),
         'group_id' => env('WA_GROUP_ID'),
     ],
 
