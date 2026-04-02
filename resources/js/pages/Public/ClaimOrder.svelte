@@ -3,7 +3,7 @@
     import { useForm } from '@inertiajs/svelte';
     import { fade } from 'svelte/transition';
 
-    let { order, isAssigned, claimedData, flash } = $props();
+    let { order, isAssigned, isClaimPending, claimedData, flash } = $props();
 
     let form = useForm({
         nid: '',
@@ -232,6 +232,22 @@
                                         </a>
                                     {/if}
                                 </div>
+                            </div>
+                        {:else if isClaimPending && !claimedData}
+                            <!-- WAITING ADMIN CONFIRMATION -->
+                            <div
+                                class="text-center py-4 text-muted bg-warning bg-opacity-10 rounded-4 border border-warning"
+                            >
+                                <i
+                                    class="ti ti-clock-hour-9 mb-2 d-block text-warning"
+                                    style="font-size: 40px;"
+                                ></i>
+                                <h5 class="mb-1 text-dark fw-bold">
+                                    Menunggu Konfirmasi Admin
+                                </h5>
+                                <p class="mb-0">
+                                    Claim Anda sedang diproses. Admin akan segera mengkonfirmasi.
+                                </p>
                             </div>
                         {:else if isAssigned && !claimedData}
                             <!-- ALREADY TAKEN -->

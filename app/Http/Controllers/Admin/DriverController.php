@@ -38,7 +38,9 @@ class DriverController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Admin/Drivers/Create');
+        return Inertia::render('Admin/Drivers/Create', [
+            'default_nid' => $this->generateUniqueNid(),
+        ]);
     }
 
     /**
@@ -47,6 +49,7 @@ class DriverController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'nid' => ['nullable', 'string', 'max:20', 'unique:drivers'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:drivers'],
             'phone' => ['required', 'string', 'max:50', 'unique:drivers'],
@@ -56,7 +59,7 @@ class DriverController extends Controller
             'nik_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'sim' => ['nullable', 'string', 'max:20'],
             'sim_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            
+
             // Optional Vehicle fields
             'add_vehicle' => ['boolean'],
             'v_brand' => ['required_if:add_vehicle,true', 'nullable', 'string', 'max:255'],
@@ -67,6 +70,10 @@ class DriverController extends Controller
         ]);
 
         return DB::transaction(function () use ($request, $validated) {
+            if (empty($validated['nid'])) {
+                $validated['nid'] = $this->generateUniqueNid();
+            }
+
             if ($request->hasFile('nik_image')) {
                 $validated['nik_image'] = $request->file('nik_image')->store('drivers/nik', 'public');
             }
@@ -89,7 +96,7 @@ class DriverController extends Controller
             }
 
             return redirect()->route('admin.drivers.index')
-                ->with('success', 'Driver' . ($request->boolean('add_vehicle') ? ' and vehicle' : '') . ' created successfully.');
+                ->with('success', 'Driver'.($request->boolean('add_vehicle') ? ' and vehicle' : '').' created successfully.');
         });
     }
 
@@ -108,7 +115,17 @@ class DriverController extends Controller
     {
         return Inertia::render('Admin/Drivers/Create', [
             'driver' => $driver,
+            'default_nid' => $this->generateUniqueNid(),
         ]);
+    }
+
+    private function generateUniqueNid(): string
+    {
+        do {
+            $nid = 'DRV-'.strtoupper(substr(md5(uniqid((string) microtime(true), true)), 0, 8));
+        } while (Driver::where('nid', $nid)->exists());
+
+        return $nid;
     }
 
     /**
@@ -117,6 +134,7 @@ class DriverController extends Controller
     public function update(Request $request, Driver $driver)
     {
         $validated = $request->validate([
+            'nid' => ['nullable', 'string', 'max:20', 'unique:drivers,nid,'.$driver->id],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:drivers,email,'.$driver->id],
             'phone' => ['required', 'string', 'max:50', 'unique:drivers,phone,'.$driver->id],

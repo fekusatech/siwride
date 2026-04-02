@@ -3,17 +3,18 @@
     import { onMount } from 'svelte';
 
     let currentTheme = $state('light');
+    let isHydrated = $state(false);
 
     let user = $derived(page.props.auth?.user);
 
     let { toggleSidebar } = $props();
 
     onMount(() => {
-        // Sync with current attributes on html tag
+        isHydrated = true;
+
         currentTheme =
             document.documentElement.getAttribute('data-bs-theme') || 'light';
 
-        // Listen for changes
         const observer = new MutationObserver(() => {
             currentTheme =
                 document.documentElement.getAttribute('data-bs-theme') ||
@@ -24,7 +25,50 @@
             attributeFilter: ['data-bs-theme', 'data-sidenav-size'],
         });
 
-        return () => observer.disconnect();
+        const toggleBtn = document.querySelector('.sidenav-toggle-button');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const html = document.documentElement;
+                const currentSize =
+                    html.getAttribute('data-sidenav-size') || 'default';
+
+                if (currentSize === 'default') {
+                    html.setAttribute('data-sidenav-size', 'condensed');
+                } else {
+                    html.setAttribute('data-sidenav-size', 'default');
+                }
+
+                html.classList.toggle('sidebar-enable');
+
+                try {
+                    const config = {
+                        theme: 'light',
+                        topbar: { color: 'light' },
+                        menu: { color: 'dark' },
+                        sidenav: {
+                            size:
+                                html.getAttribute('data-sidenav-size') ||
+                                'default',
+                            user: true,
+                        },
+                        layout: { mode: 'fluid' },
+                    };
+                    sessionStorage.setItem(
+                        '__BORON_CONFIG__',
+                        JSON.stringify(config),
+                    );
+                } catch (err) {
+                    console.error('[Topbar] Failed to persist config', err);
+                }
+            });
+        }
+
+        return () => {
+            observer.disconnect();
+        };
     });
 
     function toggleTheme() {
@@ -33,6 +77,14 @@
 
         // Also sync topbar color if needed (Boron often links them)
         document.documentElement.setAttribute('data-topbar-color', newTheme);
+    }
+
+    function closeSidebarMobile(e: Event) {
+        if (!isHydrated) return;
+        e.preventDefault();
+        e.stopPropagation();
+        document.documentElement.setAttribute('data-sidenav-size', 'default');
+        document.documentElement.classList.remove('sidebar-enable');
     }
 
     function logout(e: Event) {
@@ -51,14 +103,34 @@
 <header class="app-topbar">
     <div class="page-container topbar-menu">
         <div class="d-flex align-items-center gap-2">
-            <!-- Sidebar Menu Toggle Button -->
+            <!-- Sidebar Toggle Button (Desktop Only) -->
             <button
-                class="nav-link button-menu-mobile"
+                class="sidenav-toggle-button btn btn-secondary btn-icon d-none d-lg-flex"
+                aria-label="Toggle Sidebar"
+            >
+                <i class="ti ti-menu-deep fs-24"></i>
+            </button>
+
+            <!-- Sidebar Menu Toggle Button (Mobile) -->
+            <button
+                class="nav-link button-menu-mobile d-lg-none"
                 onclick={(e) => toggleSidebar(e)}
                 aria-label="Toggle Sidebar"
             >
                 <i class="ti ti-menu-deep fs-24"></i>
             </button>
+
+            <!-- Sidebar Close Button (Mobile Only) -->
+            {#if isHydrated}
+                <button
+                    class="nav-link button-close-sidebar-mobile d-lg-none"
+                    onclick={closeSidebarMobile}
+                    aria-label="Close Sidebar"
+                    style="display: none;"
+                >
+                    <i class="ti ti-x fs-24"></i>
+                </button>
+            {/if}
 
             <!-- Search Bar -->
             <button

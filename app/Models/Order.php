@@ -19,6 +19,7 @@ class Order extends Model
         'customer_phone',
         'flight_number',
         'driver_id',
+        'claimed_driver_id',
         'pickup_address',
         'pickup_latitude',
         'pickup_longitude',
@@ -45,6 +46,11 @@ class Order extends Model
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    public function claimedDriver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'claimed_driver_id');
     }
 
     public function vehicle(): BelongsTo

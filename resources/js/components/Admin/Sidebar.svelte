@@ -1,31 +1,14 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
     import { Link, page } from '@inertiajs/svelte';
 
     let { toggleSidebar } = $props();
     const settings = $derived(page.props.settings as any);
 
-    onMount(() => {
-        // Re-initialize SimpleBar if it exists
-        if (window.SimpleBar) {
-            const sidebarScroll = document.querySelector(
-                '.sidenav-menu [data-simplebar]',
-            );
-            if (sidebarScroll) {
-                new window.SimpleBar(sidebarScroll);
-            }
-        }
-
-        // Re-initialize custom sidebar logic if needed
-        if (window.bootstrap && window.bootstrap.Collapse) {
-            const collapses = document.querySelectorAll(
-                '.sidenav-menu .collapse',
-            );
-            collapses.forEach((el) => {
-                new window.bootstrap.Collapse(el, { toggle: false });
-            });
-        }
-    });
+    function handleToggleSidebar(e: Event) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSidebar(e);
+    }
 </script>
 
 <!-- Sidenav Menu Start -->
@@ -101,14 +84,20 @@
     <!-- Sidebar Hover Menu Toggle Button -->
     <button
         class="button-sm-hover"
-        onclick={(e) => toggleSidebar(e)}
-        aria-label="Minimize Sidebar"
+        onclick={handleToggleSidebar}
+        aria-label="Toggle Sidebar Size"
+        type="button"
     >
         <i class="ti ti-circle align-middle"></i>
     </button>
 
-    <!-- Full Sidebar Menu Close Button -->
-    <button class="button-close-fullsidebar" aria-label="Close Sidebar">
+    <!-- Close Button for Mobile -->
+    <button
+        class="button-close-fullsidebar"
+        onclick={handleToggleSidebar}
+        aria-label="Close Sidebar"
+        type="button"
+    >
         <i class="ti ti-x align-middle"></i>
     </button>
 

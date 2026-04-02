@@ -3,11 +3,12 @@
     import AppHead from '@/components/AppHead.svelte';
     import { useForm, Link } from '@inertiajs/svelte';
 
-    let { driver = null } = $props();
+    let { driver = null, default_nid = '' } = $props();
 
     // svelte-ignore state_referenced_locally
     const form = useForm({
         _method: driver ? 'put' : 'post',
+        nid: driver?.nid ?? default_nid,
         name: driver?.name ?? '',
         email: driver?.email ?? '',
         phone: driver?.phone ?? '',
@@ -55,6 +56,28 @@
             <div class="card-body">
                 <form onsubmit={submit}>
                     <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label
+                                    for="nid"
+                                    class="form-label text-uppercase fs-12 fw-bold text-muted"
+                                    >Driver Code</label
+                                >
+                                <input
+                                    type="text"
+                                    id="nid"
+                                    class="form-control"
+                                    bind:value={form.nid}
+                                    disabled={form.processing}
+                                    placeholder="e.g. DRV-001"
+                                />
+                                {#if form.errors.nid}<div
+                                        class="text-danger small mt-1"
+                                    >
+                                        {form.errors.nid}
+                                    </div>{/if}
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label

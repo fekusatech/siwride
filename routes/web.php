@@ -40,6 +40,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('admin/orders/import/template', [OrderController::class, 'downloadTemplate'])->name('admin.orders.import.template');
     Route::post('admin/orders/{order}/share', [OrderController::class, 'share'])->name('admin.orders.share');
     Route::patch('admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
+    Route::post('admin/orders/{order}/accept-claim', [OrderController::class, 'acceptClaim'])->name('admin.orders.accept-claim');
+    Route::post('admin/orders/{order}/reject-claim', [OrderController::class, 'rejectClaim'])->name('admin.orders.reject-claim');
     Route::resource('admin/orders', OrderController::class)->names('admin.orders');
 
     Route::resource('admin/drivers', DriverController::class)->names('admin.drivers');

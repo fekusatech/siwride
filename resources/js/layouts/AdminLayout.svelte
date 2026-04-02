@@ -6,7 +6,7 @@
 
     let { children }: { children: Snippet } = $props();
 
-    let sidebarSize = $state('default');
+    let isHydrated = $state(false);
 
     function toggleSidebar(e?: Event) {
         if (e) {
@@ -14,89 +14,57 @@
             e.stopPropagation();
         }
 
+        if (!isHydrated) return;
+
+        const isMobile = window.innerWidth < 768;
         const currentSize =
             document.documentElement.getAttribute('data-sidenav-size') ||
             'default';
         let newSize = 'default';
 
-        if (currentSize === 'default') {
-            newSize = 'condensed';
-        } else if (
-            currentSize === 'condensed' ||
-            currentSize === 'sm' ||
-            currentSize === 'full'
-        ) {
-            newSize = 'default';
+        if (isMobile) {
+            // Mobile: toggle between default (hidden) and full (visible overlay)
+            newSize = currentSize === 'default' ? 'full' : 'default';
+        } else {
+            // Desktop: toggle between default and sm-hover-active
+            newSize = currentSize === 'default' ? 'sm-hover-active' : 'default';
         }
 
         console.log(
-            `[SidebarToggle] Current: ${currentSize} -> New: ${newSize}`,
+            `[SidebarToggle] Mobile: ${isMobile}, Current: ${currentSize} -> New: ${newSize}`,
         );
 
         document.documentElement.setAttribute('data-sidenav-size', newSize);
-        document.documentElement.classList.toggle('sidebar-enable');
-        sidebarSize = newSize;
 
-        // Persist for Boron's config.js - Merge with existing to avoid TypeErrors
+        // Persist to sessionStorage
         try {
-            const defaultConfig = {
+            const config = {
                 theme: 'light',
                 topbar: { color: 'light' },
                 menu: { color: 'dark' },
-                sidenav: { size: 'default', user: true },
+                sidenav: { size: newSize, user: true },
                 layout: { mode: 'fluid' },
             };
 
-            const rawConfig = sessionStorage.getItem('__BORON_CONFIG__');
-            const existingConfig = rawConfig
-                ? JSON.parse(rawConfig)
-                : defaultConfig;
-
-            // Deep merge essential structure
-            const newConfig = {
-                ...defaultConfig,
-                ...existingConfig,
-                sidenav: {
-                    ...defaultConfig.sidenav,
-                    ...(existingConfig.sidenav || {}),
-                    size: newSize,
-                },
-            };
-
-            sessionStorage.setItem(
-                '__BORON_CONFIG__',
-                JSON.stringify(newConfig),
-            );
-            console.log(`[AdminLayout] Config persisted: ${newSize}`);
+            sessionStorage.setItem('__BORON_CONFIG__', JSON.stringify(config));
         } catch (e) {
-            console.error(
-                '[AdminLayout] Failed to update sessionStorage config',
-                e,
-            );
+            console.error('[AdminLayout] Failed to persist config', e);
         }
-
-        window.dispatchEvent(new Event('resize'));
     }
 
     onMount(() => {
-        // Initial sync
+        // Wait for hydration to complete
+        isHydrated = true;
+
+        // Initial sync from DOM
         const currentSize =
-            document.documentElement.getAttribute('data-sidenav-size');
-        if (currentSize) sidebarSize = currentSize;
+            document.documentElement.getAttribute('data-sidenav-size') ||
+            'default';
 
-        const observer = new MutationObserver(() => {
-            const attrSize =
-                document.documentElement.getAttribute('data-sidenav-size');
-            if (attrSize && attrSize !== sidebarSize) {
-                sidebarSize = attrSize;
-            }
-        });
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-sidenav-size'],
-        });
-
-        return () => observer.disconnect();
+        // Cleanup
+        return () => {
+            isHydrated = false;
+        };
     });
 </script>
 
@@ -129,12 +97,12 @@
     }
 
     :global(.sidenav-menu .side-nav) {
-        margin-top: -7px !important; /* Fine-tuned to achieve ~62px gap from logo */
+        margin-top: -7px !important;
     }
 
     /* Force visibility and color for sidebar sub-menu items */
     :global(
-        [data-menu-color='dark']
+        [data-menu-color='dark']:not([data-sidenav-size='condensed'])
             .sidenav-menu
             .side-nav
             .sub-menu
@@ -142,7 +110,7 @@
             .side-nav-link
     ),
     :global(
-        [data-menu-color='dark']
+        [data-menu-color='dark']:not([data-sidenav-size='condensed'])
             .sidenav-menu
             .side-nav
             .sub-menu
@@ -157,7 +125,7 @@
     }
 
     :global(
-        [data-menu-color='dark']
+        [data-menu-color='dark']:not([data-sidenav-size='condensed'])
             .sidenav-menu
             .side-nav
             .sub-menu
@@ -165,7 +133,7 @@
             .side-nav-link:hover
     ),
     :global(
-        [data-menu-color='dark']
+        [data-menu-color='dark']:not([data-sidenav-size='condensed'])
             .sidenav-menu
             .side-nav
             .sub-menu
