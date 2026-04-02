@@ -33,13 +33,13 @@ class PublicClaimController extends Controller
     public function store($booking_code, Request $request)
     {
         $request->validate([
-            'nid' => 'required|string'
+            'nid' => 'required|string',
         ]);
 
         $order = Order::where('booking_code', $booking_code)->firstOrFail();
-        
+
         $driver = Driver::where('nid', $request->nid)->first();
-        if (!$driver) {
+        if (! $driver) {
             return back()->withErrors(['nid' => 'NID tidak valid atau tidak ditemukan.']);
         }
 
@@ -53,27 +53,6 @@ class PublicClaimController extends Controller
 
         $order->update([
             'claimed_driver_id' => $driver->id,
-        ]);
-
-        return redirect()->route('orders.claim.show', $booking_code)->with('success', 'Claim berhasil dikirim! Menunggu konfirmasi admin.');
-    }
-
-        if ($order->driver_id) {
-            return back()->with('error', 'Maaf, Order ini sudah dikonfirmasi oleh admin.');
-        }
-
-        if ($order->claimed_driver_id && $order->claimed_driver_id !== $driver->id) {
-            return back()->with('error', 'Maaf, Order ini sedang menunggu konfirmasi dari driver lain.');
-        }
-
-        $order->update([
-            'claimed_driver_id' => $driver->id,
-        ]);
-
-        session()->put('claimed_order_'.$order->id, [
-            'customer_name' => $order->customer_name,
-            'customer_phone' => $order->customer_phone,
-            'driver_name' => $driver->name,
         ]);
 
         return redirect()->route('orders.claim.show', $booking_code)->with('success', 'Claim berhasil dikirim! Menunggu konfirmasi admin.');
