@@ -3,7 +3,7 @@
     import { useForm } from '@inertiajs/svelte';
     import { fade } from 'svelte/transition';
 
-    let { order, isAssigned, isClaimPending, claimedData, flash } = $props();
+    let { order, isAssigned, isClaimPending, flash } = $props();
 
     let form = useForm({
         nid: '',
@@ -14,27 +14,6 @@
             preserveScroll: true,
         });
     }
-
-    // Helper to format currency
-    function formatCurrency(amount: number) {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
-    }
-
-    // Prepare WhatsApp Link if claimed
-    let waLink = $derived.by(() => {
-        if (claimedData?.customer_phone) {
-            let cleanPhone = claimedData.customer_phone.replace(/\D/g, '');
-            if (cleanPhone.startsWith('0')) {
-                cleanPhone = '62' + cleanPhone.substring(1);
-            }
-            return `https://wa.me/${cleanPhone}`;
-        }
-        return '';
-    });
 </script>
 
 <AppHead title={`Klaim Order - ${order.booking_code}`} />
@@ -177,63 +156,7 @@
                         </div>
 
                         <!-- State Management -->
-                        {#if claimedData}
-                            <!-- SUCCESS: Data Revealed -->
-                            <div
-                                class="alert alert-success border-0 rounded-4 p-4 mb-0"
-                                style="background-color: #ecfdf5;"
-                            >
-                                <h5
-                                    class="text-success mb-3 fw-bold d-flex align-items-center"
-                                >
-                                    <i class="ti ti-lock-open me-2 fs-22"></i> Assignment
-                                    Private Details
-                                </h5>
-
-                                <div class="mb-3">
-                                    <small class="text-muted d-block mb-1"
-                                        >Diambil Oleh Driver:</small
-                                    >
-                                    <div class="fw-bold fs-16 text-dark">
-                                        {claimedData.driver_name}
-                                    </div>
-                                </div>
-
-                                <div class="mb-4">
-                                    <small class="text-muted d-block mb-2"
-                                        >Informasi Penumpang:</small
-                                    >
-                                    <div
-                                        class="fw-bold fs-16 text-dark mb-2 d-flex align-items-center gap-2"
-                                    >
-                                        <i class="ti ti-user text-muted fs-18"
-                                        ></i>
-                                        {claimedData.customer_name}
-                                    </div>
-                                    <div
-                                        class="fw-medium text-dark d-flex align-items-center gap-2"
-                                    >
-                                        <i class="ti ti-phone text-muted fs-18"
-                                        ></i>
-                                        {claimedData.customer_phone}
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-2">
-                                    {#if waLink}
-                                        <a
-                                            href={waLink}
-                                            target="_blank"
-                                            class="btn btn-success flex-grow-1 fw-bold d-flex justify-content-center align-items-center gap-2 py-2 shadow-sm"
-                                        >
-                                            <i
-                                                class="ti ti-brand-whatsapp fs-20"
-                                            ></i> Kirim Pesan WA
-                                        </a>
-                                    {/if}
-                                </div>
-                            </div>
-                        {:else if isClaimPending && !claimedData}
+                        {#if isClaimPending}
                             <!-- WAITING ADMIN CONFIRMATION -->
                             <div
                                 class="text-center py-4 text-muted bg-warning bg-opacity-10 rounded-4 border border-warning"
@@ -249,7 +172,7 @@
                                     Claim Anda sedang diproses. Admin akan segera mengkonfirmasi.
                                 </p>
                             </div>
-                        {:else if isAssigned && !claimedData}
+                        {:else if isAssigned}
                             <!-- ALREADY TAKEN -->
                             <div
                                 class="text-center py-4 text-muted bg-light rounded-4"

@@ -23,28 +23,40 @@ class PublicClaimController extends Controller
             ->where('booking_code', $booking_code)
             ->firstOrFail();
 
-        $claimedData = session()->pull('claimed_order_'.$order->id);
-
         return Inertia::render('Public/ClaimOrder', [
             'order' => $order,
             'isAssigned' => $order->driver_id !== null,
             'isClaimPending' => $order->claimed_driver_id !== null && $order->driver_id === null,
-            'claimedData' => $claimedData,
         ]);
     }
 
     public function store($booking_code, Request $request)
     {
         $request->validate([
-            'nid' => 'required|string',
+            'nid' => 'required|string'
         ]);
 
         $order = Order::where('booking_code', $booking_code)->firstOrFail();
-
+        
         $driver = Driver::where('nid', $request->nid)->first();
-        if (! $driver) {
+        if (!$driver) {
             return back()->withErrors(['nid' => 'NID tidak valid atau tidak ditemukan.']);
         }
+
+        if ($order->driver_id) {
+            return back()->with('error', 'Maaf, Order ini sudah dikonfirmasi oleh admin.');
+        }
+
+        if ($order->claimed_driver_id && $order->claimed_driver_id !== $driver->id) {
+            return back()->with('error', 'Maaf, Order ini sedang menunggu konfirmasi dari driver lain.');
+        }
+
+        $order->update([
+            'claimed_driver_id' => $driver->id,
+        ]);
+
+        return redirect()->route('orders.claim.show', $booking_code)->with('success', 'Claim berhasil dikirim! Menunggu konfirmasi admin.');
+    }
 
         if ($order->driver_id) {
             return back()->with('error', 'Maaf, Order ini sudah dikonfirmasi oleh admin.');
