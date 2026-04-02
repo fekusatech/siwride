@@ -85,25 +85,26 @@
                 </Label>
             </div>
 
-            <Button
-                type="submit"
-                class="mt-4 w-full"
-                disabled={processing}
-            >
+            <Button type="submit" class="mt-4 w-full" disabled={processing}>
                 {#if processing}<Spinner />{/if}
                 Log in
             </Button>
         </div>
 
         {#if canRegister}
-            <div class="text-center text-sm text-muted-foreground flex flex-col gap-2">
+            <div
+                class="text-center text-sm text-muted-foreground flex flex-col gap-2"
+            >
                 <div>
                     Don't have an account?
                     <TextLink href={register()}>Sign up</TextLink>
                 </div>
                 <div class="mt-2 text-xs">
                     Want to be a driver?
-                    <TextLink href="/driver/register" class="font-bold underline">Register as Driver</TextLink>
+                    <TextLink
+                        href="/driver/register"
+                        class="font-bold underline">Register as Driver</TextLink
+                    >
                 </div>
             </div>
         {/if}

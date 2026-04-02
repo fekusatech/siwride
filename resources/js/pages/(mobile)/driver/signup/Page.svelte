@@ -39,7 +39,9 @@
 <div class="flex flex-col gap-6">
     <div class="flex flex-col gap-2">
         <h1 class="text-2xl font-bold">Driver Partner Registration</h1>
-        <p class="text-sm text-muted-foreground">Fill in your details and vehicle information to apply.</p>
+        <p class="text-sm text-muted-foreground">
+            Fill in your details and vehicle information to apply.
+        </p>
     </div>
 
     <form onsubmit={submit} class="grid gap-6">
@@ -97,7 +99,9 @@
         </div>
 
         <div class="grid gap-2">
-            <Label for="vehicle_registration_number">Vehicle Registration Number (Plat Nomor)</Label>
+            <Label for="vehicle_registration_number"
+                >Vehicle Registration Number (Plat Nomor)</Label
+            >
             <Input
                 id="vehicle_registration_number"
                 type="text"
@@ -130,11 +134,7 @@
             <InputError message={form.errors.password_confirmation} />
         </div>
 
-        <Button
-            type="submit"
-            class="mt-2 w-full"
-            disabled={form.processing}
-        >
+        <Button type="submit" class="mt-2 w-full" disabled={form.processing}>
             {#if form.processing}<Spinner />{/if}
             Apply as Driver
         </Button>

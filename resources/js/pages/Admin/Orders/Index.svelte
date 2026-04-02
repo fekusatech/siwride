@@ -19,7 +19,7 @@
     let fromDate = $state(filters.from_date ?? '');
     // svelte-ignore state_referenced_locally
     let toDate = $state(filters.to_date ?? '');
-    
+
     // Sync state with props (important for URL/Back button navigation)
     $effect(() => {
         search = filters.search ?? '';
@@ -39,7 +39,7 @@
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
-            minimumFractionDigits: 0
+            minimumFractionDigits: 0,
         }).format(amount);
     }
 
@@ -50,17 +50,25 @@
     }
 
     function handleDelete(order: any) {
-        if (confirm(`Are you sure you want to delete booking ${order.booking_code}?`)) {
+        if (
+            confirm(
+                `Are you sure you want to delete booking ${order.booking_code}?`,
+            )
+        ) {
             router.delete(`/admin/orders/${order.id}`);
         }
     }
 
     function updateStatus(orderId: number, status: string) {
         updatingOrderId = orderId;
-        router.patch(`/admin/orders/${orderId}/status`, { status }, {
-            onFinish: () => updatingOrderId = null,
-            preserveScroll: true
-        });
+        router.patch(
+            `/admin/orders/${orderId}/status`,
+            { status },
+            {
+                onFinish: () => (updatingOrderId = null),
+                preserveScroll: true,
+            },
+        );
     }
 
     function handleOrderSuccess() {
@@ -70,14 +78,30 @@
 
     function shareToWhatsApp(order: any) {
         const d = new Date(order.date);
-        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const months = [
+            'Januari',
+            'Februari',
+            'Maret',
+            'April',
+            'Mei',
+            'Juni',
+            'Juli',
+            'Agustus',
+            'September',
+            'Oktober',
+            'November',
+            'Desember',
+        ];
         const dateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
         const timeStr = order.time ? order.time.substring(0, 5) : '';
-        const priceFormatted = new Intl.NumberFormat('id-ID').format(order.price);
+        const priceFormatted = new Intl.NumberFormat('id-ID').format(
+            order.price,
+        );
 
         const claimUrl = `${window.location.origin}/c/${order.booking_code}`;
 
-        const message = `*#${order.order_number} - CHECK IN*\n\n` +
+        const message =
+            `*#${order.order_number} - CHECK IN*\n\n` +
             `*Kode Booking:* ${order.booking_code}\n` +
             `*Tanggal:* ${dateStr}\n` +
             `*Jam:* ${timeStr} WITA\n\n` +
@@ -90,15 +114,19 @@
             `*Klaim Order (Buka Link):*\n${claimUrl}`;
 
         // Send message to backend WhatsApp Service
-        router.post(`/admin/orders/${order.id}/share`, { message }, {
-            preserveScroll: true,
-            onBefore: () => {
-                // optional: could show loading
+        router.post(
+            `/admin/orders/${order.id}/share`,
+            { message },
+            {
+                preserveScroll: true,
+                onBefore: () => {
+                    // optional: could show loading
+                },
+                onSuccess: () => {
+                    // Success is handled by flash messages from controller
+                },
             },
-            onSuccess: () => {
-                // Success is handled by flash messages from controller
-            }
-        });
+        );
     }
 
     let isReady = $state(false);
@@ -114,7 +142,7 @@
         router.get('/admin/orders', params, {
             preserveState: true,
             replace: true,
-            preserveScroll: true
+            preserveScroll: true,
         });
     }
 
@@ -137,10 +165,13 @@
 
     // Handle immediate updates for non-debounced filters
     $effect(() => {
-        if (isReady && (status !== (filters.status ?? '') || 
-                        driverId !== (filters.driver_id ?? '') || 
-                        fromDate !== (filters.from_date ?? '') || 
-                        toDate !== (filters.to_date ?? ''))) {
+        if (
+            isReady &&
+            (status !== (filters.status ?? '') ||
+                driverId !== (filters.driver_id ?? '') ||
+                fromDate !== (filters.from_date ?? '') ||
+                toDate !== (filters.to_date ?? ''))
+        ) {
             applyFilters();
         }
     });
@@ -187,17 +218,17 @@
         .status-segment.active.pending {
             background: #fff;
             color: #f59e0b;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .status-segment.active.completed {
             background: #fff;
             color: #10b981;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .status-segment.active.cancelled {
             background: #fff;
             color: #ef4444;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .status-segment:disabled {
             opacity: 0.5;
@@ -213,7 +244,9 @@
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 
@@ -224,11 +257,24 @@
                 <p class="text-muted mb-0">List of all booking orders</p>
             </div>
             <div class="d-flex gap-2">
-                <Link href="/admin/orders/calendar" class="btn btn-outline-primary d-flex align-items-center gap-1">
+                <Link
+                    href="/admin/orders/import"
+                    class="btn btn-outline-success d-flex align-items-center gap-1"
+                >
+                    <i class="ti ti-file-spreadsheet fs-18"></i>
+                    Import Excel
+                </Link>
+                <Link
+                    href="/admin/orders/calendar"
+                    class="btn btn-outline-primary d-flex align-items-center gap-1"
+                >
                     <i class="ti ti-calendar fs-18"></i>
                     Calendar View
                 </Link>
-                <Link href="/admin/orders/create" class="btn btn-primary d-flex align-items-center gap-1">
+                <Link
+                    href="/admin/orders/create"
+                    class="btn btn-primary d-flex align-items-center gap-1"
+                >
                     <i class="ti ti-plus fs-18"></i>
                     Input Order
                 </Link>
@@ -239,23 +285,37 @@
             <div class="card-body">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-3">
-                        <label for="filter-search" class="form-label small fw-bold text-muted">Search</label>
+                        <label
+                            for="filter-search"
+                            class="form-label small fw-bold text-muted"
+                            >Search</label
+                        >
                         <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0">
+                            <span
+                                class="input-group-text bg-transparent border-end-0"
+                            >
                                 <i class="ti ti-search text-muted"></i>
                             </span>
-                            <input 
+                            <input
                                 id="filter-search"
-                                type="text" 
-                                class="form-control border-start-0 ps-0" 
-                                placeholder="Order #, booking, customer..." 
+                                type="text"
+                                class="form-control border-start-0 ps-0"
+                                placeholder="Order #, booking, customer..."
                                 bind:value={search}
                             />
                         </div>
                     </div>
                     <div class="col-md-2">
-                        <label for="filter-status" class="form-label small fw-bold text-muted">Status</label>
-                        <select id="filter-status" class="form-select" bind:value={status}>
+                        <label
+                            for="filter-status"
+                            class="form-label small fw-bold text-muted"
+                            >Status</label
+                        >
+                        <select
+                            id="filter-status"
+                            class="form-select"
+                            bind:value={status}
+                        >
                             <option value="">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="completed">Completed</option>
@@ -263,8 +323,16 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="filter-driver" class="form-label small fw-bold text-muted">Driver</label>
-                        <select id="filter-driver" class="form-select" bind:value={driverId}>
+                        <label
+                            for="filter-driver"
+                            class="form-label small fw-bold text-muted"
+                            >Driver</label
+                        >
+                        <select
+                            id="filter-driver"
+                            class="form-select"
+                            bind:value={driverId}
+                        >
                             <option value="">All Drivers</option>
                             {#each drivers as driver}
                                 <option value={driver.id}>{driver.name}</option>
@@ -272,40 +340,61 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="filter-from-date" class="form-label small fw-bold text-muted">Date Range</label>
+                        <label
+                            for="filter-from-date"
+                            class="form-label small fw-bold text-muted"
+                            >Date Range</label
+                        >
                         <div class="input-group">
-                            <Flatpickr 
-                                id="filter-from-date" 
-                                bind:value={fromDate} 
+                            <Flatpickr
+                                id="filter-from-date"
+                                bind:value={fromDate}
                                 placeholder="From"
-                                options={{ altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d" }}
+                                options={{
+                                    altInput: true,
+                                    altFormat: 'd/m/Y',
+                                    dateFormat: 'Y-m-d',
+                                }}
                                 class="border-end-0"
                             />
-                            <span class="input-group-text bg-white px-1 text-muted">to</span>
-                            <Flatpickr 
-                                id="filter-to-date" 
-                                bind:value={toDate} 
+                            <span
+                                class="input-group-text bg-white px-1 text-muted"
+                                >to</span
+                            >
+                            <Flatpickr
+                                id="filter-to-date"
+                                bind:value={toDate}
                                 placeholder="To"
-                                options={{ altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d" }}
+                                options={{
+                                    altInput: true,
+                                    altFormat: 'd/m/Y',
+                                    dateFormat: 'Y-m-d',
+                                }}
                             />
                         </div>
                     </div>
                     <div class="col-md-2">
-                        <div class="d-none d-md-block" style="height: 24px;">&nbsp;</div>
+                        <div class="d-none d-md-block" style="height: 24px;">
+                            &nbsp;
+                        </div>
                         <div class="d-flex gap-2">
-                            <button 
+                            <button
                                 class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-1"
                                 style="height: 38px;"
                                 onclick={applyFilters}
                             >
                                 <i class="ti ti-filter"></i> Filter
                             </button>
-                            <button 
+                            <button
                                 class="btn btn-outline-danger px-2 d-flex align-items-center justify-content-center"
                                 style="height: 38px; width: 45px;"
-                                onclick={clearFilters} 
+                                onclick={clearFilters}
                                 title="Clear All Filters"
-                                disabled={!search && !status && !driverId && !fromDate && !toDate}
+                                disabled={!search &&
+                                    !status &&
+                                    !driverId &&
+                                    !fromDate &&
+                                    !toDate}
                             >
                                 <i class="ti ti-filter-off"></i>
                             </button>
@@ -318,7 +407,9 @@
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-centered mb-0 text-nowrap">
+                    <table
+                        class="table table-hover table-centered mb-0 text-nowrap"
+                    >
                         <thead class="bg-light">
                             <tr>
                                 <th>Booking Code</th>
@@ -336,100 +427,211 @@
                         <tbody>
                             {#each orders.data as order}
                                 <tr>
-                                    <td><span class="fw-bold">{order.booking_code}</span></td>
+                                    <td
+                                        ><span class="fw-bold"
+                                            >{order.booking_code}</span
+                                        ></td
+                                    >
                                     <td>{order.order_number}</td>
                                     <td>
-                                        <div>{new Date(order.date).toLocaleDateString('id-ID')}</div>
-                                        <small class="text-muted">{order.time}</small>
+                                        <div>
+                                            {new Date(
+                                                order.date,
+                                            ).toLocaleDateString('id-ID')}
+                                        </div>
+                                        <small class="text-muted"
+                                            >{order.time}</small
+                                        >
                                     </td>
                                     <td>
-                                        <div class="fw-medium">{order.customer_name}</div>
-                                        <small class="text-muted">{order.customer_phone}</small>
+                                        <div class="fw-medium">
+                                            {order.customer_name}
+                                        </div>
+                                        <small class="text-muted"
+                                            >{order.customer_phone}</small
+                                        >
                                     </td>
                                     <td>{order.flight_number || '-'}</td>
                                     <td>
                                         {#if order.driver}
-                                            <div class="fw-medium text-dark">{order.driver.name}</div>
+                                            <div class="fw-medium text-dark">
+                                                {order.driver.name}
+                                            </div>
                                             {#if order.vehicle}
-                                                <small class="text-primary fw-bold d-block mt-1">
-                                                    <i class="ti ti-car"></i> {order.vehicle.registration_number}
+                                                <small
+                                                    class="text-primary fw-bold d-block mt-1"
+                                                >
+                                                    <i class="ti ti-car"></i>
+                                                    {order.vehicle
+                                                        .registration_number}
                                                 </small>
                                             {/if}
                                         {:else}
-                                            <div class="d-flex flex-column align-items-start gap-1">
-                                                <span class="badge bg-soft-warning text-warning border border-warning px-2 py-1">
-                                                    <i class="ti ti-loader me-1"></i> Open Order
+                                            <div
+                                                class="d-flex flex-column align-items-start gap-1"
+                                            >
+                                                <span
+                                                    class="badge bg-soft-warning text-warning border border-warning px-2 py-1"
+                                                >
+                                                    <i class="ti ti-loader me-1"
+                                                    ></i> Open Order
                                                 </span>
-                                                <small class="text-muted italic ps-1">Waiting for driver...</small>
+                                                <small
+                                                    class="text-muted italic ps-1"
+                                                    >Waiting for driver...</small
+                                                >
                                             </div>
                                         {/if}
                                     </td>
-                                    <td style="max-width: 250px;" class="text-truncate">
-                                        <div class="d-flex align-items-center gap-1">
-                                            <i class="ti ti-map-pin text-success"></i>
-                                            <span title={order.pickup_address}>{order.pickup_address}</span>
+                                    <td
+                                        style="max-width: 250px;"
+                                        class="text-truncate"
+                                    >
+                                        <div
+                                            class="d-flex align-items-center gap-1"
+                                        >
+                                            <i
+                                                class="ti ti-map-pin text-success"
+                                            ></i>
+                                            <span title={order.pickup_address}
+                                                >{order.pickup_address}</span
+                                            >
                                         </div>
-                                        <div class="d-flex align-items-center gap-1 mt-1">
-                                            <i class="ti ti-map-pin text-danger"></i>
-                                            <span title={order.dropoff_address}>{order.dropoff_address}</span>
+                                        <div
+                                            class="d-flex align-items-center gap-1 mt-1"
+                                        >
+                                            <i class="ti ti-map-pin text-danger"
+                                            ></i>
+                                            <span title={order.dropoff_address}
+                                                >{order.dropoff_address}</span
+                                            >
                                         </div>
                                     </td>
                                     <td>{order.passengers}</td>
                                     <td>
-                                        <div class="fw-medium">{formatCurrency(order.price)}</div>
-                                        <small class="text-muted">P/B: {formatCurrency(order.parking_gas_fee)}</small>
+                                        <div class="fw-medium">
+                                            {formatCurrency(order.price)}
+                                        </div>
+                                        <small class="text-muted"
+                                            >P/B: {formatCurrency(
+                                                order.parking_gas_fee,
+                                            )}</small
+                                        >
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex align-items-center justify-content-center gap-3">
+                                        <div
+                                            class="d-flex align-items-center justify-content-center gap-3"
+                                        >
                                             <!-- Interactive Status Toggle -->
-                                            <div class="status-segmented-control shadow-sm">
-                                                <button 
-                                                    class="status-segment {order.status === 'pending' ? 'active pending' : ''}" 
-                                                    onclick={() => updateStatus(order.id, 'pending')}
-                                                    disabled={updatingOrderId === order.id}
+                                            <div
+                                                class="status-segmented-control shadow-sm"
+                                            >
+                                                <button
+                                                    class="status-segment {order.status ===
+                                                    'pending'
+                                                        ? 'active pending'
+                                                        : ''}"
+                                                    onclick={() =>
+                                                        updateStatus(
+                                                            order.id,
+                                                            'pending',
+                                                        )}
+                                                    disabled={updatingOrderId ===
+                                                        order.id}
                                                     title="Set to Pending"
                                                 >
                                                     {#if updatingOrderId === order.id && order.status !== 'pending'}
-                                                        <span class="loading-ring"></span>
+                                                        <span
+                                                            class="loading-ring"
+                                                        ></span>
                                                     {:else}
-                                                        <i class="ti ti-clock"></i>
+                                                        <i class="ti ti-clock"
+                                                        ></i>
                                                     {/if}
                                                 </button>
-                                                <button 
-                                                    class="status-segment {order.status === 'completed' ? 'active completed' : ''}" 
-                                                    onclick={() => updateStatus(order.id, 'completed')}
-                                                    disabled={updatingOrderId === order.id}
+                                                <button
+                                                    class="status-segment {order.status ===
+                                                    'completed'
+                                                        ? 'active completed'
+                                                        : ''}"
+                                                    onclick={() =>
+                                                        updateStatus(
+                                                            order.id,
+                                                            'completed',
+                                                        )}
+                                                    disabled={updatingOrderId ===
+                                                        order.id}
                                                     title="Set to Completed"
                                                 >
                                                     {#if updatingOrderId === order.id && order.status !== 'completed'}
-                                                        <span class="loading-ring"></span>
+                                                        <span
+                                                            class="loading-ring"
+                                                        ></span>
                                                     {:else}
-                                                        <i class="ti ti-check"></i>
+                                                        <i class="ti ti-check"
+                                                        ></i>
                                                     {/if}
                                                 </button>
-                                                <button 
-                                                    class="status-segment {order.status === 'cancelled' ? 'active cancelled' : ''}" 
-                                                    onclick={() => updateStatus(order.id, 'cancelled')}
-                                                    disabled={updatingOrderId === order.id}
+                                                <button
+                                                    class="status-segment {order.status ===
+                                                    'cancelled'
+                                                        ? 'active cancelled'
+                                                        : ''}"
+                                                    onclick={() =>
+                                                        updateStatus(
+                                                            order.id,
+                                                            'cancelled',
+                                                        )}
+                                                    disabled={updatingOrderId ===
+                                                        order.id}
                                                     title="Set to Cancelled"
                                                 >
                                                     {#if updatingOrderId === order.id && order.status !== 'cancelled'}
-                                                        <span class="loading-ring"></span>
+                                                        <span
+                                                            class="loading-ring"
+                                                        ></span>
                                                     {:else}
                                                         <i class="ti ti-x"></i>
                                                     {/if}
                                                 </button>
                                             </div>
 
-                                            <div class="d-flex align-items-center gap-1 border-start ps-3 py-1">
-                                                <button type="button" class="btn btn-sm btn-soft-success btn-icon" title="Share to WA Group" onclick={(e) => { e.preventDefault(); shareToWhatsApp(order); }}>
-                                                    <i class="ti ti-brand-whatsapp fs-16"></i>
+                                            <div
+                                                class="d-flex align-items-center gap-1 border-start ps-3 py-1"
+                                            >
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-soft-success btn-icon"
+                                                    title="Share to WA Group"
+                                                    onclick={(e) => {
+                                                        e.preventDefault();
+                                                        shareToWhatsApp(order);
+                                                    }}
+                                                >
+                                                    <i
+                                                        class="ti ti-brand-whatsapp fs-16"
+                                                    ></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-light btn-icon" title="View Detail" onclick={() => openModal(order, 'view')}>
-                                                    <i class="ti ti-eye fs-16"></i>
+                                                <button
+                                                    class="btn btn-sm btn-light btn-icon"
+                                                    title="View Detail"
+                                                    onclick={() =>
+                                                        openModal(
+                                                            order,
+                                                            'view',
+                                                        )}
+                                                >
+                                                    <i class="ti ti-eye fs-16"
+                                                    ></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-soft-danger btn-icon" title="Delete" onclick={() => handleDelete(order)}>
-                                                    <i class="ti ti-trash fs-16"></i>
+                                                <button
+                                                    class="btn btn-sm btn-soft-danger btn-icon"
+                                                    title="Delete"
+                                                    onclick={() =>
+                                                        handleDelete(order)}
+                                                >
+                                                    <i class="ti ti-trash fs-16"
+                                                    ></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -439,7 +641,9 @@
                                 <tr>
                                     <td colspan="10" class="text-center py-5">
                                         <div class="text-muted">
-                                            <i class="ti ti-inbox fs-48 mb-2 d-block"></i>
+                                            <i
+                                                class="ti ti-inbox fs-48 mb-2 d-block"
+                                            ></i>
                                             No orders found.
                                         </div>
                                     </td>
@@ -455,7 +659,12 @@
 
     <!-- Multi-purpose Modal (View/Edit) -->
     {#if showModal}
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1055;" transition:fade={{ duration: 150 }}>
+        <div
+            class="modal fade show d-block"
+            tabindex="-1"
+            style="background: rgba(0,0,0,0.5); z-index: 1055;"
+            transition:fade={{ duration: 150 }}
+        >
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content shadow-lg border-0 rounded-3">
                     <div class="modal-header bg-primary text-white py-3">
@@ -468,107 +677,228 @@
                                 Edit Booking - {selectedOrder.booking_code}
                             {/if}
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" onclick={() => showModal = false} aria-label="Close"></button>
+                        <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            onclick={() => (showModal = false)}
+                            aria-label="Close"
+                        ></button>
                     </div>
-                    <div class="modal-body p-4" style="max-height: 80vh; overflow-y: auto;">
+                    <div
+                        class="modal-body p-4"
+                        style="max-height: 80vh; overflow-y: auto;"
+                    >
                         {#if modalMode === 'view'}
                             <div class="row g-4">
                                 <div class="col-md-6">
-                                    <div class="text-muted small text-uppercase fw-bold mb-1 d-block">Customer</div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <div
+                                        class="text-muted small text-uppercase fw-bold mb-1 d-block"
+                                    >
+                                        Customer
+                                    </div>
+                                    <div
+                                        class="d-flex align-items-center gap-2"
+                                    >
+                                        <div
+                                            class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width: 40px; height: 40px;"
+                                        >
                                             <i class="ti ti-user fs-20"></i>
                                         </div>
                                         <div>
-                                            <h5 class="mb-0">{selectedOrder.customer_name}</h5>
-                                            <p class="mb-0 text-muted">{selectedOrder.customer_phone}</p>
+                                            <h5 class="mb-0">
+                                                {selectedOrder.customer_name}
+                                            </h5>
+                                            <p class="mb-0 text-muted">
+                                                {selectedOrder.customer_phone}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6 text-md-end">
-                                    <div class="text-muted small text-uppercase fw-bold mb-1 d-block">Status</div>
-                                    <span class="badge fs-14 bg-{selectedOrder.status === 'completed' ? 'success' : (selectedOrder.status === 'cancelled' ? 'danger' : 'warning')}-subtle text-{selectedOrder.status === 'completed' ? 'success' : (selectedOrder.status === 'cancelled' ? 'danger' : 'warning')}">
+                                    <div
+                                        class="text-muted small text-uppercase fw-bold mb-1 d-block"
+                                    >
+                                        Status
+                                    </div>
+                                    <span
+                                        class="badge fs-14 bg-{selectedOrder.status ===
+                                        'completed'
+                                            ? 'success'
+                                            : selectedOrder.status ===
+                                                'cancelled'
+                                              ? 'danger'
+                                              : 'warning'}-subtle text-{selectedOrder.status ===
+                                        'completed'
+                                            ? 'success'
+                                            : selectedOrder.status ===
+                                                'cancelled'
+                                              ? 'danger'
+                                              : 'warning'}"
+                                    >
                                         {selectedOrder.status.toUpperCase()}
                                     </span>
                                 </div>
 
-                                <div class="col-12"><hr class="my-0"></div>
+                                <div class="col-12"><hr class="my-0" /></div>
 
                                 <div class="col-md-6">
-                                    <div class="text-muted small text-uppercase fw-bold mb-2 d-block">Route Details</div>
+                                    <div
+                                        class="text-muted small text-uppercase fw-bold mb-2 d-block"
+                                    >
+                                        Route Details
+                                    </div>
                                     <div class="p-3 bg-light rounded-3">
                                         <div class="d-flex gap-3 mb-3">
-                                            <i class="ti ti-map-pin text-primary fs-20 mt-1"></i>
+                                            <i
+                                                class="ti ti-map-pin text-primary fs-20 mt-1"
+                                            ></i>
                                             <div>
-                                                <small class="text-muted d-block">Pickup</small>
-                                                <span class="fw-medium">{selectedOrder.pickup_address}</span>
+                                                <small
+                                                    class="text-muted d-block"
+                                                    >Pickup</small
+                                                >
+                                                <span class="fw-medium"
+                                                    >{selectedOrder.pickup_address}</span
+                                                >
                                             </div>
                                         </div>
                                         <div class="d-flex gap-3">
-                                            <i class="ti ti-building text-info fs-20 mt-1"></i>
+                                            <i
+                                                class="ti ti-building text-info fs-20 mt-1"
+                                            ></i>
                                             <div>
-                                                <small class="text-muted d-block">Dropoff</small>
-                                                <span class="fw-medium">{selectedOrder.dropoff_address}</span>
+                                                <small
+                                                    class="text-muted d-block"
+                                                    >Dropoff</small
+                                                >
+                                                <span class="fw-medium"
+                                                    >{selectedOrder.dropoff_address}</span
+                                                >
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <div class="text-muted small text-uppercase fw-bold mb-2 d-block">Assignment</div>
+                                    <div
+                                        class="text-muted small text-uppercase fw-bold mb-2 d-block"
+                                    >
+                                        Assignment
+                                    </div>
                                     <div class="p-3 border rounded-3 h-100">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <i class="ti ti-user-check text-muted fs-18"></i>
-                                            <span class="text-muted">Driver:</span>
-                                            <span class="fw-bold">{selectedOrder.driver?.name || 'Unassigned'}</span>
+                                        <div
+                                            class="d-flex align-items-center gap-2 mb-2"
+                                        >
+                                            <i
+                                                class="ti ti-user-check text-muted fs-18"
+                                            ></i>
+                                            <span class="text-muted"
+                                                >Driver:</span
+                                            >
+                                            <span class="fw-bold"
+                                                >{selectedOrder.driver?.name ||
+                                                    'Unassigned'}</span
+                                            >
                                         </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="ti ti-car text-muted fs-18"></i>
-                                            <span class="text-muted">Vehicle:</span>
+                                        <div
+                                            class="d-flex align-items-center gap-2"
+                                        >
+                                            <i
+                                                class="ti ti-car text-muted fs-18"
+                                            ></i>
+                                            <span class="text-muted"
+                                                >Vehicle:</span
+                                            >
                                             <span class="fw-medium">
-                                                {selectedOrder.vehicle ? `${selectedOrder.vehicle.registration_number} (${selectedOrder.vehicle.brand})` : 'None'}
+                                                {selectedOrder.vehicle
+                                                    ? `${selectedOrder.vehicle.registration_number} (${selectedOrder.vehicle.brand})`
+                                                    : 'None'}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-12">
-                                    <div class="row bg-primary-subtle p-3 rounded-3 mx-0">
+                                    <div
+                                        class="row bg-primary-subtle p-3 rounded-3 mx-0"
+                                    >
                                         <div class="col-md-4 text-center">
-                                            <small class="text-muted d-block">Passengers</small>
-                                            <span class="fw-bold fs-16">{selectedOrder.passengers} PAX</span>
+                                            <small class="text-muted d-block"
+                                                >Passengers</small
+                                            >
+                                            <span class="fw-bold fs-16"
+                                                >{selectedOrder.passengers} PAX</span
+                                            >
                                         </div>
-                                        <div class="col-md-4 text-center border-start border-primary-subtle">
-                                            <small class="text-muted d-block">Price</small>
-                                            <span class="fw-bold fs-16 text-primary">{formatCurrency(selectedOrder.price)}</span>
+                                        <div
+                                            class="col-md-4 text-center border-start border-primary-subtle"
+                                        >
+                                            <small class="text-muted d-block"
+                                                >Price</small
+                                            >
+                                            <span
+                                                class="fw-bold fs-16 text-primary"
+                                                >{formatCurrency(
+                                                    selectedOrder.price,
+                                                )}</span
+                                            >
                                         </div>
-                                        <div class="col-md-4 text-center border-start border-primary-subtle">
-                                            <small class="text-muted d-block">P/B Fee</small>
-                                            <span class="fw-bold fs-16 text-primary">{formatCurrency(selectedOrder.parking_gas_fee)}</span>
+                                        <div
+                                            class="col-md-4 text-center border-start border-primary-subtle"
+                                        >
+                                            <small class="text-muted d-block"
+                                                >P/B Fee</small
+                                            >
+                                            <span
+                                                class="fw-bold fs-16 text-primary"
+                                                >{formatCurrency(
+                                                    selectedOrder.parking_gas_fee,
+                                                )}</span
+                                            >
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mt-4 d-flex justify-content-end gap-2">
-                                <button type="button" class="btn btn-light px-4" onclick={() => showModal = false}>Close</button>
-                                <button type="button" class="btn btn-primary px-4 d-flex align-items-center gap-1" onclick={() => modalMode = 'edit'}>
+                                <button
+                                    type="button"
+                                    class="btn btn-light px-4"
+                                    onclick={() => (showModal = false)}
+                                    >Close</button
+                                >
+                                <button
+                                    type="button"
+                                    class="btn btn-primary px-4 d-flex align-items-center gap-1"
+                                    onclick={() => (modalMode = 'edit')}
+                                >
                                     <i class="ti ti-edit"></i> Edit Booking
                                 </button>
                             </div>
                         {:else}
-                            <OrderForm 
-                                {drivers} 
-                                {google_maps_api_key} 
+                            <OrderForm
+                                {drivers}
+                                {google_maps_api_key}
                                 order={selectedOrder}
                                 onSuccess={handleOrderSuccess}
                             >
                                 {#snippet footer({ processing })}
-                                    <button type="button" class="btn btn-light px-4" onclick={() => modalMode = 'view'}>
+                                    <button
+                                        type="button"
+                                        class="btn btn-light px-4"
+                                        onclick={() => (modalMode = 'view')}
+                                    >
                                         Cancel
                                     </button>
-                                    <button type="submit" class="btn btn-primary px-4" disabled={processing}>
-                                        {processing ? 'Saving...' : 'Update Booking'}
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary px-4"
+                                        disabled={processing}
+                                    >
+                                        {processing
+                                            ? 'Saving...'
+                                            : 'Update Booking'}
                                     </button>
                                 {/snippet}
                             </OrderForm>

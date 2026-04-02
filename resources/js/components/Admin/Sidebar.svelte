@@ -8,7 +8,9 @@
     onMount(() => {
         // Re-initialize SimpleBar if it exists
         if (window.SimpleBar) {
-            const sidebarScroll = document.querySelector('.sidenav-menu [data-simplebar]');
+            const sidebarScroll = document.querySelector(
+                '.sidenav-menu [data-simplebar]',
+            );
             if (sidebarScroll) {
                 new window.SimpleBar(sidebarScroll);
             }
@@ -16,34 +18,47 @@
 
         // Re-initialize custom sidebar logic if needed
         if (window.bootstrap && window.bootstrap.Collapse) {
-            const collapses = document.querySelectorAll('.sidenav-menu .collapse');
-            collapses.forEach(el => {
+            const collapses = document.querySelectorAll(
+                '.sidenav-menu .collapse',
+            );
+            collapses.forEach((el) => {
                 new window.bootstrap.Collapse(el, { toggle: false });
             });
         }
     });
 </script>
 
-
-
 <!-- Sidenav Menu Start -->
 <div class="sidenav-menu">
-
     <!-- Brand Logo -->
     <Link href="/dashboard" class="logo">
         <span class="logo-light">
             <span class="logo-lg">
                 {#if settings.logo}
-                    <img src="/storage/{settings.logo}?v={new Date(settings.updated_at).getTime()}" alt="{settings.business_name} Logo">
+                    <img
+                        src="/storage/{settings.logo}?v={new Date(
+                            settings.updated_at,
+                        ).getTime()}"
+                        alt="{settings.business_name} Logo"
+                    />
                 {:else}
-                    <img src="/assets-admin/images/logo.png" alt="logo">
+                    <img src="/assets-admin/images/logo.png" alt="logo" />
                 {/if}
             </span>
             <span class="logo-sm text-center">
                 {#if settings.favicon}
-                    <img src="/storage/{settings.favicon}?v={new Date(settings.updated_at).getTime()}" alt="sm logo" style="width: 24px; height: 24px;">
+                    <img
+                        src="/storage/{settings.favicon}?v={new Date(
+                            settings.updated_at,
+                        ).getTime()}"
+                        alt="sm logo"
+                        style="width: 24px; height: 24px;"
+                    />
                 {:else}
-                    <img src="/assets-admin/images/logo-sm.png" alt="small logo">
+                    <img
+                        src="/assets-admin/images/logo-sm.png"
+                        alt="small logo"
+                    />
                 {/if}
             </span>
         </span>
@@ -51,23 +66,44 @@
         <span class="logo-dark">
             <span class="logo-lg">
                 {#if settings.logo}
-                    <img src="/storage/{settings.logo}?v={new Date(settings.updated_at).getTime()}" alt="{settings.business_name} Logo">
+                    <img
+                        src="/storage/{settings.logo}?v={new Date(
+                            settings.updated_at,
+                        ).getTime()}"
+                        alt="{settings.business_name} Logo"
+                    />
                 {:else}
-                    <img src="/assets-admin/images/logo-dark.png" alt="dark logo">
+                    <img
+                        src="/assets-admin/images/logo-dark.png"
+                        alt="dark logo"
+                    />
                 {/if}
             </span>
             <span class="logo-sm text-center">
                 {#if settings.favicon}
-                    <img src="/storage/{settings.favicon}?v={new Date(settings.updated_at).getTime()}" alt="sm logo" style="width: 24px; height: 24px;">
+                    <img
+                        src="/storage/{settings.favicon}?v={new Date(
+                            settings.updated_at,
+                        ).getTime()}"
+                        alt="sm logo"
+                        style="width: 24px; height: 24px;"
+                    />
                 {:else}
-                    <img src="/assets-admin/images/logo-sm.png" alt="small logo">
+                    <img
+                        src="/assets-admin/images/logo-sm.png"
+                        alt="small logo"
+                    />
                 {/if}
             </span>
         </span>
     </Link>
 
     <!-- Sidebar Hover Menu Toggle Button -->
-    <button class="button-sm-hover" onclick={(e) => toggleSidebar(e)} aria-label="Minimize Sidebar">
+    <button
+        class="button-sm-hover"
+        onclick={(e) => toggleSidebar(e)}
+        aria-label="Minimize Sidebar"
+    >
         <i class="ti ti-circle align-middle"></i>
     </button>
 
@@ -77,27 +113,30 @@
     </button>
 
     <div data-simplebar>
-
         <!--- Sidenav Menu -->
         <ul class="side-nav">
-
             <li class="side-nav-item">
                 <Link href="/dashboard" class="side-nav-link">
-                    <span class="menu-icon"><i class="ti ti-dashboard"></i></span>
+                    <span class="menu-icon"
+                        ><i class="ti ti-dashboard"></i></span
+                    >
                     <span class="menu-text"> Dashboard </span>
                 </Link>
             </li>
 
             <li class="side-nav-item">
                 <Link href="/admin/orders" class="side-nav-link">
-                    <span class="menu-icon"><i class="ti ti-shopping-cart"></i></span>
+                    <span class="menu-icon"
+                        ><i class="ti ti-shopping-cart"></i></span
+                    >
                     <span class="menu-text"> Orders </span>
                 </Link>
             </li>
 
             <li class="side-nav-item">
                 <Link href="/admin/orders/calendar" class="side-nav-link">
-                    <span class="menu-icon"><i class="ti ti-calendar"></i></span>
+                    <span class="menu-icon"><i class="ti ti-calendar"></i></span
+                    >
                     <span class="menu-text"> Calendar </span>
                 </Link>
             </li>
@@ -122,11 +161,11 @@
 
             <li class="side-nav-item">
                 <Link href="/admin/settings/general" class="side-nav-link">
-                    <span class="menu-icon"><i class="ti ti-settings"></i></span>
+                    <span class="menu-icon"><i class="ti ti-settings"></i></span
+                    >
                     <span class="menu-text"> Settings </span>
                 </Link>
             </li>
-
         </ul>
     </div>
 </div>

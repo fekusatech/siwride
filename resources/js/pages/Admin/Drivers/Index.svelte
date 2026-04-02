@@ -20,10 +20,14 @@
         if (search !== currentSearch) {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                router.get('/admin/drivers', { search }, {
-                    preserveState: true,
-                    replace: true,
-                });
+                router.get(
+                    '/admin/drivers',
+                    { search },
+                    {
+                        preserveState: true,
+                        replace: true,
+                    },
+                );
             }, 300);
         }
     });
@@ -46,7 +50,10 @@
                 <h4 class="mb-0">Driver Management</h4>
                 <p class="text-muted mb-0">List of all registered drivers</p>
             </div>
-            <Link href="/admin/drivers/create" class="btn btn-primary d-flex align-items-center gap-1">
+            <Link
+                href="/admin/drivers/create"
+                class="btn btn-primary d-flex align-items-center gap-1"
+            >
                 <i class="ti ti-plus fs-18"></i>
                 Add Driver
             </Link>
@@ -58,13 +65,15 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="input-group">
-                                <span class="input-group-text bg-transparent border-end-0">
+                                <span
+                                    class="input-group-text bg-transparent border-end-0"
+                                >
                                     <i class="ti ti-search text-muted"></i>
                                 </span>
-                                <input 
-                                    type="text" 
-                                    class="form-control border-start-0 ps-0" 
-                                    placeholder="Search name, phone, email, or NID..." 
+                                <input
+                                    type="text"
+                                    class="form-control border-start-0 ps-0"
+                                    placeholder="Search name, phone, email, or NID..."
                                     bind:value={search}
                                 />
                             </div>
@@ -73,7 +82,9 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-hover table-centered mb-0 text-nowrap">
+                    <table
+                        class="table table-hover table-centered mb-0 text-nowrap"
+                    >
                         <thead class="bg-light">
                             <tr>
                                 <th>Name</th>
@@ -88,36 +99,74 @@
                             {#each driverList as driver}
                                 <tr>
                                     <td>
-                                        <div class="d-flex align-items-center gap-2">
+                                        <div
+                                            class="d-flex align-items-center gap-2"
+                                        >
                                             {#if driver.image}
-                                                <img src={driver.image} alt={driver.name} class="rounded-circle" width="32">
+                                                <img
+                                                    src={driver.image}
+                                                    alt={driver.name}
+                                                    class="rounded-circle"
+                                                    width="32"
+                                                />
                                             {:else}
-                                                <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                <div
+                                                    class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;"
+                                                >
                                                     {driver.name.charAt(0)}
                                                 </div>
                                             {/if}
                                             <div>
-                                                <span class="fw-medium d-block text-dark">{driver.name}</span>
-                                                <small class="text-muted">{driver.nid || 'No NID'}</small>
+                                                <span
+                                                    class="fw-medium d-block text-dark"
+                                                    >{driver.name}</span
+                                                >
+                                                <small class="text-muted"
+                                                    >{driver.nid ||
+                                                        'No NID'}</small
+                                                >
                                             </div>
                                         </div>
                                     </td>
                                     <td>{driver.email}</td>
                                     <td>{driver.phone}</td>
                                     <td>
-                                        <span class="badge bg-info-subtle text-info">{driver.vehicles_count} Vehicles</span>
+                                        <span
+                                            class="badge bg-info-subtle text-info"
+                                            >{driver.vehicles_count} Vehicles</span
+                                        >
                                     </td>
                                     <td>
-                                        <span class="badge bg-{driver.status === 'active' ? 'success' : 'danger'}-subtle text-{driver.status === 'active' ? 'success' : 'danger'}">
+                                        <span
+                                            class="badge bg-{driver.status ===
+                                            'active'
+                                                ? 'success'
+                                                : 'danger'}-subtle text-{driver.status ===
+                                            'active'
+                                                ? 'success'
+                                                : 'danger'}"
+                                        >
                                             {driver.status}
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex align-items-center justify-content-center gap-2">
-                                            <Link href={`/admin/drivers/${driver.id}/edit`} class="btn btn-sm btn-icon btn-primary" aria-label="Edit driver">
+                                        <div
+                                            class="d-flex align-items-center justify-content-center gap-2"
+                                        >
+                                            <Link
+                                                href={`/admin/drivers/${driver.id}/edit`}
+                                                class="btn btn-sm btn-icon btn-primary"
+                                                aria-label="Edit driver"
+                                            >
                                                 <i class="ti ti-edit"></i>
                                             </Link>
-                                            <button onclick={() => deleteDriver(driver.id)} class="btn btn-sm btn-icon btn-danger" aria-label="Delete driver">
+                                            <button
+                                                onclick={() =>
+                                                    deleteDriver(driver.id)}
+                                                class="btn btn-sm btn-icon btn-danger"
+                                                aria-label="Delete driver"
+                                            >
                                                 <i class="ti ti-trash"></i>
                                             </button>
                                         </div>

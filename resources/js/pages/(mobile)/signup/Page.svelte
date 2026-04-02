@@ -105,11 +105,7 @@
                 <InputError message={errors.password_confirmation} />
             </div>
 
-            <Button
-                type="submit"
-                class="mt-2 w-full"
-                disabled={processing}
-            >
+            <Button type="submit" class="mt-2 w-full" disabled={processing}>
                 {#if processing}<Spinner />{/if}
                 Create account
             </Button>

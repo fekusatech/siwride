@@ -1,25 +1,47 @@
 <footer class="main-footer">
-    <div class="main-footer__shape-one" style="background-image: url(assets/images/shapes/footer-shape-1.png);"></div>
+    <div
+        class="main-footer__shape-one"
+        style="background-image: url(assets/images/shapes/footer-shape-1.png);"
+    ></div>
     <div class="container">
-    <div class="main-footer__top wow fadeInUp" data-wow-delay="100ms">
-        <div class="main-footer__top__dot"></div>
-        <h3 class="main-footer__top__title">Get Updated The Latest<br> Newsletter <img src="assets/images/shapes/sec-title-shape.png" alt="Travhub"></h3>
-        <form onsubmit={(e) => e.preventDefault()} data-url="MAILCHIMP_FORM_URL" class="main-footer__newsletter mc-form">
-            <input type="text" name="EMAIL" placeholder="Enter email address">
-            <button type="submit" class="travhub-btn">
-                <span>Send Message</span>
-            </button>
-        </form>
-        <div class="mc-form__response"></div>
-    </div>
+        <div class="main-footer__top wow fadeInUp" data-wow-delay="100ms">
+            <div class="main-footer__top__dot"></div>
+            <h3 class="main-footer__top__title">
+                Get Updated The Latest<br /> Newsletter
+                <img
+                    src="assets/images/shapes/sec-title-shape.png"
+                    alt="Travhub"
+                />
+            </h3>
+            <form
+                onsubmit={(e) => e.preventDefault()}
+                data-url="MAILCHIMP_FORM_URL"
+                class="main-footer__newsletter mc-form"
+            >
+                <input
+                    type="text"
+                    name="EMAIL"
+                    placeholder="Enter email address"
+                />
+                <button type="submit" class="travhub-btn">
+                    <span>Send Message</span>
+                </button>
+            </form>
+            <div class="mc-form__response"></div>
+        </div>
         <div class="row">
             <div class="col-md-6 col-xl-4 wow fadeInUp" data-wow-delay="00ms">
                 <div class="footer-widget footer-widget--about">
                     <a href="/" class="footer-widget__logo">
-                        <img src="assets/images/logo-1.png" width="185" alt="Travhub">
+                        <img
+                            src="assets/images/logo-1.png"
+                            width="185"
+                            alt="Travhub"
+                        />
                     </a>
                     <p class="footer-widget__text">
-                        Content of a page when looking at layout the<br> point of using lorem the is Ipsum less when<br> looking normal
+                        Content of a page when looking at layout the<br /> point
+                        of using lorem the is Ipsum less when<br /> looking normal
                     </p>
                     <div class="main-footer__social">
                         <a href="https://facebook.com">
@@ -31,7 +53,8 @@
                             <span class="sr-only">Twitter</span>
                         </a>
                         <a href="https://linkedin.com">
-                            <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+                            <i class="fab fa-linkedin-in" aria-hidden="true"
+                            ></i>
                             <span class="sr-only">Linkedin</span>
                         </a>
                         <a href="https://instagram.com">
@@ -68,30 +91,67 @@
                 <div class="footer-widget footer-widget--gallery">
                     <h2 class="footer-widget__title">Our Gallery</h2>
                     <div class="footer-widget__gallery">
-                        <a href="assets/images/resources/gallery-1.jpg" class="img-popup" aria-label="View gallery image">
-                            <img src="assets/images/resources/gallery-1.jpg" alt="travhub">
+                        <a
+                            href="assets/images/resources/gallery-1.jpg"
+                            class="img-popup"
+                            aria-label="View gallery image"
+                        >
+                            <img
+                                src="assets/images/resources/gallery-1.jpg"
+                                alt="travhub"
+                            />
                         </a>
-                        <a href="assets/images/resources/gallery-2.jpg" class="img-popup">
-                            <img src="assets/images/resources/gallery-2.jpg" alt="travhub">
+                        <a
+                            href="assets/images/resources/gallery-2.jpg"
+                            class="img-popup"
+                        >
+                            <img
+                                src="assets/images/resources/gallery-2.jpg"
+                                alt="travhub"
+                            />
                         </a>
-                        <a href="assets/images/resources/gallery-3.jpg" class="img-popup">
-                            <img src="assets/images/resources/gallery-3.jpg" alt="travhub">
+                        <a
+                            href="assets/images/resources/gallery-3.jpg"
+                            class="img-popup"
+                        >
+                            <img
+                                src="assets/images/resources/gallery-3.jpg"
+                                alt="travhub"
+                            />
                         </a>
-                        <a href="assets/images/resources/gallery-4.jpg" class="img-popup">
-                            <img src="assets/images/resources/gallery-4.jpg" alt="travhub">
+                        <a
+                            href="assets/images/resources/gallery-4.jpg"
+                            class="img-popup"
+                        >
+                            <img
+                                src="assets/images/resources/gallery-4.jpg"
+                                alt="travhub"
+                            />
                         </a>
-                        <a href="assets/images/resources/gallery-5.jpg" class="img-popup">
-                            <img src="assets/images/resources/gallery-5.jpg" alt="travhub">
+                        <a
+                            href="assets/images/resources/gallery-5.jpg"
+                            class="img-popup"
+                        >
+                            <img
+                                src="assets/images/resources/gallery-5.jpg"
+                                alt="travhub"
+                            />
                         </a>
-                        <a href="assets/images/resources/gallery-6.jpg" class="img-popup">
-                            <img src="assets/images/resources/gallery-6.jpg" alt="travhub">
+                        <a
+                            href="assets/images/resources/gallery-6.jpg"
+                            class="img-popup"
+                        >
+                            <img
+                                src="assets/images/resources/gallery-6.jpg"
+                                alt="travhub"
+                            />
                         </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="main-footer__bottom  wow fadeInUp" data-wow-delay="00ms">
+    <div class="main-footer__bottom wow fadeInUp" data-wow-delay="00ms">
         <div class="container">
             <div class="main-footer__bottom__inner">
                 <p class="main-footer__copyright">
@@ -105,9 +165,17 @@
 <div class="mobile-nav__wrapper">
     <div class="mobile-nav__overlay mobile-nav__toggler"></div>
     <div class="mobile-nav__content">
-        <span class="mobile-nav__close mobile-nav__toggler"><i class="fa fa-times"></i></span>
+        <span class="mobile-nav__close mobile-nav__toggler"
+            ><i class="fa fa-times"></i></span
+        >
         <div class="logo-box">
-            <a href="/" aria-label="logo image"><img src="assets/images/logo-1.png" width="155" alt="Travhub" /></a>
+            <a href="/" aria-label="logo image"
+                ><img
+                    src="assets/images/logo-1.png"
+                    width="155"
+                    alt="Travhub"
+                /></a
+            >
         </div>
         <div class="mobile-nav__container"></div>
 
@@ -155,7 +223,12 @@
 </div>
 
 <a href="#top" class="scroll-to-top" aria-label="Scroll to top">
-    <svg class="scroll-to-top__circle" width="100%" height="100%" viewBox="-1 -1 102 102">
+    <svg
+        class="scroll-to-top__circle"
+        width="100%"
+        height="100%"
+        viewBox="-1 -1 102 102"
+    >
         <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" />
     </svg>
 </a>

@@ -7,7 +7,11 @@
         <div class="main-header__inner">
             <div class="main-header__logo">
                 <a href="/">
-                    <img src="assets/images/logo-1.png" alt="Travhub" width="152">
+                    <img
+                        src="assets/images/logo-1.png"
+                        alt="Travhub"
+                        width="152"
+                    />
                 </a>
             </div>
             <nav class="main-header__nav main-menu">
@@ -24,7 +28,12 @@
                         <a href="about.html">About</a>
                     </li>
                     <li class="dropdown">
-                        <a href="#/" role="button" aria-haspopup="true" onclick={(e) => e.preventDefault()}>Pages</a>
+                        <a
+                            href="#/"
+                            role="button"
+                            aria-haspopup="true"
+                            onclick={(e) => e.preventDefault()}>Pages</a
+                        >
                         <ul>
                             <li><a href="team.html">Our Team</a></li>
                             <li><a href="pricing.html">Pricing Table</a></li>
@@ -35,48 +44,129 @@
                         </ul>
                     </li>
                     <li class="dropdown">
-                        <a href="#/" role="button" aria-haspopup="true" onclick={(e) => e.preventDefault()}>Tours</a>
+                        <a
+                            href="#/"
+                            role="button"
+                            aria-haspopup="true"
+                            onclick={(e) => e.preventDefault()}>Tours</a
+                        >
                         <ul>
                             <li><a href="tour.html">Tour Page</a></li>
-                            <li><a href="tour-sidebar.html">Tour Sidebar</a></li>
-                            <li><a href="tour-carousel.html">Tour Carousel</a></li>
-                            <li><a href="tour-details.html">Tour Details</a></li>
+                            <li>
+                                <a href="tour-sidebar.html">Tour Sidebar</a>
+                            </li>
+                            <li>
+                                <a href="tour-carousel.html">Tour Carousel</a>
+                            </li>
+                            <li>
+                                <a href="tour-details.html">Tour Details</a>
+                            </li>
                         </ul>
                     </li>
                     <li class="dropdown">
-                        <a href="#/" role="button" aria-haspopup="true" onclick={(e) => e.preventDefault()}>Destination</a>
+                        <a
+                            href="#/"
+                            role="button"
+                            aria-haspopup="true"
+                            onclick={(e) => e.preventDefault()}>Destination</a
+                        >
                         <ul class="sub-menu">
                             <li><a href="destination.html">Destination</a></li>
-                            <li><a href="destination-carousel.html">Destination Carousel</a></li>
-                            <li><a href="destination-details.html">Destination Details</a></li>
+                            <li>
+                                <a href="destination-carousel.html"
+                                    >Destination Carousel</a
+                                >
+                            </li>
+                            <li>
+                                <a href="destination-details.html"
+                                    >Destination Details</a
+                                >
+                            </li>
                         </ul>
                     </li>
                     <li class="dropdown">
-                        <a href="#/" role="button" aria-haspopup="true" onclick={(e) => e.preventDefault()}>News</a>
+                        <a
+                            href="#/"
+                            role="button"
+                            aria-haspopup="true"
+                            onclick={(e) => e.preventDefault()}>News</a
+                        >
                         <ul class="sub-menu">
                             <li class="dropdown">
-                                <a href="#/" role="button" aria-haspopup="true" onclick={(e) => e.preventDefault()}>News grid</a>
+                                <a
+                                    href="#/"
+                                    role="button"
+                                    aria-haspopup="true"
+                                    onclick={(e) => e.preventDefault()}
+                                    >News grid</a
+                                >
                                 <ul class="sub-menu">
-                                    <li><a href="blog-grid.html">No sidebar</a></li>
-                                    <li><a href="blog-grid-left.html">Left sidebar</a></li>
-                                    <li><a href="blog-grid-right.html">Right sidebar</a></li>
+                                    <li>
+                                        <a href="blog-grid.html">No sidebar</a>
+                                    </li>
+                                    <li>
+                                        <a href="blog-grid-left.html"
+                                            >Left sidebar</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a href="blog-grid-right.html"
+                                            >Right sidebar</a
+                                        >
+                                    </li>
                                 </ul>
                             </li>
                             <li class="dropdown">
-                                <a href="#/" role="button" aria-haspopup="true" onclick={(e) => e.preventDefault()}>News list</a>
+                                <a
+                                    href="#/"
+                                    role="button"
+                                    aria-haspopup="true"
+                                    onclick={(e) => e.preventDefault()}
+                                    >News list</a
+                                >
                                 <ul class="sub-menu">
-                                    <li><a href="blog-list.html">No sidebar</a></li>
-                                    <li><a href="blog-list-left.html">Left sidebar</a></li>
-                                    <li><a href="blog-list-right.html">Right sidebar</a></li>
+                                    <li>
+                                        <a href="blog-list.html">No sidebar</a>
+                                    </li>
+                                    <li>
+                                        <a href="blog-list-left.html"
+                                            >Left sidebar</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a href="blog-list-right.html"
+                                            >Right sidebar</a
+                                        >
+                                    </li>
                                 </ul>
                             </li>
-                            <li><a href="blog-carousel.html">News carousel</a></li>
+                            <li>
+                                <a href="blog-carousel.html">News carousel</a>
+                            </li>
                             <li class="dropdown">
-                                <a href="#/" role="button" aria-haspopup="true" onclick={(e) => e.preventDefault()}>News details</a>
+                                <a
+                                    href="#/"
+                                    role="button"
+                                    aria-haspopup="true"
+                                    onclick={(e) => e.preventDefault()}
+                                    >News details</a
+                                >
                                 <ul class="sub-menu">
-                                    <li><a href="blog-details.html">No sidebar</a></li>
-                                    <li><a href="blog-details-left.html">Left sidebar</a></li>
-                                    <li><a href="blog-details-right.html">Right sidebar</a></li>
+                                    <li>
+                                        <a href="blog-details.html"
+                                            >No sidebar</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a href="blog-details-left.html"
+                                            >Left sidebar</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a href="blog-details-right.html"
+                                            >Right sidebar</a
+                                        >
+                                    </li>
                                 </ul>
                             </li>
                         </ul>

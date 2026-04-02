@@ -3,12 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Imports\OrdersImport;
 use App\Models\Driver;
 use App\Models\Order;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OrderController extends Controller
 {
@@ -182,20 +190,158 @@ class OrderController extends Controller
      */
     public function share(Request $request, Order $order, WhatsAppService $waService)
     {
-        \Illuminate\Support\Facades\Log::info("OrderController: Attempting SHARE for order ID: {$order->id}");
+        Log::info("OrderController: Attempting SHARE for order ID: {$order->id}");
 
         $validated = $request->validate([
-            'message' => ['required', 'string']
+            'message' => ['required', 'string'],
         ]);
 
         $response = $waService->sendGroupMessage($validated['message']);
 
         if ($response && $response->successful()) {
-            \Illuminate\Support\Facades\Log::info("OrderController: SHARE successful for order ID: {$order->id}");
+            Log::info("OrderController: SHARE successful for order ID: {$order->id}");
+
             return redirect()->back()->with('success', 'Order berhasil dibagikan ke Grup WhatsApp!');
         }
 
-        \Illuminate\Support\Facades\Log::warning("OrderController: SHARE FAILED for order ID: {$order->id}");
+        Log::warning("OrderController: SHARE FAILED for order ID: {$order->id}");
+
         return redirect()->back()->with('error', 'Gagal mengirim pesan ke WhatsApp. Coba lagi nanti.');
+    }
+
+    /**
+     * Show import orders page
+     */
+    public function importPage(): Response
+    {
+        return Inertia::render('Admin/Orders/Import');
+    }
+
+    /**
+     * Handle Excel file upload and import
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'], // 10MB max
+        ]);
+
+        try {
+            Excel::import(new OrdersImport, $request->file('file'));
+
+            return redirect()->route('admin.orders.index')
+                ->with('success', 'Orders imported successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to import orders: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Download Excel template for import
+     */
+    public function downloadTemplate(): BinaryFileResponse
+    {
+        $fileName = 'orders-template.xlsx';
+        $filePath = storage_path('app/templates/'.$fileName);
+
+        // Create template if it doesn't exist
+        if (! file_exists($filePath)) {
+            $this->createTemplate($filePath);
+        }
+
+        return response()->download($filePath, $fileName);
+    }
+
+    /**
+     * Create Excel template for orders import
+     */
+    private function createTemplate(string $filePath): void
+    {
+        $directory = dirname($filePath);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set headers
+        $headers = [
+            'Date',
+            'Time',
+            'Customer Name',
+            'Customer Phone',
+            'Flight Number',
+            'Driver Code',
+            'Vehicle Plate',
+            'Pickup Address',
+            'Dropoff Address',
+            'Passengers',
+            'Price',
+            'Parking Gas Fee',
+            'Status',
+            'Booking Code',
+            'Order Number',
+        ];
+
+        foreach ($headers as $index => $header) {
+            $sheet->setCellValueByColumnAndRow($index + 1, 1, $header);
+        }
+
+        // Style header row
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '366092']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ];
+
+        for ($i = 1; $i <= count($headers); $i++) {
+            $sheet->getStyleByColumnAndRow($i, 1)->applyFromArray($headerStyle);
+        }
+
+        // Add sample data row
+        $sampleData = [
+            '2026-03-30',
+            '08:00',
+            'John Doe',
+            '081234567890',
+            'GA123',
+            'siw01',
+            'DK 1234 AB',
+            'Airport Terminal 1',
+            'Hotel Grand Bali',
+            '2',
+            '150000',
+            '20000',
+            'pending',
+            '',
+            '',
+        ];
+
+        foreach ($sampleData as $index => $value) {
+            $sheet->setCellValueByColumnAndRow($index + 1, 2, $value);
+        }
+
+        // Set column widths
+        $sheet->getColumnDimension('A')->setWidth(12);
+        $sheet->getColumnDimension('B')->setWidth(10);
+        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('D')->setWidth(18);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(15);
+        $sheet->getColumnDimension('G')->setWidth(15);
+        $sheet->getColumnDimension('H')->setWidth(25);
+        $sheet->getColumnDimension('I')->setWidth(25);
+        $sheet->getColumnDimension('J')->setWidth(12);
+        $sheet->getColumnDimension('K')->setWidth(12);
+        $sheet->getColumnDimension('L')->setWidth(18);
+        $sheet->getColumnDimension('M')->setWidth(12);
+        $sheet->getColumnDimension('N')->setWidth(18);
+        $sheet->getColumnDimension('O')->setWidth(15);
+
+        // Save template
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($filePath);
     }
 }

@@ -11,8 +11,10 @@
                     <a href="mailto:exam126@gmail.com">exam126@gmail.com</a>
                 </li>
                 <li class="topbar-one__info__item topbar-one__info__item--last">
-                    <i class="flaticon-three-o-clock-clock topbar-one__info__icon"></i>
-                    Opening Hour  9:00am - 10:00pm
+                    <i
+                        class="flaticon-three-o-clock-clock topbar-one__info__icon"
+                    ></i>
+                    Opening Hour 9:00am - 10:00pm
                 </li>
             </ul>
         </div>

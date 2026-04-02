@@ -15,18 +15,25 @@
     let selectedOrder = $state<any>(null);
 
     // Format orders for FullCalendar
-    let events = $derived(orders.map(order => {
-        const datePart = order.date.split('T')[0];
-        const timePart = order.time || '00:00:00';
-        
-        return {
-            id: order.id,
-            title: `${order.customer_name} (${order.booking_code})`,
-            start: `${datePart}T${timePart}`,
-            color: order.status === 'completed' ? '#10b981' : (order.status === 'cancelled' ? '#ef4444' : '#f59e0b'),
-            extendedProps: { ...order }
-        };
-    }));
+    let events = $derived(
+        orders.map((order) => {
+            const datePart = order.date.split('T')[0];
+            const timePart = order.time || '00:00:00';
+
+            return {
+                id: order.id,
+                title: `${order.customer_name} (${order.booking_code})`,
+                start: `${datePart}T${timePart}`,
+                color:
+                    order.status === 'completed'
+                        ? '#10b981'
+                        : order.status === 'cancelled'
+                          ? '#ef4444'
+                          : '#f59e0b',
+                extendedProps: { ...order },
+            };
+        }),
+    );
 
     function initCalendar() {
         if (!calendarEl || typeof FullCalendar === 'undefined') return;
@@ -36,7 +43,7 @@
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                right: 'dayGridMonth,timeGridWeek,timeGridDay',
             },
             events: events,
             selectable: true,
@@ -50,7 +57,7 @@
                 selectedOrder = info.event.extendedProps;
                 modalMode = 'view';
                 showModal = true;
-            }
+            },
         });
         calendar.render();
     }
@@ -59,7 +66,8 @@
         // Load FullCalendar script if not present
         if (typeof FullCalendar === 'undefined') {
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js';
+            script.src =
+                'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js';
             script.onload = () => initCalendar();
             document.head.appendChild(script);
         } else {
@@ -86,7 +94,7 @@
                 onSuccess: () => {
                     showModal = false;
                     selectedOrder = null;
-                }
+                },
             });
         }
     }
@@ -95,7 +103,7 @@
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
-            minimumFractionDigits: 0
+            minimumFractionDigits: 0,
         }).format(amount);
     }
 </script>
@@ -107,9 +115,14 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h4 class="mb-0">Orders Calendar</h4>
-                <p class="text-muted mb-0">Manage bookings visually on the calendar</p>
+                <p class="text-muted mb-0">
+                    Manage bookings visually on the calendar
+                </p>
             </div>
-            <Link href="/admin/orders" class="btn btn-primary d-flex align-items-center gap-1">
+            <Link
+                href="/admin/orders"
+                class="btn btn-primary d-flex align-items-center gap-1"
+            >
                 <i class="ti ti-list fs-18"></i>
                 Table View
             </Link>
@@ -124,14 +137,24 @@
 
     <!-- Multi-purpose Modal (Create/View/Edit) -->
     {#if showModal}
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1055;">
+        <div
+            class="modal fade show d-block"
+            tabindex="-1"
+            style="background: rgba(0,0,0,0.5); z-index: 1055;"
+        >
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content shadow-lg border-0 rounded-3">
                     <div class="modal-header bg-primary text-white py-3">
                         <h5 class="modal-title d-flex align-items-center gap-2">
                             {#if modalMode === 'create'}
                                 <i class="ti ti-calendar-plus fs-22"></i>
-                                New Booking for {new Date(selectedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                New Booking for {new Date(
+                                    selectedDate,
+                                ).toLocaleDateString('id-ID', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                })}
                             {:else if modalMode === 'view'}
                                 <i class="ti ti-info-circle fs-22"></i>
                                 Booking Details - {selectedOrder.booking_code}
@@ -140,119 +163,248 @@
                                 Edit Booking - {selectedOrder.booking_code}
                             {/if}
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" onclick={() => showModal = false} aria-label="Close"></button>
+                        <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            onclick={() => (showModal = false)}
+                            aria-label="Close"
+                        ></button>
                     </div>
-                    <div class="modal-body p-4" style="max-height: 80vh; overflow-y: auto;">
+                    <div
+                        class="modal-body p-4"
+                        style="max-height: 80vh; overflow-y: auto;"
+                    >
                         {#if modalMode === 'view'}
                             <div class="row g-4">
                                 <div class="col-md-6">
-                                    <div class="text-muted small text-uppercase fw-bold mb-1 d-block">Customer</div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <div
+                                        class="text-muted small text-uppercase fw-bold mb-1 d-block"
+                                    >
+                                        Customer
+                                    </div>
+                                    <div
+                                        class="d-flex align-items-center gap-2"
+                                    >
+                                        <div
+                                            class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width: 40px; height: 40px;"
+                                        >
                                             <i class="ti ti-user fs-20"></i>
                                         </div>
                                         <div>
-                                            <h5 class="mb-0">{selectedOrder.customer_name}</h5>
-                                            <p class="mb-0 text-muted">{selectedOrder.customer_phone}</p>
+                                            <h5 class="mb-0">
+                                                {selectedOrder.customer_name}
+                                            </h5>
+                                            <p class="mb-0 text-muted">
+                                                {selectedOrder.customer_phone}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6 text-md-end">
-                                    <div class="text-muted small text-uppercase fw-bold mb-1 d-block">Status</div>
-                                    <span class="badge fs-14 bg-{selectedOrder.status === 'completed' ? 'success' : (selectedOrder.status === 'cancelled' ? 'danger' : 'warning')}-subtle text-{selectedOrder.status === 'completed' ? 'success' : (selectedOrder.status === 'cancelled' ? 'danger' : 'warning')}">
+                                    <div
+                                        class="text-muted small text-uppercase fw-bold mb-1 d-block"
+                                    >
+                                        Status
+                                    </div>
+                                    <span
+                                        class="badge fs-14 bg-{selectedOrder.status ===
+                                        'completed'
+                                            ? 'success'
+                                            : selectedOrder.status ===
+                                                'cancelled'
+                                              ? 'danger'
+                                              : 'warning'}-subtle text-{selectedOrder.status ===
+                                        'completed'
+                                            ? 'success'
+                                            : selectedOrder.status ===
+                                                'cancelled'
+                                              ? 'danger'
+                                              : 'warning'}"
+                                    >
                                         {selectedOrder.status.toUpperCase()}
                                     </span>
                                 </div>
 
-                                <div class="col-12"><hr class="my-0"></div>
+                                <div class="col-12"><hr class="my-0" /></div>
 
                                 <div class="col-md-6">
-                                    <div class="text-muted small text-uppercase fw-bold mb-2 d-block">Route Details</div>
+                                    <div
+                                        class="text-muted small text-uppercase fw-bold mb-2 d-block"
+                                    >
+                                        Route Details
+                                    </div>
                                     <div class="p-3 bg-light rounded-3">
                                         <div class="d-flex gap-3 mb-3">
-                                            <i class="ti ti-map-pin text-primary fs-20 mt-1"></i>
+                                            <i
+                                                class="ti ti-map-pin text-primary fs-20 mt-1"
+                                            ></i>
                                             <div>
-                                                <small class="text-muted d-block">Pickup</small>
-                                                <span class="fw-medium">{selectedOrder.pickup_address}</span>
+                                                <small
+                                                    class="text-muted d-block"
+                                                    >Pickup</small
+                                                >
+                                                <span class="fw-medium"
+                                                    >{selectedOrder.pickup_address}</span
+                                                >
                                             </div>
                                         </div>
                                         <div class="d-flex gap-3">
-                                            <i class="ti ti-building text-info fs-20 mt-1"></i>
+                                            <i
+                                                class="ti ti-building text-info fs-20 mt-1"
+                                            ></i>
                                             <div>
-                                                <small class="text-muted d-block">Dropoff</small>
-                                                <span class="fw-medium">{selectedOrder.dropoff_address}</span>
+                                                <small
+                                                    class="text-muted d-block"
+                                                    >Dropoff</small
+                                                >
+                                                <span class="fw-medium"
+                                                    >{selectedOrder.dropoff_address}</span
+                                                >
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <div class="text-muted small text-uppercase fw-bold mb-2 d-block">Assignment</div>
+                                    <div
+                                        class="text-muted small text-uppercase fw-bold mb-2 d-block"
+                                    >
+                                        Assignment
+                                    </div>
                                     <div class="p-3 border rounded-3 h-100">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <i class="ti ti-user-check text-muted fs-18"></i>
-                                            <span class="text-muted">Driver:</span>
-                                            <span class="fw-bold">{selectedOrder.driver?.name || 'Unassigned'}</span>
+                                        <div
+                                            class="d-flex align-items-center gap-2 mb-2"
+                                        >
+                                            <i
+                                                class="ti ti-user-check text-muted fs-18"
+                                            ></i>
+                                            <span class="text-muted"
+                                                >Driver:</span
+                                            >
+                                            <span class="fw-bold"
+                                                >{selectedOrder.driver?.name ||
+                                                    'Unassigned'}</span
+                                            >
                                         </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="ti ti-car text-muted fs-18"></i>
-                                            <span class="text-muted">Vehicle:</span>
+                                        <div
+                                            class="d-flex align-items-center gap-2"
+                                        >
+                                            <i
+                                                class="ti ti-car text-muted fs-18"
+                                            ></i>
+                                            <span class="text-muted"
+                                                >Vehicle:</span
+                                            >
                                             <span class="fw-medium">
-                                                {selectedOrder.vehicle ? `${selectedOrder.vehicle.registration_number} (${selectedOrder.vehicle.brand})` : 'None'}
+                                                {selectedOrder.vehicle
+                                                    ? `${selectedOrder.vehicle.registration_number} (${selectedOrder.vehicle.brand})`
+                                                    : 'None'}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-12">
-                                    <div class="row bg-primary-subtle p-3 rounded-3 mx-0">
+                                    <div
+                                        class="row bg-primary-subtle p-3 rounded-3 mx-0"
+                                    >
                                         <div class="col-md-4 text-center">
-                                            <small class="text-muted d-block">Passengers</small>
-                                            <span class="fw-bold fs-16">{selectedOrder.passengers} PAX</span>
+                                            <small class="text-muted d-block"
+                                                >Passengers</small
+                                            >
+                                            <span class="fw-bold fs-16"
+                                                >{selectedOrder.passengers} PAX</span
+                                            >
                                         </div>
-                                        <div class="col-md-4 text-center border-start border-primary-subtle">
-                                            <small class="text-muted d-block">Price</small>
-                                            <span class="fw-bold fs-16 text-primary">{formatCurrency(selectedOrder.price)}</span>
+                                        <div
+                                            class="col-md-4 text-center border-start border-primary-subtle"
+                                        >
+                                            <small class="text-muted d-block"
+                                                >Price</small
+                                            >
+                                            <span
+                                                class="fw-bold fs-16 text-primary"
+                                                >{formatCurrency(
+                                                    selectedOrder.price,
+                                                )}</span
+                                            >
                                         </div>
-                                        <div class="col-md-4 text-center border-start border-primary-subtle">
-                                            <small class="text-muted d-block">P/B Fee</small>
-                                            <span class="fw-bold fs-16 text-primary">{formatCurrency(selectedOrder.parking_gas_fee)}</span>
+                                        <div
+                                            class="col-md-4 text-center border-start border-primary-subtle"
+                                        >
+                                            <small class="text-muted d-block"
+                                                >P/B Fee</small
+                                            >
+                                            <span
+                                                class="fw-bold fs-16 text-primary"
+                                                >{formatCurrency(
+                                                    selectedOrder.parking_gas_fee,
+                                                )}</span
+                                            >
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="mt-4 d-flex justify-content-between align-items-center">
-                                <button type="button" class="btn btn-link text-danger p-0" onclick={handleDelete}>
+                            <div
+                                class="mt-4 d-flex justify-content-between align-items-center"
+                            >
+                                <button
+                                    type="button"
+                                    class="btn btn-link text-danger p-0"
+                                    onclick={handleDelete}
+                                >
                                     <i class="ti ti-trash"></i> Delete Booking
                                 </button>
                                 <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-light px-4" onclick={() => showModal = false}>Close</button>
-                                    <button type="button" class="btn btn-primary px-4 d-flex align-items-center gap-1" onclick={() => modalMode = 'edit'}>
+                                    <button
+                                        type="button"
+                                        class="btn btn-light px-4"
+                                        onclick={() => (showModal = false)}
+                                        >Close</button
+                                    >
+                                    <button
+                                        type="button"
+                                        class="btn btn-primary px-4 d-flex align-items-center gap-1"
+                                        onclick={() => (modalMode = 'edit')}
+                                    >
                                         <i class="ti ti-edit"></i> Edit Booking
                                     </button>
                                 </div>
                             </div>
                         {:else}
-                            <OrderForm 
-                                {drivers} 
-                                {google_maps_api_key} 
+                            <OrderForm
+                                {drivers}
+                                {google_maps_api_key}
                                 initialDate={selectedDate}
                                 order={selectedOrder}
                                 onSuccess={handleOrderSuccess}
                             >
                                 {#snippet footer({ processing })}
-                                    <button type="button" class="btn btn-light px-4" onclick={() => {
-                                        if (modalMode === 'edit') {
-                                            modalMode = 'view';
-                                        } else {
-                                            showModal = false;
-                                        }
-                                    }}>
+                                    <button
+                                        type="button"
+                                        class="btn btn-light px-4"
+                                        onclick={() => {
+                                            if (modalMode === 'edit') {
+                                                modalMode = 'view';
+                                            } else {
+                                                showModal = false;
+                                            }
+                                        }}
+                                    >
                                         Cancel
                                     </button>
-                                    <button type="submit" class="btn btn-primary px-4" disabled={processing}>
-                                        {processing ? 'Saving...' : (modalMode === 'edit' ? 'Update Booking' : 'Confirm Booking')}
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary px-4"
+                                        disabled={processing}
+                                    >
+                                        {processing
+                                            ? 'Saving...'
+                                            : modalMode === 'edit'
+                                              ? 'Update Booking'
+                                              : 'Confirm Booking'}
                                     </button>
                                 {/snippet}
                             </OrderForm>

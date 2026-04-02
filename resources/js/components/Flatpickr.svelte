@@ -3,12 +3,12 @@
     import flatpickr from 'flatpickr';
     import 'flatpickr/dist/flatpickr.css';
 
-    let { 
-        value = $bindable(''), 
-        options = {}, 
-        placeholder = '', 
+    let {
+        value = $bindable(''),
+        options = {},
+        placeholder = '',
         class: className = '',
-        id = '' 
+        id = '',
     } = $props();
 
     let inputElement: HTMLInputElement;
@@ -20,7 +20,7 @@
             defaultDate: value,
             onChange: (selectedDates, dateStr) => {
                 value = dateStr;
-            }
+            },
         });
     });
 
@@ -36,7 +36,7 @@
     });
 </script>
 
-<input 
+<input
     bind:this={inputElement}
     {id}
     class="form-control {className}"
@@ -48,7 +48,9 @@
     /* Customization to make it look more premium */
     :global(.flatpickr-calendar) {
         border: 0 !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
         border-radius: 8px !important;
     }
     :global(.flatpickr-day.selected) {

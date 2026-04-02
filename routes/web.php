@@ -16,13 +16,13 @@ Route::get('/login-admin', function () {
     return Inertia::render('Admin/Login');
 })->name('admin.login');
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\PublicClaimController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ProfileController;
 
 Route::get('/c/{booking_code}', [PublicClaimController::class, 'show'])->name('orders.claim.show');
 Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name('orders.claim.store');
@@ -35,6 +35,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('admin/profile/password', [ProfileController::class, 'updatePassword'])->name('admin.profile.password');
 
     Route::get('admin/orders/calendar', [OrderController::class, 'calendar'])->name('admin.orders.calendar');
+    Route::get('admin/orders/import', [OrderController::class, 'importPage'])->name('admin.orders.import');
+    Route::post('admin/orders/import', [OrderController::class, 'import'])->name('admin.orders.import.store');
+    Route::get('admin/orders/import/template', [OrderController::class, 'downloadTemplate'])->name('admin.orders.import.template');
     Route::post('admin/orders/{order}/share', [OrderController::class, 'share'])->name('admin.orders.share');
     Route::patch('admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
     Route::resource('admin/orders', OrderController::class)->names('admin.orders');
