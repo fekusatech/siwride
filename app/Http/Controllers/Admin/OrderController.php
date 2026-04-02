@@ -257,9 +257,58 @@ class OrderController extends Controller
      */
     public function rejectClaim(Order $order)
     {
-        if (! $order->claimed_driver_id) {
+        if (!$order->claimed_driver_id) {
             return redirect()->back()->with('error', 'Tidak ada claim yang perlu ditolak.');
         }
+
+        $order->update([
+            'claimed_driver_id' => null,
+        ]);
+
+        return redirect()->back()->with('success', 'Claim driver ditolak.');
+    }
+
+    /**
+     * Re-send order details via WhatsApp to the assigned driver.
+     */
+    public function resendWaToDriver(Order $order, WhatsAppService $waService)
+    {
+        if (!$order->driver_id) {
+            return redirect()->back()->with('error', 'Order belum memiliki driver.');
+        }
+
+        $driver = Driver::find($order->driver_id);
+        if (!$driver) {
+            return redirect()->back()->with('error', 'Driver tidak ditemukan.');
+        }
+
+        $d = new \DateTime($order->date);
+        $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $dateStr = $d->format('j').' '.$months[(int) $d->format('n') - 1].' '.$d->format('Y');
+        $timeStr = $order->time ? substr($order->time, 0, 5) : '';
+
+        $privateMessage = "*ORDER DIKONFIRMASI ADMIN*\n\n".
+            "Booking Code: {$order->booking_code}\n".
+            "Order Number: {$order->order_number}\n\n".
+            "*Customer:*\n".
+            "Nama: {$order->customer_name}\n".
+            "Telepon: {$order->customer_phone}\n\n".
+            "*Pickup:* {$order->pickup_address}\n".
+            "*Dropoff:* {$order->dropoff_address}\n".
+            "*Tanggal:* {$dateStr}\n".
+            "*Jam:* {$timeStr} WITA\n".
+            "*Penumpang:* {$order->passengers} Pax\n".
+            '*Harga:* Rp '.number_format($order->price, 0, ',', '.')."\n\n".
+            'Silakan hubungi customer untuk konfirmasi penjemputan!';
+
+        $response = $waService->sendPrivateMessage($driver->phone, $privateMessage);
+
+        if ($response && $response->successful()) {
+            return redirect()->back()->with('success', 'Detail order berhasil dikirim ulang ke driver.');
+        }
+
+        return redirect()->back()->with('error', 'Gagal mengirim pesan ke driver.');
+    }
 
         $order->update([
             'claimed_driver_id' => null,

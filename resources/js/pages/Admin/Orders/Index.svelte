@@ -35,6 +35,7 @@
 
     let updatingOrderId = $state<number | null>(null);
     let sharingOrderId = $state<number | null>(null);
+    let resendingOrderId = $state<number | null>(null);
     let processingClaimId = $state<number | null>(null);
     let processingClaimAction = $state<'accept' | 'reject' | null>(null);
     let toast = $state<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -102,6 +103,18 @@
         );
     }
 
+    function resendWaToDriver(orderId: number) {
+        resendingOrderId = orderId;
+        router.post(
+            `/admin/orders/${orderId}/resend-wa`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => (resendingOrderId = null),
+            },
+        );
+    }
+
     function updateStatus(orderId: number, status: string) {
         updatingOrderId = orderId;
         router.patch(
@@ -141,20 +154,38 @@
             order.price,
         );
 
-        const claimUrl = `${window.location.origin}/c/${order.booking_code}`;
+        let message: string;
 
-        const message =
-            `*#${order.order_number} - CHECK IN*\n\n` +
-            `*Kode Booking:* ${order.booking_code}\n` +
-            `*Tanggal:* ${dateStr}\n` +
-            `*Jam:* ${timeStr} WITA\n\n` +
-            `*📍 Pick Up:*\n${order.pickup_address}\n\n` +
-            `*🏁 Drop Off:*\n${order.dropoff_address}\n\n` +
-            `*Detail:*\n` +
-            `- Penumpang: ${order.passengers} Pax\n` +
-            `- Flight Number: ${order.flight_number || '-'}\n` +
-            `- Price: *${priceFormatted}*\n\n` +
-            `*Klaim Order (Buka Link):*\n${claimUrl}`;
+        if (order.driver) {
+            message =
+                `*ORDER DIKONFIRMASI ADMIN*\n\n` +
+                `Booking Code: ${order.booking_code}\n` +
+                `Order Number: ${order.order_number}\n\n` +
+                `*Customer:*\n` +
+                `Nama: ${order.customer_name}\n` +
+                `Telepon: ${order.customer_phone}\n\n` +
+                `*Pickup:* ${order.pickup_address}\n` +
+                `*Dropoff:* ${order.dropoff_address}\n` +
+                `*Tanggal:* ${dateStr}\n` +
+                `*Jam:* ${timeStr} WITA\n` +
+                `*Penumpang:* ${order.passengers} Pax\n` +
+                `*Harga:* Rp ${priceFormatted}\n\n` +
+                `Silakan hubungi customer untuk konfirmasi penjemputan!`;
+        } else {
+            const claimUrl = `${window.location.origin}/c/${order.booking_code}`;
+            message =
+                `*#${order.order_number} - CHECK IN*\n\n` +
+                `*Kode Booking:* ${order.booking_code}\n` +
+                `*Tanggal:* ${dateStr}\n` +
+                `*Jam:* ${timeStr} WITA\n\n` +
+                `*📍 Pick Up:*\n${order.pickup_address}\n\n` +
+                `*🏁 Drop Off:*\n${order.dropoff_address}\n\n` +
+                `*Detail:*\n` +
+                `- Penumpang: ${order.passengers} Pax\n` +
+                `- Flight Number: ${order.flight_number || '-'}\n` +
+                `- Price: *${priceFormatted}*\n\n` +
+                `*Klaim Order (Buka Link):*\n${claimUrl}`;
+        }
 
         navigator.clipboard.writeText(message).then(() => {
             showToast('Pesan berhasil disalin ke clipboard!');
@@ -729,6 +760,28 @@
                                             <div
                                                 class="d-flex align-items-center gap-1 border-start ps-3 py-1"
                                             >
+                                                {#if order.driver}
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-outline-success btn-icon"
+                                                        title="Resend WA to Driver"
+                                                        disabled={resendingOrderId === order.id}
+                                                        onclick={(e) => {
+                                                            e.preventDefault();
+                                                            resendWaToDriver(order.id);
+                                                        }}
+                                                    >
+                                                        {#if resendingOrderId === order.id}
+                                                            <span
+                                                                class="loading-ring"
+                                                            ></span>
+                                                        {:else}
+                                                            <i
+                                                                class="ti ti-brand-whatsapp fs-16"
+                                                            ></i>
+                                                        {/if}
+                                                    </button>
+                                                {/if}
                                                 <button
                                                     type="button"
                                                     class="btn btn-sm btn-soft-success btn-icon"
@@ -745,14 +798,14 @@
                                                         ></span>
                                                     {:else}
                                                         <i
-                                                            class="ti ti-brand-whatsapp fs-16"
+                                                            class="ti ti-share fs-16"
                                                         ></i>
                                                     {/if}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     class="btn btn-sm btn-outline-secondary btn-icon"
-                                                    title="Copy WA Message"
+                                                    title={order.driver ? 'Copy WA to Driver' : 'Copy WA to Group'}
                                                     data-copy-btn={order.id}
                                                     onclick={(e) => {
                                                         e.preventDefault();
