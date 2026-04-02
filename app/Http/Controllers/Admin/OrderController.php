@@ -257,7 +257,7 @@ class OrderController extends Controller
      */
     public function rejectClaim(Order $order)
     {
-        if (!$order->claimed_driver_id) {
+        if (! $order->claimed_driver_id) {
             return redirect()->back()->with('error', 'Tidak ada claim yang perlu ditolak.');
         }
 
@@ -273,12 +273,12 @@ class OrderController extends Controller
      */
     public function resendWaToDriver(Order $order, WhatsAppService $waService)
     {
-        if (!$order->driver_id) {
+        if (! $order->driver_id) {
             return redirect()->back()->with('error', 'Order belum memiliki driver.');
         }
 
         $driver = Driver::find($order->driver_id);
-        if (!$driver) {
+        if (! $driver) {
             return redirect()->back()->with('error', 'Driver tidak ditemukan.');
         }
 
@@ -308,13 +308,6 @@ class OrderController extends Controller
         }
 
         return redirect()->back()->with('error', 'Gagal mengirim pesan ke driver.');
-    }
-
-        $order->update([
-            'claimed_driver_id' => null,
-        ]);
-
-        return redirect()->back()->with('success', 'Claim driver ditolak.');
     }
 
     /**
