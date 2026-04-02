@@ -6,7 +6,7 @@
     import Flatpickr from '@/components/Flatpickr.svelte';
     import { Link, router } from '@inertiajs/svelte';
     import { onMount } from 'svelte';
-    import { fade } from 'svelte/transition';
+    import { fade, fly } from 'svelte/transition';
 
     let { orders, filters, drivers, google_maps_api_key } = $props();
     // svelte-ignore state_referenced_locally
@@ -34,6 +34,15 @@
     let selectedOrder = $state<any>(null);
 
     let updatingOrderId = $state<number | null>(null);
+    let sharingOrderId = $state<number | null>(null);
+    let toast = $state<{ message: string; type: 'success' | 'error' } | null>(null);
+    let toastTimeout: any;
+
+    function showToast(message: string, type: 'success' | 'error' = 'success') {
+        clearTimeout(toastTimeout);
+        toast = { message, type };
+        toastTimeout = setTimeout(() => (toast = null), 3000);
+    }
 
     function formatCurrency(amount: number) {
         return new Intl.NumberFormat('id-ID', {
@@ -76,6 +85,50 @@
         selectedOrder = null;
     }
 
+    function copyToClipboard(order: any) {
+        const d = new Date(order.date);
+        const months = [
+            'Januari',
+            'Februari',
+            'Maret',
+            'April',
+            'Mei',
+            'Juni',
+            'Juli',
+            'Agustus',
+            'September',
+            'Oktober',
+            'November',
+            'Desember',
+        ];
+        const dateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        const timeStr = order.time ? order.time.substring(0, 5) : '';
+        const priceFormatted = new Intl.NumberFormat('id-ID').format(
+            order.price,
+        );
+
+        const claimUrl = `${window.location.origin}/c/${order.booking_code}`;
+
+        const message =
+            `*#${order.order_number} - CHECK IN*\n\n` +
+            `*Kode Booking:* ${order.booking_code}\n` +
+            `*Tanggal:* ${dateStr}\n` +
+            `*Jam:* ${timeStr} WITA\n\n` +
+            `*📍 Pick Up:*\n${order.pickup_address}\n\n` +
+            `*🏁 Drop Off:*\n${order.dropoff_address}\n\n` +
+            `*Detail:*\n` +
+            `- Penumpang: ${order.passengers} Pax\n` +
+            `- Flight Number: ${order.flight_number || '-'}\n` +
+            `- Price: *${priceFormatted}*\n\n` +
+            `*Klaim Order (Buka Link):*\n${claimUrl}`;
+
+        navigator.clipboard.writeText(message).then(() => {
+            showToast('Pesan berhasil disalin ke clipboard!');
+        }).catch(() => {
+            showToast('Gagal menyalin pesan.', 'error');
+        });
+    }
+
     function shareToWhatsApp(order: any) {
         const d = new Date(order.date);
         const months = [
@@ -113,17 +166,18 @@
             `- Price: *${priceFormatted}*\n\n` +
             `*Klaim Order (Buka Link):*\n${claimUrl}`;
 
-        // Send message to backend WhatsApp Service
+        sharingOrderId = order.id;
         router.post(
             `/admin/orders/${order.id}/share`,
             { message },
             {
                 preserveScroll: true,
-                onBefore: () => {
-                    // optional: could show loading
-                },
+                onFinish: () => (sharingOrderId = null),
                 onSuccess: () => {
-                    // Success is handled by flash messages from controller
+                    showToast('Order berhasil dibagikan ke WhatsApp!');
+                },
+                onError: () => {
+                    showToast('Gagal mengirim pesan ke WhatsApp.', 'error');
                 },
             },
         );
@@ -603,13 +657,34 @@
                                                     type="button"
                                                     class="btn btn-sm btn-soft-success btn-icon"
                                                     title="Share to WA Group"
+                                                    disabled={sharingOrderId === order.id}
                                                     onclick={(e) => {
                                                         e.preventDefault();
                                                         shareToWhatsApp(order);
                                                     }}
                                                 >
+                                                    {#if sharingOrderId === order.id}
+                                                        <span
+                                                            class="loading-ring"
+                                                        ></span>
+                                                    {:else}
+                                                        <i
+                                                            class="ti ti-brand-whatsapp fs-16"
+                                                        ></i>
+                                                    {/if}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-secondary btn-icon"
+                                                    title="Copy WA Message"
+                                                    data-copy-btn={order.id}
+                                                    onclick={(e) => {
+                                                        e.preventDefault();
+                                                        copyToClipboard(order);
+                                                    }}
+                                                >
                                                     <i
-                                                        class="ti ti-brand-whatsapp fs-16"
+                                                        class="ti ti-clipboard fs-16"
                                                     ></i>
                                                 </button>
                                                 <button
@@ -904,6 +979,40 @@
                             </OrderForm>
                         {/if}
                     </div>
+                </div>
+            </div>
+        </div>
+    {/if}
+
+    {#if toast}
+        <div
+            class="position-fixed bottom-0 end-0 p-3"
+            style="z-index: 9999;"
+            transition:fly={{ y: 30, duration: 200 }}
+        >
+            <div
+                class="toast show align-items-center text-white border-0 shadow-lg"
+                class:bg-success={toast.type === 'success'}
+                class:bg-danger={toast.type === 'error'}
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+            >
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center gap-2">
+                        {#if toast.type === 'success'}
+                            <i class="ti ti-check fs-20"></i>
+                        {:else}
+                            <i class="ti ti-alert-circle fs-20"></i>
+                        {/if}
+                        {toast.message}
+                    </div>
+                    <button
+                        type="button"
+                        class="btn-close btn-close-white me-2 m-auto"
+                        onclick={() => (toast = null)}
+                        aria-label="Close"
+                    ></button>
                 </div>
             </div>
         </div>

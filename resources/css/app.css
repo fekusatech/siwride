@@ -170,3 +170,71 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Sidebar Toggle Styles - Original Template */
+.button-sm-hover {
+    cursor: pointer;
+    display: none;
+    right: 12px;
+    top: 0;
+    position: absolute;
+    font-size: var(--bs-menu-item-icon-size);
+    line-height: var(--bs-topbar-height);
+    background: transparent;
+    border: none;
+    z-index: 1;
+    color: var(--bs-menu-item-color);
+}
+.button-sm-hover:hover,
+.button-sm-hover:focus,
+.button-sm-hover:active {
+    color: #669776;
+}
+
+.button-close-fullsidebar {
+    display: none;
+    z-index: 1;
+    position: absolute;
+    background: transparent;
+    border: none;
+    top: 0;
+    right: calc(
+        var(--bs-sidenav-width-sm) * 0.5 - var(--bs-logo-sm-height) * 0.7
+    );
+    cursor: pointer;
+    color: var(--bs-menu-item-color);
+    line-height: var(--bs-topbar-height);
+    font-size: var(--bs-menu-item-icon-size);
+}
+.button-close-fullsidebar:hover,
+.button-close-fullsidebar:focus,
+.button-close-fullsidebar:active {
+    color: var(--bs-menu-item-hover-color);
+}
+
+html[data-sidenav-size='sm-hover']:not([data-layout='topnav'])
+    .sidenav-menu
+    .button-sm-hover {
+    display: block;
+}
+
+html[data-sidenav-size='sm-hover-active']:not([data-layout='topnav'])
+    .sidenav-menu
+    .button-sm-hover {
+    display: block;
+}
+html[data-sidenav-size='sm-hover-active']:not([data-layout='topnav'])
+    .sidenav-menu
+    .button-sm-hover
+    i.ti-circle::before {
+    content: '\efb1';
+}
+
+html[data-sidenav-size='full']:not([data-layout='topnav'])
+    .button-close-fullsidebar {
+    display: block;
+}
+html[data-sidenav-size='full']:not([data-layout='topnav']) .sidenav-menu {
+    margin-left: calc(var(--bs-sidenav-width) * -1);
+    opacity: 0;
+}
