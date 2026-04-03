@@ -96,7 +96,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {#each driverList as driver}
+                            {#each driverList as driver (driver.id)}
                                 <tr>
                                     <td>
                                         <div
