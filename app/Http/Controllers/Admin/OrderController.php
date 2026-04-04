@@ -232,15 +232,19 @@ class OrderController extends Controller
         $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $dateStr = $d->format('j').' '.$months[(int) $d->format('n') - 1].' '.$d->format('Y');
         $timeStr = $order->time ? substr($order->time, 0, 5) : '';
+        $distance = $this->getDistance($order);
+        $flightNumber = $order->flight_number ?: '-';
 
         $privateMessage = "*ORDER DIKONFIRMASI ADMIN*\n\n".
             "Booking Code: {$order->booking_code}\n".
             "Order Number: {$order->order_number}\n\n".
             "*Customer:*\n".
             "Nama: {$order->customer_name}\n".
-            "Telepon: {$order->customer_phone}\n\n".
+            "Telepon: {$order->customer_phone}\n".
+            "Flight Number: {$flightNumber}\n\n".
             "*Pickup:* {$order->pickup_address}\n".
             "*Dropoff:* {$order->dropoff_address}\n".
+            "*Jarak:* {$distance}\n".
             "*Tanggal:* {$dateStr}\n".
             "*Jam:* {$timeStr} WITA\n".
             "*Penumpang:* {$order->passengers} Pax\n".
@@ -286,15 +290,19 @@ class OrderController extends Controller
         $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $dateStr = $d->format('j').' '.$months[(int) $d->format('n') - 1].' '.$d->format('Y');
         $timeStr = $order->time ? substr($order->time, 0, 5) : '';
+        $distance = $this->getDistance($order);
+        $flightNumber = $order->flight_number ?: '-';
 
         $privateMessage = "*ORDER DIKONFIRMASI ADMIN*\n\n".
             "Booking Code: {$order->booking_code}\n".
             "Order Number: {$order->order_number}\n\n".
             "*Customer:*\n".
             "Nama: {$order->customer_name}\n".
-            "Telepon: {$order->customer_phone}\n\n".
+            "Telepon: {$order->customer_phone}\n".
+            "Flight Number: {$flightNumber}\n\n".
             "*Pickup:* {$order->pickup_address}\n".
             "*Dropoff:* {$order->dropoff_address}\n".
+            "*Jarak:* {$distance}\n".
             "*Tanggal:* {$dateStr}\n".
             "*Jam:* {$timeStr} WITA\n".
             "*Penumpang:* {$order->passengers} Pax\n".
@@ -308,6 +316,44 @@ class OrderController extends Controller
         }
 
         return redirect()->back()->with('error', 'Gagal mengirim pesan ke driver.');
+    }
+
+    /**
+     * Calculate driving distance between pickup and dropoff using Google Distance Matrix API.
+     */
+    private function getDistance(Order $order): string
+    {
+        if (! $order->pickup_latitude || ! $order->pickup_longitude || ! $order->dropoff_latitude || ! $order->dropoff_longitude) {
+            return '-';
+        }
+
+        $apiKey = config('services.google.maps_api_key');
+        if (! $apiKey) {
+            return '-';
+        }
+
+        $origins = "{$order->pickup_latitude},{$order->pickup_longitude}";
+        $destinations = "{$order->dropoff_latitude},{$order->dropoff_longitude}";
+
+        try {
+            $response = Http::get('https://maps.googleapis.com/maps/api/distancematrix/json', [
+                'origins' => $origins,
+                'destinations' => $destinations,
+                'mode' => 'driving',
+                'key' => $apiKey,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['rows'][0]['elements'][0]['distance']['text'])) {
+                    return $data['rows'][0]['elements'][0]['distance']['text'];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to get distance from Google API: {$e->getMessage()}");
+        }
+
+        return '-';
     }
 
     /**

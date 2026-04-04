@@ -38,7 +38,9 @@
     let resendingOrderId = $state<number | null>(null);
     let processingClaimId = $state<number | null>(null);
     let processingClaimAction = $state<'accept' | 'reject' | null>(null);
-    let toast = $state<{ message: string; type: 'success' | 'error' } | null>(null);
+    let toast = $state<{ message: string; type: 'success' | 'error' } | null>(
+        null,
+    );
     let toastTimeout: any;
 
     function showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -132,7 +134,7 @@
         selectedOrder = null;
     }
 
-    function copyToClipboard(order: any) {
+    async function copyToClipboard(order: any) {
         const d = new Date(order.date);
         const months = [
             'Januari',
@@ -153,6 +155,30 @@
         const priceFormatted = new Intl.NumberFormat('id-ID').format(
             order.price,
         );
+        const flightNumber = order.flight_number || '-';
+
+        let distance = '-';
+        if (
+            order.pickup_latitude &&
+            order.pickup_longitude &&
+            order.dropoff_latitude &&
+            order.dropoff_longitude &&
+            google_maps_api_key
+        ) {
+            try {
+                const origins = `${order.pickup_latitude},${order.pickup_longitude}`;
+                const destinations = `${order.dropoff_latitude},${order.dropoff_longitude}`;
+                const resp = await fetch(
+                    `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origins)}&destinations=${encodeURIComponent(destinations)}&mode=driving&key=${google_maps_api_key}`,
+                );
+                const data = await resp.json();
+                if (data.rows?.[0]?.elements?.[0]?.distance?.text) {
+                    distance = data.rows[0].elements[0].distance.text;
+                }
+            } catch {
+                distance = '-';
+            }
+        }
 
         let message: string;
 
@@ -163,9 +189,11 @@
                 `Order Number: ${order.order_number}\n\n` +
                 `*Customer:*\n` +
                 `Nama: ${order.customer_name}\n` +
-                `Telepon: ${order.customer_phone}\n\n` +
+                `Telepon: ${order.customer_phone}\n` +
+                `Flight Number: ${flightNumber}\n\n` +
                 `*Pickup:* ${order.pickup_address}\n` +
                 `*Dropoff:* ${order.dropoff_address}\n` +
+                `*Jarak:* ${distance}\n` +
                 `*Tanggal:* ${dateStr}\n` +
                 `*Jam:* ${timeStr} WITA\n` +
                 `*Penumpang:* ${order.passengers} Pax\n` +
@@ -187,11 +215,14 @@
                 `*Klaim Order (Buka Link):*\n${claimUrl}`;
         }
 
-        navigator.clipboard.writeText(message).then(() => {
-            showToast('Pesan berhasil disalin ke clipboard!');
-        }).catch(() => {
-            showToast('Gagal menyalin pesan.', 'error');
-        });
+        navigator.clipboard
+            .writeText(message)
+            .then(() => {
+                showToast('Pesan berhasil disalin ke clipboard!');
+            })
+            .catch(() => {
+                showToast('Gagal menyalin pesan.', 'error');
+            });
     }
 
     function shareToWhatsApp(order: any) {
@@ -589,39 +620,62 @@
                                             <div
                                                 class="d-flex flex-column align-items-start gap-1"
                                             >
-                                                <div class="fw-medium text-warning">
-                                                    <i class="ti ti-user-clock me-1"></i>
+                                                <div
+                                                    class="fw-medium text-warning"
+                                                >
+                                                    <i
+                                                        class="ti ti-user-clock me-1"
+                                                    ></i>
                                                     {order.claimed_driver.name}
                                                 </div>
                                                 <small class="text-muted">
-                                                    NID: {order.claimed_driver.nid || '-'}
+                                                    NID: {order.claimed_driver
+                                                        .nid || '-'}
                                                 </small>
                                                 <div class="d-flex gap-1 mt-1">
                                                     <button
                                                         class="btn btn-xs btn-success d-flex align-items-center gap-1"
                                                         style="font-size: 11px; padding: 2px 8px;"
-                                                        disabled={processingClaimId === order.id}
-                                                        onclick={() => acceptClaim(order.id)}
+                                                        disabled={processingClaimId ===
+                                                            order.id}
+                                                        onclick={() =>
+                                                            acceptClaim(
+                                                                order.id,
+                                                            )}
                                                         title="Accept Claim"
                                                     >
                                                         {#if processingClaimId === order.id && processingClaimAction === 'accept'}
-                                                            <span class="spinner-border spinner-border-sm" style="width: 12px; height: 12px;"></span>
+                                                            <span
+                                                                class="spinner-border spinner-border-sm"
+                                                                style="width: 12px; height: 12px;"
+                                                            ></span>
                                                         {:else}
-                                                            <i class="ti ti-check fs-12"></i>
+                                                            <i
+                                                                class="ti ti-check fs-12"
+                                                            ></i>
                                                         {/if}
                                                         Accept
                                                     </button>
                                                     <button
                                                         class="btn btn-xs btn-outline-danger d-flex align-items-center gap-1"
                                                         style="font-size: 11px; padding: 2px 8px;"
-                                                        disabled={processingClaimId === order.id}
-                                                        onclick={() => rejectClaim(order.id)}
+                                                        disabled={processingClaimId ===
+                                                            order.id}
+                                                        onclick={() =>
+                                                            rejectClaim(
+                                                                order.id,
+                                                            )}
                                                         title="Reject Claim"
                                                     >
                                                         {#if processingClaimId === order.id && processingClaimAction === 'reject'}
-                                                            <span class="spinner-border spinner-border-sm" style="width: 12px; height: 12px;"></span>
+                                                            <span
+                                                                class="spinner-border spinner-border-sm"
+                                                                style="width: 12px; height: 12px;"
+                                                            ></span>
                                                         {:else}
-                                                            <i class="ti ti-x fs-12"></i>
+                                                            <i
+                                                                class="ti ti-x fs-12"
+                                                            ></i>
                                                         {/if}
                                                         Reject
                                                     </button>
@@ -765,10 +819,13 @@
                                                         type="button"
                                                         class="btn btn-sm btn-outline-success btn-icon"
                                                         title="Resend WA to Driver"
-                                                        disabled={resendingOrderId === order.id}
+                                                        disabled={resendingOrderId ===
+                                                            order.id}
                                                         onclick={(e) => {
                                                             e.preventDefault();
-                                                            resendWaToDriver(order.id);
+                                                            resendWaToDriver(
+                                                                order.id,
+                                                            );
                                                         }}
                                                     >
                                                         {#if resendingOrderId === order.id}
@@ -786,7 +843,8 @@
                                                     type="button"
                                                     class="btn btn-sm btn-soft-success btn-icon"
                                                     title="Share to WA Group"
-                                                    disabled={sharingOrderId === order.id}
+                                                    disabled={sharingOrderId ===
+                                                        order.id}
                                                     onclick={(e) => {
                                                         e.preventDefault();
                                                         shareToWhatsApp(order);
@@ -805,7 +863,9 @@
                                                 <button
                                                     type="button"
                                                     class="btn btn-sm btn-outline-secondary btn-icon"
-                                                    title={order.driver ? 'Copy WA to Driver' : 'Copy WA to Group'}
+                                                    title={order.driver
+                                                        ? 'Copy WA to Driver'
+                                                        : 'Copy WA to Group'}
                                                     data-copy-btn={order.id}
                                                     onclick={(e) => {
                                                         e.preventDefault();
