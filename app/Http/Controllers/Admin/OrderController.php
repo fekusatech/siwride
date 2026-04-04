@@ -244,7 +244,7 @@ class OrderController extends Controller
             "Flight Number: {$flightNumber}\n\n".
             "*Pickup:* {$order->pickup_address}\n".
             "*Dropoff:* {$order->dropoff_address}\n".
-            "*Jarak:* {$distance}\n".
+            ($distance !== '-' ? "*Jarak:* {$distance}\n" : '').
             "*Tanggal:* {$dateStr}\n".
             "*Jam:* {$timeStr} WITA\n".
             "*Penumpang:* {$order->passengers} Pax\n".
@@ -302,7 +302,7 @@ class OrderController extends Controller
             "Flight Number: {$flightNumber}\n\n".
             "*Pickup:* {$order->pickup_address}\n".
             "*Dropoff:* {$order->dropoff_address}\n".
-            "*Jarak:* {$distance}\n".
+            ($distance !== '-' ? "*Jarak:* {$distance}\n" : '').
             "*Tanggal:* {$dateStr}\n".
             "*Jam:* {$timeStr} WITA\n".
             "*Penumpang:* {$order->passengers} Pax\n".
