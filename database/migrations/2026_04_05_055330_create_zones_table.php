@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('zones', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->geometry('coordinates', 'polygon', 4326)->nullable(); // EPSG:4326 for WGS 84
+            $table->polygon('coordinates')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

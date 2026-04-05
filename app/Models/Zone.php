@@ -59,7 +59,7 @@ class Zone extends Model
 
                     $wkt = 'POLYGON(('.implode(',', $points).'))';
 
-                    return DB::raw("ST_GeomFromText('$wkt', 4326)");
+                    return DB::raw("ST_GeomFromText('$wkt')");
                 }
 
                 return $value;
@@ -81,7 +81,7 @@ class Zone extends Model
     public static function containsPoint(float $lat, float $lng): bool
     {
         return self::active()
-            ->whereRaw("ST_Contains(coordinates, ST_GeomFromText('POINT($lat $lng)', 4326))")
+            ->whereRaw("ST_Contains(coordinates, ST_GeomFromText('POINT($lat $lng)'))")
             ->exists();
     }
 }
