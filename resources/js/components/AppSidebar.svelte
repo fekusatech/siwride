@@ -3,7 +3,7 @@
     import BookOpen from 'lucide-svelte/icons/book-open';
     import FolderGit2 from 'lucide-svelte/icons/folder-git-2';
     import LayoutGrid from 'lucide-svelte/icons/layout-grid';
-    import Layers from 'lucide-svelte/icons/layers';
+    import Map from 'lucide-svelte/icons/map';
     import MapPin from 'lucide-svelte/icons/map-pin';
     import type { Snippet } from 'svelte';
     import AppLogo from '@/components/AppLogo.svelte';
@@ -53,7 +53,7 @@
         {
             title: 'Zones',
             href: '/admin/zones',
-            icon: Layers,
+            icon: Map,
         },
     ];
 

@@ -87,7 +87,12 @@
         currentPolygons.forEach(p => p.setMap(null));
         currentPolygons = [];
 
+        const bounds = new google.maps.LatLngBounds();
+        let hasValidCoords = false;
+
         zones.forEach((zone: any) => {
+            if (!zone.coordinates || zone.coordinates.length === 0) return;
+
             const polygon = new google.maps.Polygon({
                 paths: zone.coordinates,
                 strokeColor: zone.is_active ? '#3b82f6' : '#9ca3af',
@@ -102,8 +107,17 @@
                 editZone(zone);
             });
 
+            zone.coordinates.forEach((coord: any) => {
+                bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
+                hasValidCoords = true;
+            });
+
             currentPolygons.push(polygon);
         });
+
+        if (hasValidCoords && !isEditing) {
+            map.fitBounds(bounds);
+        }
     }
 
     function updateCoordinatesFromPolygon(polygon: any) {
@@ -305,9 +319,9 @@
                                                         <span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded uppercase">Inactive</span>
                                                     {/if}
                                                 </h4>
-                                                <p class="text-xs text-gray-500 mt-1">{zone.coordinates.length} points defined</p>
+                                                <p class="text-xs text-gray-500 mt-1">{zone.coordinates ? zone.coordinates.length : 0} points defined</p>
                                             </div>
-                                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div class="flex gap-1">
                                                 <button 
                                                     onclick={() => editZone(zone)}
                                                     class="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
