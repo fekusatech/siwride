@@ -3,6 +3,8 @@
     import BookOpen from 'lucide-svelte/icons/book-open';
     import FolderGit2 from 'lucide-svelte/icons/folder-git-2';
     import LayoutGrid from 'lucide-svelte/icons/layout-grid';
+    import Layers from 'lucide-svelte/icons/layers';
+    import MapPin from 'lucide-svelte/icons/map-pin';
     import type { Snippet } from 'svelte';
     import AppLogo from '@/components/AppLogo.svelte';
     import NavFooter from '@/components/NavFooter.svelte';
@@ -32,6 +34,26 @@
             title: 'Dashboard',
             href: dashboard(),
             icon: LayoutGrid,
+        },
+        {
+            title: 'Orders',
+            href: '/admin/orders',
+            icon: BookOpen,
+        },
+        {
+            title: 'Drivers',
+            href: '/admin/drivers',
+            icon: MapPin,
+        },
+        {
+            title: 'Vehicles',
+            href: '/admin/vehicles',
+            icon: FolderGit2,
+        },
+        {
+            title: 'Zones',
+            href: '/admin/zones',
+            icon: Layers,
         },
     ];
 

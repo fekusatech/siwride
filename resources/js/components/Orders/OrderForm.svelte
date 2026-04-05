@@ -46,6 +46,35 @@
     );
     let availableVehicles = $derived(selectedDriver?.vehicles || []);
 
+    let pickupInZone = $state(true);
+    let dropoffInZone = $state(true);
+    let validatingPickup = $state(false);
+    let validatingDropoff = $state(false);
+
+    async function checkZone(lat: number, lng: number, type: 'pickup' | 'dropoff') {
+        if (type === 'pickup') validatingPickup = true;
+        else validatingDropoff = true;
+
+        try {
+            const response = await fetch('/admin/zones/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ lat, lng }),
+            });
+            const data = await response.json();
+            if (type === 'pickup') pickupInZone = data.inside;
+            else dropoffInZone = data.inside;
+        } catch (error) {
+            console.error('Zone validation error:', error);
+        } finally {
+            if (type === 'pickup') validatingPickup = false;
+            else validatingDropoff = false;
+        }
+    }
+
     $effect(() => {
         if (form.driver_id) {
             const driverId = Number(form.driver_id);
@@ -102,6 +131,7 @@
                 form.pickup_address = place.formatted_address || '';
                 form.pickup_latitude = place.geometry.location.lat();
                 form.pickup_longitude = place.geometry.location.lng();
+                checkZone(form.pickup_latitude, form.pickup_longitude, 'pickup');
             }
         });
         const dropoffAutocomplete = new google.maps.places.Autocomplete(
@@ -114,6 +144,7 @@
                 form.dropoff_address = place.formatted_address || '';
                 form.dropoff_latitude = place.geometry.location.lat();
                 form.dropoff_longitude = place.geometry.location.lng();
+                checkZone(form.dropoff_latitude, form.dropoff_longitude, 'dropoff');
             }
         });
     }
@@ -124,6 +155,12 @@
 
     function handleSubmit(e: Event) {
         e.preventDefault();
+
+        if (!pickupInZone || !dropoffInZone) {
+            alert('Cannot save: One of the addresses is outside the service zones.');
+            return;
+        }
+
         if (order) {
             form.put(`/admin/orders/${order.id}`, {
                 onSuccess: () => onSuccess(),
@@ -271,26 +308,36 @@
             <label for="pickup_address_form" class="form-label">Pick Up</label>
             <input
                 type="text"
-                class="form-control"
+                class="form-control {!pickupInZone ? 'is-invalid' : ''}"
                 id="pickup_address_form"
                 bind:this={pickupInput}
                 bind:value={form.pickup_address}
                 placeholder="Search address..."
                 required
             />
+            {#if validatingPickup}
+                <div class="text-muted small mt-1">Checking zone...</div>
+            {:else if !pickupInZone}
+                <div class="invalid-feedback">Address is outside the service zones.</div>
+            {/if}
         </div>
         <div class="col-md-6">
             <label for="dropoff_address_form" class="form-label">Drop Off</label
             >
             <input
                 type="text"
-                class="form-control"
+                class="form-control {!dropoffInZone ? 'is-invalid' : ''}"
                 id="dropoff_address_form"
                 bind:this={dropoffInput}
                 bind:value={form.dropoff_address}
                 placeholder="Search address..."
                 required
             />
+            {#if validatingDropoff}
+                <div class="text-muted small mt-1">Checking zone...</div>
+            {:else if !dropoffInZone}
+                <div class="invalid-feedback">Address is outside the service zones.</div>
+            {/if}
         </div>
         <div class="col-md-4">
             <label for="passengers_form" class="form-label">Pass</label>
@@ -328,12 +375,12 @@
     </div>
     <div class="mt-4 d-flex justify-content-end gap-2">
         {#if footer}
-            {@render footer({ processing: form.processing })}
+            {@render footer({ processing: form.processing || validatingPickup || validatingDropoff })}
         {:else}
             <button
                 type="submit"
                 class="btn btn-primary"
-                disabled={form.processing}
+                disabled={form.processing || validatingPickup || validatingDropoff || !pickupInZone || !dropoffInZone}
             >
                 {form.processing ? 'Saving...' : 'Save Order'}
             </button>
