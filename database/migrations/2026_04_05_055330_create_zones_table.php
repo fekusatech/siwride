@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('zones', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->polygon('coordinates')->nullable();
+            $table->geometry('coordinates', subtype: 'polygon', srid: 4326)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
