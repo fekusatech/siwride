@@ -146,6 +146,13 @@
                 </Link>
             </li>
 
+            <li class="side-nav-item">
+                <Link href="/admin/zones" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-layers"></i></span>
+                    <span class="menu-text"> Zones </span>
+                </Link>
+            </li>
+
             <li class="side-nav-title mt-2">System</li>
 
             <li class="side-nav-item">
