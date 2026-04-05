@@ -121,9 +121,23 @@
 
     function setupAutocomplete() {
         if (!pickupInput || !dropoffInput) return;
+
+        // Define Bali bounds to restrict autocomplete suggestions
+        const baliBounds = new google.maps.LatLngBounds(
+            new google.maps.LatLng(-8.9472, 114.4173), // South West
+            new google.maps.LatLng(-8.0583, 115.7118)  // North East
+        );
+
+        const autocompleteOptions = {
+            types: ['geocode', 'establishment'],
+            bounds: baliBounds,
+            componentRestrictions: { country: 'id' }, // Optional: restrict to Indonesia
+            strictBounds: true, // Set to true if you want to ONLY show results inside Bali
+        };
+
         const pickupAutocomplete = new google.maps.places.Autocomplete(
             pickupInput,
-            { types: ['geocode', 'establishment'] },
+            autocompleteOptions,
         );
         pickupAutocomplete.addListener('place_changed', () => {
             const place = pickupAutocomplete.getPlace();
@@ -134,9 +148,10 @@
                 checkZone(form.pickup_latitude, form.pickup_longitude, 'pickup');
             }
         });
+
         const dropoffAutocomplete = new google.maps.places.Autocomplete(
             dropoffInput,
-            { types: ['geocode', 'establishment'] },
+            autocompleteOptions,
         );
         dropoffAutocomplete.addListener('place_changed', () => {
             const place = dropoffAutocomplete.getPlace();
