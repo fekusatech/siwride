@@ -4,11 +4,20 @@
     import { router } from '@inertiajs/svelte';
     import { fade } from 'svelte/transition';
 
+    let { flash = {} } = $props();
+
     let fileInput: HTMLInputElement;
     let selectedFile: File | null = $state(null);
     let isImporting = $state(false);
     let importError = $state('');
     let dragActive = $state(false);
+
+    // Sync flash error from backend on mount and navigation
+    $effect(() => {
+        if (flash?.error) {
+            importError = flash.error;
+        }
+    });
 
     function handleDragEnter(e: DragEvent) {
         e.preventDefault();
