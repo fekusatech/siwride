@@ -5,7 +5,7 @@
     import { fade } from 'svelte/transition';
 
     let fileInput: HTMLInputElement;
-    let selectedFile: File | null = null;
+    let selectedFile: File | null = $state(null);
     let isImporting = $state(false);
     let importError = $state('');
     let dragActive = $state(false);
@@ -39,6 +39,8 @@
         if (target.files && target.files.length > 0) {
             selectedFile = target.files[0];
             importError = '';
+        } else {
+            selectedFile = null;
         }
     }
 
