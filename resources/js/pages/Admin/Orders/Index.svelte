@@ -162,18 +162,28 @@
             order.pickup_latitude &&
             order.pickup_longitude &&
             order.dropoff_latitude &&
-            order.dropoff_longitude &&
-            google_maps_api_key
+            order.dropoff_longitude
         ) {
             try {
-                const origins = `${order.pickup_latitude},${order.pickup_longitude}`;
-                const destinations = `${order.dropoff_latitude},${order.dropoff_longitude}`;
-                const resp = await fetch(
-                    `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origins)}&destinations=${encodeURIComponent(destinations)}&mode=driving&key=${google_maps_api_key}`,
-                );
+                const csrfToken =
+                    document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                const resp = await fetch('/admin/orders/distance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        pickup_latitude: order.pickup_latitude,
+                        pickup_longitude: order.pickup_longitude,
+                        dropoff_latitude: order.dropoff_latitude,
+                        dropoff_longitude: order.dropoff_longitude,
+                    }),
+                });
                 const data = await resp.json();
-                if (data.rows?.[0]?.elements?.[0]?.distance?.text) {
-                    distance = data.rows[0].elements[0].distance.text;
+                if (data.distance && data.distance !== '-') {
+                    distance = data.distance;
                 }
             } catch {
                 distance = '-';

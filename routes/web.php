@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('admin/orders/import', [OrderController::class, 'importPage'])->name('admin.orders.import');
     Route::post('admin/orders/import', [OrderController::class, 'import'])->name('admin.orders.import.store');
     Route::get('admin/orders/import/template', [OrderController::class, 'downloadTemplate'])->name('admin.orders.import.template');
+    Route::post('admin/orders/distance', [OrderController::class, 'distanceApi'])->name('admin.orders.distance');
     Route::post('admin/orders/{order}/share', [OrderController::class, 'share'])->name('admin.orders.share');
     Route::patch('admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
     Route::post('admin/orders/{order}/accept-claim', [OrderController::class, 'acceptClaim'])->name('admin.orders.accept-claim');

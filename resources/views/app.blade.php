@@ -79,6 +79,9 @@
         @endif
 
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
+        @if($isDashboard)
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        @endif
         
         <x-inertia::head>
             <title>{{ $page['props']['settings']['business_name'] ?? config('app.name', 'Laravel') }}</title>

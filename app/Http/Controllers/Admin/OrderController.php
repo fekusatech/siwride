@@ -320,6 +320,48 @@ class OrderController extends Controller
     }
 
     /**
+     * Get distance between pickup and dropoff via Google Distance Matrix API.
+     * Called from frontend to avoid CORS issues.
+     */
+    public function distanceApi(Request $request)
+    {
+        $request->validate([
+            'pickup_latitude' => 'required|numeric',
+            'pickup_longitude' => 'required|numeric',
+            'dropoff_latitude' => 'required|numeric',
+            'dropoff_longitude' => 'required|numeric',
+        ]);
+
+        $apiKey = config('services.google.maps_api_key');
+        if (! $apiKey) {
+            return response()->json(['distance' => '-']);
+        }
+
+        $origins = "{$request->pickup_latitude},{$request->pickup_longitude}";
+        $destinations = "{$request->dropoff_latitude},{$request->dropoff_longitude}";
+
+        try {
+            $response = Http::get('https://maps.googleapis.com/maps/api/distancematrix/json', [
+                'origins' => $origins,
+                'destinations' => $destinations,
+                'mode' => 'driving',
+                'key' => $apiKey,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $distance = $data['rows'][0]['elements'][0]['distance']['text'] ?? '-';
+
+                return response()->json(['distance' => $distance]);
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to get distance from Google API: {$e->getMessage()}");
+        }
+
+        return response()->json(['distance' => '-']);
+    }
+
+    /**
      * Calculate driving distance between pickup and dropoff using Google Distance Matrix API.
      */
     private function getDistance(Order $order): string
