@@ -6,26 +6,28 @@
     <div class="container">
         <div class="main-header__inner">
             <div class="main-header__logo">
-                <a href="/">
+                <a href="/" style="display: flex; align-items: center; gap: 12px;">
                     <img
-                        src="assets/images/logo-1.png"
-                        alt="Travhub"
-                        width="152"
+                        src="assets/images/siwride_logo.png"
+                        alt="Siwride"
+                        width="70"
+                        style="border: 2px solid white; border-radius: 50%; padding: 2px; background-color: white;"
                     />
+                    <span style="color: white; font-size: 30px; font-weight: 700; letter-spacing: 1px;">SIWRIDE</span>
                 </a>
             </div>
-            <nav class="main-header__nav main-menu">
+            <nav class="main-header__nav main-menu" style="margin-right: 50px;">
                 <ul class="main-menu__list">
                     <li class="dropdown">
                         <a href="/">Home</a>
+                    </li>
+                    <li>
+                        <a href="about.html">About</a>
                         <ul>
                             <li><a href="/">Home One</a></li>
                             <li><a href="index2.html">Home Two</a></li>
                             <li><a href="index3.html">Home Three</a></li>
                         </ul>
-                    </li>
-                    <li>
-                        <a href="about.html">About</a>
                     </li>
                     <li class="dropdown">
                         <a

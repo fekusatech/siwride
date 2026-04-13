@@ -16,10 +16,10 @@
   --travhub-text-rgb: 85, 85, 85;
   --travhub-text2: #757575;
   --travhub-text2-rgb: 117, 117, 117;
-  --travhub-base: #1BBC9B;
-  --travhub-base-rgb: 27, 188, 155;
-  --travhub-primary: #abe6d7;
-  --travhub-primary-rgb: 171, 230, 215;
+  --travhub-base: #d11f1f;
+  --travhub-base-rgb: 209, 31, 31;
+  --travhub-primary: #e88e8e;
+  --travhub-primary-rgb: 232, 142, 142;
   --travhub-gray: #F0F0F0;
   --travhub-gray-rgb: 240, 240, 240;
   --travhub-gray2: #F1F4FA;
@@ -3411,7 +3411,7 @@ h6 {
   }
 }
 .hero-one__form{
-  max-width: 1095px;
+  max-width: 1300px;
   margin: 0 auto;
   @media (max-width: 1199px) {
     padding: 0 20px;
@@ -3570,6 +3570,54 @@ h6 {
   .hero-one__form .banner-form .banner-form__control + .banner-form__control {
     padding-left: 0;
   }
+}
+
+/* Form Styles Updates */
+.hero-one__form .banner-form label {
+  font-weight: 900;
+}
+.hero-one__form .banner-form .banner-form__control {
+  /* wrapper styling removed to keep border exclusively at the input level */
+  padding-bottom: 5px;
+}
+.hero-one__form .banner-form .banner-form__button {
+  padding-bottom: 0 !important;
+}
+.hero-one__form .banner-form input {
+  border-bottom: 1px solid rgba(75, 74, 74, 0.616) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  background: transparent !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-bottom: 5px !important;
+  margin-bottom: 0 !important;
+  width: 100% !important; /* Forces the border to cleanly span the input box */
+  display: block;
+}
+.hero-one__form .banner-form input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-bottom-color: var(--travhub-base) !important;
+}
+
+/* Make placeholder less prominent than label */
+.hero-one__form .banner-form input::placeholder {
+  color: #888888 !important;
+  font-weight: normal !important;
+  font-size: 14px !important;
+  opacity: 1;
+}
+.hero-one__form .banner-form input::-webkit-input-placeholder {
+  color: #888888 !important;
+  font-weight: normal !important;
+  font-size: 14px !important;
+}
+.hero-one__form .banner-form input::-moz-placeholder {
+  color: #888888 !important;
+  font-weight: normal !important;
+  font-size: 14px !important;
 }
 .hero-one__shape-one {
   position: absolute;
@@ -3841,8 +3889,8 @@ h6 {
   font-weight: 400;
   font-size: 16px;
   line-height: 180%;
-  color: rgba(85, 85, 85, 0.7);
-  margin-bottom: -7px;
+  color: rgb(75, 74, 74);
+  margin-bottom: -2px;
 }
 .banner-form .banner-form__control + .banner-form__control {
   padding-right: 0;

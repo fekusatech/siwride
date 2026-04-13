@@ -12,14 +12,16 @@
     $(".travhub-multi-datepicker").each(function () {
       let self = $(this);
       self.daterangepicker({
-        autoUpdateInput: false
+        autoUpdateInput: false,
+        singleDatePicker: true,
+        timePicker: true,
+        timePicker24Hour: true,
+        locale: {
+          format: 'D MMM YYYY, HH:mm'
+        }
       });
       self.on("apply.daterangepicker", function (ev, picker) {
-        $(this).val(
-          picker.startDate.format("D MMM YY") +
-          " - " +
-          picker.endDate.format("D MMM YY")
-        );
+        $(this).val(picker.startDate.format("D MMM YYYY, HH:mm"));
       });
     });
   }
