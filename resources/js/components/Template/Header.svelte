@@ -42,9 +42,25 @@
                     <li>
                         <a href="about.html">About</a>
                         <ul>
-                            <li><a href="/">Home One</a></li>
-                            <li><a href="index2.html">Home Two</a></li>
-                            <li><a href="index3.html">Home Three</a></li>
+                            <li><a href="index2.html">About Us</a></li>
+                            <li><a href="/">Our Services</a></li>
+                            <li><a href="index3.html">Area Coverage</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a
+                            href="#/"
+                            role="button"
+                            aria-haspopup="true"
+                            onclick={(e) => e.preventDefault()}>Vehicles</a
+                        >
+                        <ul>
+                            <li><a href="team.html">Standard Cars?</a></li>
+                            <li><a href="pricing.html">Premium Cars</a></li>
+                            <li><a href="gallery.html">Vans/Minibuses</a></li>
+                            <li><a href="faq.html">Buses</a></li>
+                            <li><a href="/">Login</a></li>
+                            <li><a href="/">Special Vehicles</a></li>
                         </ul>
                     </li>
                     <li class="dropdown">
@@ -55,35 +71,19 @@
                             onclick={(e) => e.preventDefault()}>Pages</a
                         >
                         <ul>
-                            <li><a href="team.html">Our Team</a></li>
-                            <li><a href="pricing.html">Pricing Table</a></li>
-                            <li><a href="gallery.html">Gallery</a></li>
-                            <li><a href="faq.html">FAQs</a></li>
-                            <li><a href="login.html">Login</a></li>
-                            <li><a href="404.html">404 Error</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a
-                            href="#/"
-                            role="button"
-                            aria-haspopup="true"
-                            onclick={(e) => e.preventDefault()}>Tours</a
-                        >
-                        <ul>
-                            <li><a href="tour.html">Tour Page</a></li>
+                            <li><a href="tour.html">Testimonials</a></li>
                             <li>
-                                <a href="tour-sidebar.html">Tour Sidebar</a>
+                                <a href="tour-sidebar.html">FAQ</a>
                             </li>
                             <li>
-                                <a href="tour-carousel.html">Tour Carousel</a>
+                                <a href="tour-carousel.html">Terms & Coditions</a>
                             </li>
                             <li>
-                                <a href="tour-details.html">Tour Details</a>
+                                <a href="tour-details.html">Privacy Policy</a>
                             </li>
                         </ul>
                     </li>
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a
                             href="#/"
                             role="button"
@@ -103,8 +103,8 @@
                                 >
                             </li>
                         </ul>
-                    </li>
-                    <li class="dropdown">
+                    </li> -->
+                    <!-- <li class="dropdown">
                         <a
                             href="#/"
                             role="button"
@@ -190,6 +190,9 @@
                                 </ul>
                             </li>
                         </ul>
+                    </li> -->
+                    <li>
+                        <a href="contact.html">Booking</a>
                     </li>
                     <li>
                         <a href="contact.html">Contact</a>
