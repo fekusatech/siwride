@@ -1104,4 +1104,34 @@
     :global(.page-wrapper .main-header.scrolled) + .topbar-one {
         display: none !important;
     }
+
+    /* Hide hero images on screens under 1600px */
+    :global(.hero-one__image) {
+        visibility: visible;
+    }
+    
+    @media (max-width: 1599px) {
+        :global(.hero-one__image-two),
+        :global(.hero-one__image-four) {
+            visibility: hidden !important;
+            display: none !important;
+        }
+    }
+
+    /* Vehicle cards responsive for mobile */
+    @media (max-width: 767px) {
+        :global(.vehicle-category .owl-item) {
+            width: 100% !important;
+            min-width: 350px !important;
+            max-width: 400px !important;
+            flex: 0 0 auto !important;
+        }
+        
+        :global(.vehicle-category .owl-item .vehicle-card) {
+            width: 100% !important;
+            min-width: 350px !important;
+            max-width: 400px !important;
+            margin: 0 auto !important;
+        }
+    }
 </style>
