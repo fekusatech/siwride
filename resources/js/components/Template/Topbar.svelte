@@ -4,17 +4,17 @@
             <ul class="list-unstyled topbar-one__info">
                 <li class="topbar-one__info__item">
                     <i class="flaticon-pin-1 topbar-one__info__icon"></i>
-                    6391 Elgin St. Celina, Delaware 10299
+                    Bali, Indonesia
                 </li>
                 <li class="topbar-one__info__item">
                     <i class="flaticon-mail topbar-one__info__icon"></i>
-                    <a href="mailto:exam126@gmail.com">exam126@gmail.com</a>
+                    <a href="mailto:info@siwride.com">info@siwride.com</a>
                 </li>
                 <li class="topbar-one__info__item topbar-one__info__item--last">
                     <i
                         class="flaticon-three-o-clock-clock topbar-one__info__icon"
                     ></i>
-                    Opening Hour 9:00am - 10:00pm
+                    24/7 Service Available
                 </li>
             </ul>
         </div>

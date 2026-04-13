@@ -1,8 +1,26 @@
 <script lang="ts">
+    import { onMount, onDestroy } from 'svelte';
+    
     export let auth: any = null;
+    
+    let scrolled = false;
+    let headerElement: HTMLElement;
+    
+    const handleScroll = () => {
+        scrolled = window.scrollY > 50;
+    };
+    
+    onMount(() => {
+        window.addEventListener('scroll', handleScroll);
+        handleScroll(); // Check initial position
+    });
+    
+    onDestroy(() => {
+        window.removeEventListener('scroll', handleScroll);
+    });
 </script>
 
-<header class="main-header sticky-header sticky-header--normal">
+<header class="main-header sticky-header sticky-header--normal" class:scrolled={scrolled} bind:this={headerElement}>
     <div class="container">
         <div class="main-header__inner">
             <div class="main-header__logo">
@@ -207,3 +225,81 @@
         </div>
     </div>
 </header>
+
+<style>
+    :global(.main-header.scrolled) {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 9999 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        transition: all 0.3s ease !important;
+        padding: 0 !important;
+        border-radius: 0 0 15px 15px !important;
+    }
+    
+    :global(.main-header.scrolled .main-header__inner) {
+        padding: 0 50px 0 0 !important;
+        transition: all 0.3s ease !important;
+        height: 70px !important;
+        display: flex !important;
+        align-items: center !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+        border-radius: 0 0 14px 15px !important;
+    }
+    
+    :global(.main-header.scrolled .main-header__logo) {
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        border-radius: 0px 0px 30px 15px;
+    }
+    
+    :global(.main-header.scrolled .main-header__logo img) {
+        width: 50px !important;
+        height: 50px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    :global(.main-header.scrolled .main-header__logo span) {
+        font-size: 24px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    :global(.main-header.scrolled .main-menu__list > li > a) {
+        padding: 8px 15px !important;
+        font-size: 15px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    :global(.main-header.scrolled .travhub-btn) {
+        padding: 8px 20px !important;
+        font-size: 14px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    /* Hide topbar when scrolled - this will be handled in Welcome.svelte */
+    
+    /* Add smooth transitions for normal state */
+    :global(.main-header) {
+        transition: all 0.3s ease !important;
+    }
+    
+    :global(.main-header .main-header__logo img) {
+        transition: all 0.3s ease !important;
+    }
+    
+    :global(.main-header .main-header__logo span) {
+        transition: all 0.3s ease !important;
+    }
+    
+    :global(.main-header .main-menu__list > li > a) {
+        transition: all 0.3s ease !important;
+    }
+    
+    :global(.main-header .travhub-btn) {
+        transition: all 0.3s ease !important;
+    }
+</style>

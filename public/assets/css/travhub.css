@@ -2284,10 +2284,25 @@ h6 {
   width: auto;
 }
 .main-header__btn {
+  min-width: 100px;
   position: relative;
 
   @media (max-width: 767px) {
     display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .main-header__logo {
+    width: 55% !important;
+    min-width: 55% !important;
+  }
+}
+
+@media (max-width: 500px) {
+  .main-header__logo {
+    width: 70% !important;
+    min-width: 70% !important;
   }
 }
 .main-header__right {

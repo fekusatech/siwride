@@ -1092,4 +1092,16 @@
     :global(.testimonials-one .owl-stage, .vehicle-category .owl-stage) {
         display: flex !important;
     }
+
+    /* Hide topbar when header is scrolled */
+    :global(.main-header.scrolled) ~ * .topbar-one,
+    :global(.main-header.scrolled) + .topbar-one {
+        display: none !important;
+    }
+    
+    /* Alternative selector for topbar hiding */
+    :global(.page-wrapper .main-header.scrolled) ~ .topbar-one,
+    :global(.page-wrapper .main-header.scrolled) + .topbar-one {
+        display: none !important;
+    }
 </style>
