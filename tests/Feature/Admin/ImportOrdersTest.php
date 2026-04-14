@@ -9,6 +9,9 @@ use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ImportOrdersTest extends TestCase
@@ -26,7 +29,7 @@ class ImportOrdersTest extends TestCase
         ]);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function import_page_can_be_accessed()
     {
         $response = $this->actingAs($this->admin)
@@ -38,7 +41,7 @@ class ImportOrdersTest extends TestCase
         );
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function template_can_be_downloaded()
     {
         $response = $this->actingAs($this->admin)
@@ -48,7 +51,7 @@ class ImportOrdersTest extends TestCase
         $response->assertHeader('content-disposition', 'attachment; filename=orders-template.xlsx');
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function import_requires_file()
     {
         $response = $this->actingAs($this->admin)
@@ -57,7 +60,7 @@ class ImportOrdersTest extends TestCase
         $response->assertSessionHasErrors('file');
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function import_rejects_invalid_file_types()
     {
         $file = UploadedFile::fake()->create('orders.txt', 100);
@@ -68,7 +71,7 @@ class ImportOrdersTest extends TestCase
         $response->assertSessionHasErrors('file');
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function import_rejects_files_larger_than_10mb()
     {
         $file = UploadedFile::fake()->create('orders.xlsx', 11 * 1024); // 11MB
@@ -79,12 +82,12 @@ class ImportOrdersTest extends TestCase
         $response->assertSessionHasErrors('file');
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function orders_can_be_imported_from_excel()
     {
         $filePath = storage_path('test-orders-simple.xlsx');
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -102,7 +105,7 @@ class ImportOrdersTest extends TestCase
         $sheet->setCellValueByColumnAndRow(6, 2, 'Dropoff Location');
         $sheet->setCellValueByColumnAndRow(7, 2, '125000');
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $writer->save($filePath);
 
         $file = new UploadedFile($filePath, 'orders.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
@@ -124,13 +127,13 @@ class ImportOrdersTest extends TestCase
         }
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function import_creates_orders_with_required_fields()
     {
         // Create a real Excel file for testing
         $filePath = storage_path('test-orders.xlsx');
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -148,7 +151,7 @@ class ImportOrdersTest extends TestCase
         $sheet->setCellValueByColumnAndRow(6, 2, 'Hotel Grand Bali');
         $sheet->setCellValueByColumnAndRow(7, 2, '150000');
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $writer->save($filePath);
 
         $file = new UploadedFile($filePath, 'orders.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
@@ -173,14 +176,14 @@ class ImportOrdersTest extends TestCase
         }
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function import_assigns_driver_by_code()
     {
         $driver = Driver::factory()->create(['nid' => 'siw01', 'name' => 'Rahman']);
 
         $filePath = storage_path('test-orders-driver.xlsx');
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -199,7 +202,7 @@ class ImportOrdersTest extends TestCase
         $sheet->setCellValueByColumnAndRow(7, 2, 'Hotel Grand Bali');
         $sheet->setCellValueByColumnAndRow(8, 2, '150000');
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $writer->save($filePath);
 
         $file = new UploadedFile($filePath, 'orders.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
@@ -220,14 +223,14 @@ class ImportOrdersTest extends TestCase
         }
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function import_assigns_vehicle_by_plate()
     {
         $vehicle = Vehicle::factory()->create(['registration_number' => 'DK 1234 AB']);
 
         $filePath = storage_path('test-orders-vehicle.xlsx');
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -246,7 +249,7 @@ class ImportOrdersTest extends TestCase
         $sheet->setCellValueByColumnAndRow(7, 2, 'Ubud Resort');
         $sheet->setCellValueByColumnAndRow(8, 2, '200000');
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $writer->save($filePath);
 
         $file = new UploadedFile($filePath, 'orders.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
@@ -267,12 +270,12 @@ class ImportOrdersTest extends TestCase
         }
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function import_generates_booking_code_if_empty()
     {
         $filePath = storage_path('test-orders-autogen.xlsx');
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -290,7 +293,7 @@ class ImportOrdersTest extends TestCase
         $sheet->setCellValueByColumnAndRow(6, 2, 'Test Hotel');
         $sheet->setCellValueByColumnAndRow(7, 2, '175000');
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $writer->save($filePath);
 
         $file = new UploadedFile($filePath, 'orders.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);

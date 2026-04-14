@@ -24,8 +24,9 @@ class ZoneController extends Controller
                 if (! $wkt) {
                     $coords = [];
                 } else {
-                    $wkt = str_replace(['POLYGON((', '))'], '', $wkt);
-                    $points = explode(',', $wkt);
+                    preg_match('/\(\((.*?)\)\)/', $wkt, $matches);
+                    $wktPoints = $matches[1] ?? '';
+                    $points = explode(',', $wktPoints);
                     $coords = array_map(function ($point) {
                         $p = explode(' ', trim($point));
 

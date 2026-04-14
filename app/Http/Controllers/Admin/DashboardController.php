@@ -3,25 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\Driver;
+use App\Models\Order;
 use App\Models\Vehicle;
-use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $today = Carbon::today();
-        
+
         // KPIs
         $totalOrders = Order::count();
         $todayOrders = Order::whereDate('date', $today)->count();
         $pendingClaims = Order::whereNull('driver_id')->where('status', 'pending')->count();
         $totalRevenue = Order::where('status', 'completed')->sum('price');
-        
+
         // Charts: 7 Day Revenue Trend
         $last7Days = collect(range(6, 0))->map(function ($days) {
             return Carbon::today()->subDays($days)->format('Y-m-d');
@@ -36,7 +36,7 @@ class DashboardController extends Controller
         $revenueTrend = $last7Days->map(function ($date) use ($revenueData) {
             return [
                 'date' => Carbon::parse($date)->format('d M'),
-                'total' => (float) ($revenueData[$date] ?? 0)
+                'total' => (float) ($revenueData[$date] ?? 0),
             ];
         });
 

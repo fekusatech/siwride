@@ -11,11 +11,12 @@ use Illuminate\Support\Facades\Hash;
 class ImportDriverData extends Command
 {
     protected $signature = 'siwride:import-drivers';
+
     protected $description = 'Import driver and payroll data from spreadsheet snippet';
 
     public function handle()
     {
-        $data = "1	siw01	Nanankjhe	19	1.745.000	3	290.000	100.000
+        $data = '1	siw01	Nanankjhe	19	1.745.000	3	290.000	100.000
 2	siw02	Rahman	16	2.040.000	0	0	100.000
 3	siw03	Eko Satrio	0	0	0	0	0
 4	siw04	Wawan	6	890.000	0	0	100.000
@@ -39,16 +40,20 @@ class ImportDriverData extends Command
 22	siw22	Lutfi	0	0	0	0	0
 23	siw23	Angga / cash	0	0	1	250.000	0
 24	siw24		0	0	0	0	0
-25	siw25	Sby	2	300.000	0	0	0";
+25	siw25	Sby	2	300.000	0	0	0';
 
         $lines = explode("\n", $data);
         $count = 0;
 
         DB::transaction(function () use ($lines, &$count) {
             foreach ($lines as $line) {
-                if (empty(trim($line))) continue;
+                if (empty(trim($line))) {
+                    continue;
+                }
                 $cols = explode("\t", $line);
-                if (count($cols) < 3) continue;
+                if (count($cols) < 3) {
+                    continue;
+                }
 
                 $nid = trim($cols[1]);
                 $name = trim($cols[2]) ?: "Driver $nid";
@@ -63,8 +68,8 @@ class ImportDriverData extends Command
                     ['nid' => $nid],
                     [
                         'name' => $name,
-                        'email' => strtolower($nid) . '@siwride.com',
-                        'phone' => '08' . mt_rand(10000000, 99999999), // Placeholder
+                        'email' => strtolower($nid).'@siwride.com',
+                        'phone' => '08'.mt_rand(10000000, 99999999), // Placeholder
                         'password' => Hash::make('password'),
                         'status' => 'active',
                     ]
@@ -85,7 +90,7 @@ class ImportDriverData extends Command
 
                 // Create Payroll for period 2
                 if ($job2 > 0 || $salary2 > 0) {
-                    // We apply the admin fee to the second period or split it? 
+                    // We apply the admin fee to the second period or split it?
                     // Usually admin fees are deducted at the end. I'll put it in period B.
                     Payroll::create([
                         'driver_id' => $driver->id,
