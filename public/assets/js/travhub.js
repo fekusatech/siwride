@@ -167,7 +167,7 @@
   }
 
   if ($(".video-popup").length) {
-    $(".video-popup").magnificPopup({
+    $(".video-popup").not('[data-inertia]').magnificPopup({
       type: "iframe",
       mainClass: "mfp-fade",
       removalDelay: 160,
@@ -179,7 +179,7 @@
 
   if ($(".img-popup").length) {
     var groups = {};
-    $(".img-popup").each(function () {
+    $(".img-popup").not('[data-inertia]').each(function () {
       var id = parseInt($(this).attr("data-group"), 10);
 
       if (!groups[id]) {
@@ -201,7 +201,7 @@
     });
   }
 
-  let solinomImagePopupGallery = $(".card__popup");
+  let solinomImagePopupGallery = $(".card__popup").not('[data-inertia]');
   solinomImagePopupGallery.each(function () {
     let elm = $(this);
     let options = elm.data("gallery-options");

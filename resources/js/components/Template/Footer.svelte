@@ -1,7 +1,7 @@
 <footer class="main-footer">
     <div
         class="main-footer__shape-one"
-        style="background-image: url(assets/images/shapes/footer-shape-1.png);"
+        style="background-image: url(/assets/images/shapes/footer-shape-1.png);"
     ></div>
     <div class="container">
         <div class="main-footer__top wow fadeInUp" data-wow-delay="100ms">
@@ -11,7 +11,7 @@
                     <h3 class="main-footer__top__title">
                         Get it on Google Play
                         <img
-                            src="assets/images/shapes/sec-title-shape.png"
+                            src="/assets/images/shapes/sec-title-shape.png"
                             alt="Siwride"
                         />
                     </h3>

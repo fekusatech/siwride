@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
+    import { Link } from '@inertiajs/svelte';
     
     export let auth: any = null;
     
@@ -24,178 +25,54 @@
     <div class="container">
         <div class="main-header__inner">
             <div class="main-header__logo">
-                <a href="/" style="display: flex; align-items: center; gap: 12px;">
+                <Link href="/" data-inertia="true" style="display: flex; align-items: center; gap: 12px;">
                     <img
-                        src="assets/images/siwride_logo.png"
+                        src="/assets/images/siwride_logo.png"
                         alt="Siwride"
                         width="70"
                         style="border: 2px solid white; border-radius: 50%; padding: 2px; background-color: white;"
                     />
                     <span style="color: white; font-size: 30px; font-weight: 700; letter-spacing: 1px;">SIWRIDE</span>
-                </a>
+                </Link>
             </div>
             <nav class="main-header__nav main-menu" style="margin-right: 50px;">
                 <ul class="main-menu__list">
                     <li class="dropdown">
-                        <a href="/">Home</a>
+                        <Link href="/" data-inertia="true">Home</Link>
                     </li>
-                    <li>
-                        <a href="about.html">About</a>
+                    <li class="dropdown">
+                        <Link href="/about" data-inertia="true">About</Link>
                         <ul>
-                            <li><a href="index2.html">About Us</a></li>
-                            <li><a href="/">Our Services</a></li>
-                            <li><a href="index3.html">Area Coverage</a></li>
+                            <li><Link href="/about-us" data-inertia="true">About Us</Link></li>
+                            <li><Link href="/services" data-inertia="true">Our Services</Link></li>
+                            <li><Link href="/area-coverage" data-inertia="true">Area Coverage</Link></li>
                         </ul>
                     </li>
                     <li class="dropdown">
-                        <a
-                            href="#/"
-                            role="button"
-                            aria-haspopup="true"
-                            onclick={(e) => e.preventDefault()}>Vehicles</a
-                        >
+                        <Link href="/vehicles" data-inertia="true">Vehicles</Link>
                         <ul>
-                            <li><a href="team.html">Standard Cars?</a></li>
-                            <li><a href="pricing.html">Premium Cars</a></li>
-                            <li><a href="gallery.html">Vans/Minibuses</a></li>
-                            <li><a href="faq.html">Buses</a></li>
-                            <li><a href="/">Login</a></li>
-                            <li><a href="/">Special Vehicles</a></li>
+                            <li><Link href="/vehicles/standard-cars" data-inertia="true">Standard Cars</Link></li>
+                            <li><Link href="/vehicles/premium-cars" data-inertia="true">Premium Cars</Link></li>
+                            <li><Link href="/vehicles/vans-minibuses" data-inertia="true">Vans/Minibuses</Link></li>
+                            <li><Link href="/vehicles/buses" data-inertia="true">Buses</Link></li>
+                            <li><Link href="/vehicles/special-vehicles" data-inertia="true">Special Vehicles</Link></li>
                         </ul>
                     </li>
                     <li class="dropdown">
-                        <a
-                            href="#/"
-                            role="button"
-                            aria-haspopup="true"
-                            onclick={(e) => e.preventDefault()}>Pages</a
-                        >
+                        <Link href="/pages" data-inertia="true">Pages</Link>
                         <ul>
-                            <li><a href="tour.html">Testimonials</a></li>
-                            <li>
-                                <a href="tour-sidebar.html">FAQ</a>
-                            </li>
-                            <li>
-                                <a href="tour-carousel.html">Terms & Coditions</a>
-                            </li>
-                            <li>
-                                <a href="tour-details.html">Privacy Policy</a>
-                            </li>
+                            <li><Link href="/testimonials" data-inertia="true">Testimonials</Link></li>
+                            <li><Link href="/faq" data-inertia="true">FAQ</Link></li>
+                            <li><Link href="/terms" data-inertia="true">Terms & Conditions</Link></li>
+                            <li><Link href="/privacy" data-inertia="true">Privacy Policy</Link></li>
                         </ul>
                     </li>
-                    <!-- <li class="dropdown">
-                        <a
-                            href="#/"
-                            role="button"
-                            aria-haspopup="true"
-                            onclick={(e) => e.preventDefault()}>Destination</a
-                        >
-                        <ul class="sub-menu">
-                            <li><a href="destination.html">Destination</a></li>
-                            <li>
-                                <a href="destination-carousel.html"
-                                    >Destination Carousel</a
-                                >
-                            </li>
-                            <li>
-                                <a href="destination-details.html"
-                                    >Destination Details</a
-                                >
-                            </li>
-                        </ul>
-                    </li> -->
-                    <!-- <li class="dropdown">
-                        <a
-                            href="#/"
-                            role="button"
-                            aria-haspopup="true"
-                            onclick={(e) => e.preventDefault()}>News</a
-                        >
-                        <ul class="sub-menu">
-                            <li class="dropdown">
-                                <a
-                                    href="#/"
-                                    role="button"
-                                    aria-haspopup="true"
-                                    onclick={(e) => e.preventDefault()}
-                                    >News grid</a
-                                >
-                                <ul class="sub-menu">
-                                    <li>
-                                        <a href="blog-grid.html">No sidebar</a>
-                                    </li>
-                                    <li>
-                                        <a href="blog-grid-left.html"
-                                            >Left sidebar</a
-                                        >
-                                    </li>
-                                    <li>
-                                        <a href="blog-grid-right.html"
-                                            >Right sidebar</a
-                                        >
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="dropdown">
-                                <a
-                                    href="#/"
-                                    role="button"
-                                    aria-haspopup="true"
-                                    onclick={(e) => e.preventDefault()}
-                                    >News list</a
-                                >
-                                <ul class="sub-menu">
-                                    <li>
-                                        <a href="blog-list.html">No sidebar</a>
-                                    </li>
-                                    <li>
-                                        <a href="blog-list-left.html"
-                                            >Left sidebar</a
-                                        >
-                                    </li>
-                                    <li>
-                                        <a href="blog-list-right.html"
-                                            >Right sidebar</a
-                                        >
-                                    </li>
-                                </ul>
-                            </li>
-                            <li>
-                                <a href="blog-carousel.html">News carousel</a>
-                            </li>
-                            <li class="dropdown">
-                                <a
-                                    href="#/"
-                                    role="button"
-                                    aria-haspopup="true"
-                                    onclick={(e) => e.preventDefault()}
-                                    >News details</a
-                                >
-                                <ul class="sub-menu">
-                                    <li>
-                                        <a href="blog-details.html"
-                                            >No sidebar</a
-                                        >
-                                    </li>
-                                    <li>
-                                        <a href="blog-details-left.html"
-                                            >Left sidebar</a
-                                        >
-                                    </li>
-                                    <li>
-                                        <a href="blog-details-right.html"
-                                            >Right sidebar</a
-                                        >
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li> -->
+
                     <li>
-                        <a href="contact.html">Booking</a>
+                        <Link href="/booking" data-inertia="true">Booking</Link>
                     </li>
                     <li>
-                        <a href="contact.html">Contact</a>
+                        <Link href="/contact" data-inertia="true">Contact</Link>
                     </li>
                 </ul>
             </nav>

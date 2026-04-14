@@ -30,6 +30,20 @@ Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name(
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+// Public Frontend Routes - Customer Pages
+Route::inertia('/about', 'customer/about')->name('about');
+Route::inertia('/about-us', 'customer/about')->name('about-us');
+Route::inertia('/services', 'customer/services')->name('services');
+Route::inertia('/area-coverage', 'customer/area-coverage')->name('area-coverage');
+Route::inertia('/vehicles', 'customer/vehicles')->name('vehicles');
+Route::inertia('/vehicles/{slug}', 'customer/vehicles/[slug]')->name('vehicles.slug');
+Route::inertia('/testimonials', 'customer/testimonials')->name('testimonials');
+Route::inertia('/faq', 'customer/faq')->name('faq');
+Route::inertia('/terms', 'customer/terms')->name('terms');
+Route::inertia('/privacy', 'customer/privacy')->name('privacy');
+Route::inertia('/booking', 'customer/booking')->name('booking');
+Route::inertia('/contact', 'customer/contact')->name('contact');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('admin/profile', [ProfileController::class, 'edit'])->name('admin.profile');
     Route::put('admin/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
