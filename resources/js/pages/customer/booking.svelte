@@ -17,9 +17,23 @@
         passengers: '1',
         message: ''
     };
+
+    const passengerOptions = Array.from({ length: 15 }, (_, i) => i + 1);
+
+    let isSubmitting = false;
+
+    const handleSubmit = async (e: Event) => {
+        e.preventDefault();
+        isSubmitting = true;
+        // Simulate network request
+        setTimeout(() => {
+            alert('Booking requested successfully! We will contact you shortly.');
+            isSubmitting = false;
+        }, 1500);
+    };
 </script>
 
-<AppHead title="Booking - Siwride" />
+<AppHead title="Book a Ride - Siwride" />
 
 <Preloader />
 <div class="custom-cursor__cursor"></div>
@@ -28,138 +42,173 @@
 <div class="page-wrapper">
     <Header />
     
-    <!-- Booking Section -->
-    <section class="page-header" style="background: linear-gradient(135deg, var(--travhub-base) 0%, #1a1a1a 100%); padding: 80px 0; text-align: center;">
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="page-header__bg"></div>
+        <div class="page-header__shape-one"></div>
+        <div class="page-header__shape-two"></div>
         <div class="container">
-            <h1 style="color: white; font-size: 48px; font-weight: 700; margin-bottom: 20px;">Book Your Ride</h1>
-            <p style="color: rgba(255,255,255,0.8); font-size: 18px; max-width: 600px; margin: 0 auto;">Simple and secure booking process for your transportation needs</p>
+            <h2 class="page-header__title bw-split-in-right">Booking</h2>
+            <ul class="travhub-breadcrumb list-unstyled">
+                <li><a href="/">Home</a></li>
+                <li><span>Booking</span></li>
+            </ul>
         </div>
     </section>
 
-    <section class="booking-section" style="padding: 80px 0; background: #f8f9fa;">
+    <!-- Booking Form Section -->
+    <section class="booking-section" style="padding: 100px 0; background: #f8f9fa;">
         <div class="container">
             <div class="row">
-                <div class="col-lg-8 mx-auto">
-                    <div class="booking-form" style="background: white; border-radius: 20px; padding: 50px; box-shadow: 0 15px 35px rgba(0,0,0,0.1);">
-                        <form>
+                <div class="col-lg-10 col-xl-8 mx-auto wow fadeInUp" data-wow-delay="100ms">
+                    <div class="booking-form" style="background: white; border-radius: 20px; padding: 50px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); border: 1px solid #f1f1f1;">
+                        
+                        <div class="text-center mb-5">
+                            <h3 style="font-size: 32px; font-weight: 700; color: #222;">Trip Details</h3>
+                            <p style="color: #666;">Please provide accurate details so our driver can reach you efficiently.</p>
+                        </div>
+
+                        <form on:submit={handleSubmit}>
+                            <!-- Personal Info -->
+                            <h4 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">1. Contact Information</h4>
                             <div class="row">
                                 <div class="col-md-6" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Full Name *</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Full Name *</label>
                                     <input 
                                         type="text" 
                                         bind:value={bookingData.name}
                                         required
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
+                                        minlength="3"
+                                        maxlength="60"
+                                        class="premium-input"
                                         placeholder="Enter your full name"
                                     />
+                                    <small class="form-text text-muted" style="font-size: 12px;">As displayed on your ID.</small>
                                 </div>
                                 <div class="col-md-6" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Email Address *</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Email Address *</label>
                                     <input 
                                         type="email" 
                                         bind:value={bookingData.email}
                                         required
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
+                                        maxlength="80"
+                                        class="premium-input"
                                         placeholder="your.email@example.com"
                                     />
+                                    <small class="form-text text-muted" style="font-size: 12px;">For booking confirmation.</small>
                                 </div>
                             </div>
                             
                             <div class="row">
-                                <div class="col-md-6" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Phone Number *</label>
+                                <div class="col-md-6" style="margin-bottom: 35px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">WhatsApp / Phone Number *</label>
                                     <input 
                                         type="tel" 
                                         bind:value={bookingData.phone}
                                         required
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
-                                        placeholder="+62 812-3456-789"
+                                        minlength="8"
+                                        maxlength="16"
+                                        pattern="[+]*[0-9]{8,16}"
+                                        class="premium-input"
+                                        placeholder="+62 812 3456 7890"
                                     />
+                                    <small class="form-text text-muted" style="font-size: 12px;">Active number for driver pickup.</small>
                                 </div>
-                                <div class="col-md-6" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Number of Passengers</label>
+                                <div class="col-md-6" style="margin-bottom: 35px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Total Passengers *</label>
                                     <select 
                                         bind:value={bookingData.passengers}
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
+                                        required
+                                        class="premium-input"
                                     >
-                                        <option value="1">1 Passenger</option>
-                                        <option value="2">2 Passengers</option>
-                                        <option value="3">3 Passengers</option>
-                                        <option value="4">4 Passengers</option>
-                                        <option value="5+">5+ Passengers</option>
+                                        {#each passengerOptions as num}
+                                            <option value="{num}">{num} Passenger{num > 1 ? 's' : ''}</option>
+                                        {/each}
+                                        <option value="16+">16+ Passengers</option>
                                     </select>
                                 </div>
                             </div>
                             
+                            <!-- Ride Details -->
+                            <h4 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">2. Ride Preferences</h4>
                             <div class="row">
                                 <div class="col-md-6" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Pickup Location *</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Pickup Location *</label>
                                     <input 
                                         type="text" 
                                         bind:value={bookingData.pickup}
                                         required
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
-                                        placeholder="Enter pickup address"
+                                        minlength="5"
+                                        maxlength="120"
+                                        class="premium-input"
+                                        placeholder="Hotel Name / Airport / Area"
                                     />
                                 </div>
                                 <div class="col-md-6" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Destination *</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Destination *</label>
                                     <input 
                                         type="text" 
                                         bind:value={bookingData.destination}
                                         required
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
-                                        placeholder="Enter destination"
+                                        minlength="5"
+                                        maxlength="120"
+                                        class="premium-input"
+                                        placeholder="Beach / Temple / Area"
                                     />
                                 </div>
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-6" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Pickup Date *</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Pickup Date *</label>
                                     <input 
                                         type="date" 
                                         bind:value={bookingData.date}
                                         required
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
+                                        class="premium-input"
+                                        min="{new Date().toISOString().split('T')[0]}"
                                     />
                                 </div>
                                 <div class="col-md-6" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Pickup Time *</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Pickup Time *</label>
                                     <input 
                                         type="time" 
                                         bind:value={bookingData.time}
                                         required
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
+                                        class="premium-input"
                                     />
                                 </div>
                             </div>
                             
                             <div class="row">
                                 <div class="col-12" style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Vehicle Type</label>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Select Vehicle Type *</label>
                                     <select 
                                         bind:value={bookingData.vehicle}
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease;"
+                                        required
+                                        class="premium-input"
                                     >
-                                        <option value="">Select Vehicle Type</option>
-                                        <option value="standard">Standard Car</option>
-                                        <option value="premium">Premium Car</option>
-                                        <option value="van">Van/Minibus</option>
-                                        <option value="bus">Bus</option>
-                                        <option value="special">Special Vehicle</option>
+                                        <option value="" disabled>-- Select a Vehicle --</option>
+                                        <option value="economy">Economy / Standard Hatchback (Up to 4 Passengers)</option>
+                                        <option value="premium">Premium SUV / Sedan (Up to 5 Passengers)</option>
+                                        <option value="van">Van / Minibus (Up to 14 Passengers)</option>
+                                        <option value="bus">Mid/Large Bus (Up to 30+ Passengers)</option>
+                                        <option value="special">Other / Custom Request</option>
                                     </select>
+                                    <small class="form-text text-muted" style="font-size: 12px; margin-top: 5px; display: block;">Luggage limits apply. If traveling heavy, consider upgrading your vehicle size.</small>
                                 </div>
                             </div>
                             
                             <div class="row">
-                                <div class="col-12" style="margin-bottom: 30px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--travhub-black);">Additional Message</label>
+                                <div class="col-12" style="margin-bottom: 40px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Additional Notes (Optional)</label>
                                     <textarea 
                                         bind:value={bookingData.message}
                                         rows="4"
-                                        style="width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; transition: border-color 0.3s ease; resize: vertical;"
-                                        placeholder="Any special requirements or notes..."
+                                        maxlength="500"
+                                        class="premium-input"
+                                        placeholder="Add flight number, child seat requests, or heavy luggage notes..."
+                                        style="resize: vertical;"
                                     ></textarea>
                                 </div>
                             </div>
@@ -169,17 +218,10 @@
                                     <button 
                                         type="submit"
                                         class="booking-submit-btn"
-                                        style="background: var(--travhub-base); color: white; padding: 18px 50px; border: none; border-radius: 50px; font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.2);"
-                                        on:mouseover={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-3px)';
-                                            e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.3)';
-                                        }}
-                                        on:mouseout={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                            e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-                                        }}
+                                        disabled={isSubmitting}
+                                        style="background: {isSubmitting ? '#999' : 'var(--travhub-base)'}; color: white; padding: 18px 50px; border: none; border-radius: 50px; font-size: 18px; font-weight: 600; cursor: {isSubmitting ? 'not-allowed' : 'pointer'}; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(229, 32, 41, 0.2);"
                                     >
-                                        Submit Booking Request
+                                        {isSubmitting ? 'Processing...' : 'Confirm Request'}
                                     </button>
                                 </div>
                             </div>
@@ -194,12 +236,33 @@
 </div>
 
 <style>
-    input:focus, select:focus, textarea:focus {
+    .premium-input {
+        width: 100%; 
+        padding: 15px 20px; 
+        border: 2px solid #eef2f5; 
+        background-color: #fcfcfc;
+        border-radius: 10px; 
+        font-size: 15px; 
+        font-weight: 500;
+        color: #333;
+        transition: all 0.3s ease;
+    }
+
+    .premium-input::placeholder {
+        color: #bbb;
+        font-weight: 400;
+    }
+
+    .premium-input:focus {
         outline: none;
+        background-color: #fff;
         border-color: var(--travhub-base) !important;
+        box-shadow: 0 0 0 4px rgba(229, 32, 41, 0.1);
     }
     
-    button:hover {
-        background: var(--travhub-black) !important;
+    .booking-submit-btn:hover:not(:disabled) {
+        background: #111 !important;
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2) !important;
     }
 </style>
