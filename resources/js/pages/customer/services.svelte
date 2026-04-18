@@ -15,72 +15,105 @@
 <div class="page-wrapper">
     <Header />
     
-    <!-- Services Section -->
-    <section class="page-header" style="background: linear-gradient(135deg, var(--travhub-base) 0%, #1a1a1a 100%); padding: 80px 0; text-align: center;">
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="page-header__bg"></div>
+        <div class="page-header__shape-one"></div>
+        <div class="page-header__shape-two"></div>
         <div class="container">
-            <h1 style="color: white; font-size: 48px; font-weight: 700; margin-bottom: 20px;">Our Services</h1>
-            <p style="color: rgba(255,255,255,0.8); font-size: 18px; max-width: 600px; margin: 0 auto;">Professional transportation services tailored to your needs</p>
+            <h2 class="page-header__title bw-split-in-right">Our Services</h2>
+            <ul class="travhub-breadcrumb list-unstyled">
+                <li><a href="/">Home</a></li>
+                <li><span>Services</span></li>
+            </ul>
         </div>
     </section>
 
-    <section class="services-section" style="padding: 80px 0;">
+    <!-- Services Grid -->
+    <section class="services-section pt-120 pb-120">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="service-card" style="background: white; border-radius: 15px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; height: 100%;">
-                        <div style="width: 80px; height: 80px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
-                            <i class="fa fa-plane" style="color: white; font-size: 36px;"></i>
+            <div class="sec-title text-center">
+                <div class="sec-title__tagline bw-split-in-right">Siwride Services<img src="/assets/images/shapes/sec-title-shape.png" alt="Siwride"></div>
+                <h3 class="sec-title__title bw-split-in-left">What We Offer</h3>
+            </div>
+            <div class="row gutter-y-30">
+                <!-- Service 1 -->
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="100ms">
+                    <div class="service-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                        <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                            <i class="fa fa-plane" style="font-size: 32px;"></i>
                         </div>
-                        <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);">Airport Transfer</h3>
-                        <p style="color: #666; line-height: 1.6;">Reliable airport pickup and drop-off services with professional drivers and comfortable vehicles.</p>
+                        <h5 class="why-choose-one__box__title">Airport Transfer</h5>
+                        <p class="why-choose-one__box__text">Reliable airport pickup and drop-off services with professional drivers and comfortable vehicles.</p>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="service-card" style="background: white; border-radius: 15px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; height: 100%;">
-                        <div style="width: 80px; height: 80px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
-                            <i class="fa fa-car" style="color: white; font-size: 36px;"></i>
+
+                <!-- Service 2 -->
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="200ms">
+                    <div class="service-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                        <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                            <i class="fa fa-car" style="font-size: 32px;"></i>
                         </div>
-                        <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);">City Tour</h3>
-                        <p style="color: #666; line-height: 1.6;">Explore the city with our comfortable and informative city tour services.</p>
+                        <h5 class="why-choose-one__box__title">City Tour</h5>
+                        <p class="why-choose-one__box__text">Explore the city with our comfortable and informative city tour services.</p>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="service-card" style="background: white; border-radius: 15px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; height: 100%;">
-                        <div style="width: 80px; height: 80px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
-                            <i class="fa fa-hotel" style="color: white; font-size: 36px;"></i>
+
+                <!-- Service 3 -->
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="300ms">
+                    <div class="service-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                        <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                            <i class="fa fa-hotel" style="font-size: 32px;"></i>
                         </div>
-                        <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);">Hotel Transfer</h3>
-                        <p style="color: #666; line-height: 1.6;">Convenient hotel transfer services for comfortable travel to and from your accommodation.</p>
+                        <h5 class="why-choose-one__box__title">Hotel Transfer</h5>
+                        <p class="why-choose-one__box__text">Convenient hotel transfer services for comfortable travel to and from your accommodation.</p>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="service-card" style="background: white; border-radius: 15px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; height: 100%;">
-                        <div style="width: 80px; height: 80px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
-                            <i class="fa fa-ring" style="color: white; font-size: 36px;"></i>
+
+                <!-- Service 4 -->
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="400ms">
+                    <div class="service-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                        <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                            <i class="fa fa-ring" style="font-size: 32px;"></i>
                         </div>
-                        <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);">Wedding Car</h3>
-                        <p style="color: #666; line-height: 1.6;">Elegant wedding transportation services with premium vehicles and professional chauffeurs.</p>
+                        <h5 class="why-choose-one__box__title">Wedding Car</h5>
+                        <p class="why-choose-one__box__text">Elegant wedding transportation services with premium vehicles and professional chauffeurs.</p>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="service-card" style="background: white; border-radius: 15px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; height: 100%;">
-                        <div style="width: 80px; height: 80px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
-                            <i class="fa fa-briefcase" style="color: white; font-size: 36px;"></i>
+
+                <!-- Service 5 -->
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="500ms">
+                    <div class="service-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                        <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                            <i class="fa fa-briefcase" style="font-size: 32px;"></i>
                         </div>
-                        <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);">Business Trip</h3>
-                        <p style="color: #666; line-height: 1.6;">Professional business transportation with punctual and reliable service.</p>
+                        <h5 class="why-choose-one__box__title">Business Trip</h5>
+                        <p class="why-choose-one__box__text">Professional business transportation with punctual and reliable service.</p>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="service-card" style="background: white; border-radius: 15px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; height: 100%;">
-                        <div style="width: 80px; height: 80px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
-                            <i class="fa fa-clock" style="color: white; font-size: 36px;"></i>
+
+                <!-- Service 6 -->
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="600ms">
+                    <div class="service-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                        <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                            <i class="fa fa-clock" style="font-size: 32px;"></i>
                         </div>
-                        <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);">Hourly Charter</h3>
-                        <p style="color: #666; line-height: 1.6;">Flexible hourly charter services for customized travel needs.</p>
+                        <h5 class="why-choose-one__box__title">Hourly Charter</h5>
+                        <p class="why-choose-one__box__text">Flexible hourly charter services for customized travel needs.</p>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta-one pt-120 pb-120 text-center" style="background-color: #f9f9f9;">
+        <div class="container">
+            <h2 class="sec-title__title bw-split-in-down mb-4">Ready for a comfortable ride?</h2>
+            <p class="mb-5" style="font-size: 18px; color: #666;">Book your trip with Siwride today and enjoy the best transportation services in Bali.</p>
+            <a href="/booking" class="travhub-btn">
+                <span>Start Booking Now</span>
+            </a>
         </div>
     </section>
     
@@ -89,11 +122,15 @@
 
 <style>
     .service-card {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #f0f0f0;
     }
     
     .service-card:hover {
         transform: translateY(-10px);
         box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        border-color: var(--travhub-base);
     }
 </style>
