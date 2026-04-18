@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
-    import { Link } from '@inertiajs/svelte';
+    import { Link, page } from '@inertiajs/svelte';
 
     const { auth = null }: { auth?: any } = $props();
 
@@ -36,6 +36,22 @@
         event.preventDefault();
         li.classList.toggle('open');
     }
+
+    /**
+     * Current pathname derived reactively from Inertia page store.
+     * Reacts on every navigation automatically.
+     */
+    const currentPath = $derived(page.url);
+
+    /**
+     * Returns true when the given href matches the current route.
+     * @param href  - the nav link href
+     * @param exact - true for exact match (Home /), false for prefix match
+     */
+    function isActive(href: string, exact = false): boolean {
+        if (exact) { return currentPath === href; }
+        return currentPath === href || currentPath.startsWith(href + '/');
+    }
 </script>
 
 <header class="main-header sticky-header sticky-header--normal" class:scrolled bind:this={headerElement}>
@@ -55,36 +71,38 @@
 
             <nav class="main-header__nav main-menu" style="margin-right: 50px;">
                 <ul class="main-menu__list">
-                    <li><Link href="/">Home</Link></li>
-                    <li class="dropdown">
+                    <li class:current={isActive('/', true)}>
+                        <Link href="/">Home</Link>
+                    </li>
+                    <li class="dropdown" class:current={isActive('/about')}>
                         <Link href="/about">About</Link>
                         <ul>
-                            <li><Link href="/about-us">About Us</Link></li>
-                            <li><Link href="/services">Our Services</Link></li>
-                            <li><Link href="/area-coverage">Area Coverage</Link></li>
+                            <li class:current={isActive('/about-us', true)}><Link href="/about-us">About Us</Link></li>
+                            <li class:current={isActive('/services', true)}><Link href="/services">Our Services</Link></li>
+                            <li class:current={isActive('/area-coverage', true)}><Link href="/area-coverage">Area Coverage</Link></li>
                         </ul>
                     </li>
-                    <li class="dropdown">
+                    <li class="dropdown" class:current={isActive('/vehicles')}>
                         <Link href="/vehicles">Vehicles</Link>
                         <ul>
-                            <li><Link href="/vehicles/standard-cars">Standard Cars</Link></li>
-                            <li><Link href="/vehicles/premium-cars">Premium Cars</Link></li>
-                            <li><Link href="/vehicles/vans-minibuses">Vans/Minibuses</Link></li>
-                            <li><Link href="/vehicles/buses">Buses</Link></li>
-                            <li><Link href="/vehicles/special-vehicles">Special Vehicles</Link></li>
+                            <li class:current={isActive('/vehicles/standard-cars', true)}><Link href="/vehicles/standard-cars">Standard Cars</Link></li>
+                            <li class:current={isActive('/vehicles/premium-cars', true)}><Link href="/vehicles/premium-cars">Premium Cars</Link></li>
+                            <li class:current={isActive('/vehicles/vans-minibuses', true)}><Link href="/vehicles/vans-minibuses">Vans/Minibuses</Link></li>
+                            <li class:current={isActive('/vehicles/buses', true)}><Link href="/vehicles/buses">Buses</Link></li>
+                            <li class:current={isActive('/vehicles/special-vehicles', true)}><Link href="/vehicles/special-vehicles">Special Vehicles</Link></li>
                         </ul>
                     </li>
-                    <li class="dropdown">
+                    <li class="dropdown" class:current={isActive('/pages') || isActive('/testimonials', true) || isActive('/faq', true) || isActive('/terms', true) || isActive('/privacy', true)}>
                         <Link href="/pages">Pages</Link>
                         <ul>
-                            <li><Link href="/testimonials">Testimonials</Link></li>
-                            <li><Link href="/faq">FAQ</Link></li>
-                            <li><Link href="/terms">Terms &amp; Conditions</Link></li>
-                            <li><Link href="/privacy">Privacy Policy</Link></li>
+                            <li class:current={isActive('/testimonials', true)}><Link href="/testimonials">Testimonials</Link></li>
+                            <li class:current={isActive('/faq', true)}><Link href="/faq">FAQ</Link></li>
+                            <li class:current={isActive('/terms', true)}><Link href="/terms">Terms &amp; Conditions</Link></li>
+                            <li class:current={isActive('/privacy', true)}><Link href="/privacy">Privacy Policy</Link></li>
                         </ul>
                     </li>
-                    <li><Link href="/booking">Booking</Link></li>
-                    <li><Link href="/contact">Contact</Link></li>
+                    <li class:current={isActive('/booking', true)}><Link href="/booking">Booking</Link></li>
+                    <li class:current={isActive('/contact', true)}><Link href="/contact">Contact</Link></li>
                 </ul>
             </nav>
 
@@ -143,49 +161,49 @@
 
         <div class="mobile-nav__container">
             <ul class="main-menu__list">
-                <li>
+                <li class:current={isActive('/', true)}>
                     <a href="/" onclick={() => (mobileNavOpen = false)}>Home</a>
                 </li>
-                <li class="dropdown">
+                <li class="dropdown" class:current={isActive('/about')}>
                     <!-- svelte-ignore a11y_invalid_attribute -->
                     <a href="#" onclick={toggleSubMenu}>
                         About <i class="fa fa-angle-down"></i>
                     </a>
                     <ul>
-                        <li><a href="/about-us" onclick={() => (mobileNavOpen = false)}>About Us</a></li>
-                        <li><a href="/services" onclick={() => (mobileNavOpen = false)}>Our Services</a></li>
-                        <li><a href="/area-coverage" onclick={() => (mobileNavOpen = false)}>Area Coverage</a></li>
+                        <li class:current={isActive('/about-us', true)}><a href="/about-us" onclick={() => (mobileNavOpen = false)}>About Us</a></li>
+                        <li class:current={isActive('/services', true)}><a href="/services" onclick={() => (mobileNavOpen = false)}>Our Services</a></li>
+                        <li class:current={isActive('/area-coverage', true)}><a href="/area-coverage" onclick={() => (mobileNavOpen = false)}>Area Coverage</a></li>
                     </ul>
                 </li>
-                <li class="dropdown">
+                <li class="dropdown" class:current={isActive('/vehicles')}>
                     <!-- svelte-ignore a11y_invalid_attribute -->
                     <a href="#" onclick={toggleSubMenu}>
                         Vehicles <i class="fa fa-angle-down"></i>
                     </a>
                     <ul>
-                        <li><a href="/vehicles/standard-cars" onclick={() => (mobileNavOpen = false)}>Standard Cars</a></li>
-                        <li><a href="/vehicles/premium-cars" onclick={() => (mobileNavOpen = false)}>Premium Cars</a></li>
-                        <li><a href="/vehicles/vans-minibuses" onclick={() => (mobileNavOpen = false)}>Vans/Minibuses</a></li>
-                        <li><a href="/vehicles/buses" onclick={() => (mobileNavOpen = false)}>Buses</a></li>
-                        <li><a href="/vehicles/special-vehicles" onclick={() => (mobileNavOpen = false)}>Special Vehicles</a></li>
+                        <li class:current={isActive('/vehicles/standard-cars', true)}><a href="/vehicles/standard-cars" onclick={() => (mobileNavOpen = false)}>Standard Cars</a></li>
+                        <li class:current={isActive('/vehicles/premium-cars', true)}><a href="/vehicles/premium-cars" onclick={() => (mobileNavOpen = false)}>Premium Cars</a></li>
+                        <li class:current={isActive('/vehicles/vans-minibuses', true)}><a href="/vehicles/vans-minibuses" onclick={() => (mobileNavOpen = false)}>Vans/Minibuses</a></li>
+                        <li class:current={isActive('/vehicles/buses', true)}><a href="/vehicles/buses" onclick={() => (mobileNavOpen = false)}>Buses</a></li>
+                        <li class:current={isActive('/vehicles/special-vehicles', true)}><a href="/vehicles/special-vehicles" onclick={() => (mobileNavOpen = false)}>Special Vehicles</a></li>
                     </ul>
                 </li>
-                <li class="dropdown">
+                <li class="dropdown" class:current={isActive('/pages') || isActive('/testimonials', true) || isActive('/faq', true) || isActive('/terms', true) || isActive('/privacy', true)}>
                     <!-- svelte-ignore a11y_invalid_attribute -->
                     <a href="#" onclick={toggleSubMenu}>
                         Pages <i class="fa fa-angle-down"></i>
                     </a>
                     <ul>
-                        <li><a href="/testimonials" onclick={() => (mobileNavOpen = false)}>Testimonials</a></li>
-                        <li><a href="/faq" onclick={() => (mobileNavOpen = false)}>FAQ</a></li>
-                        <li><a href="/terms" onclick={() => (mobileNavOpen = false)}>Terms &amp; Conditions</a></li>
-                        <li><a href="/privacy" onclick={() => (mobileNavOpen = false)}>Privacy Policy</a></li>
+                        <li class:current={isActive('/testimonials', true)}><a href="/testimonials" onclick={() => (mobileNavOpen = false)}>Testimonials</a></li>
+                        <li class:current={isActive('/faq', true)}><a href="/faq" onclick={() => (mobileNavOpen = false)}>FAQ</a></li>
+                        <li class:current={isActive('/terms', true)}><a href="/terms" onclick={() => (mobileNavOpen = false)}>Terms &amp; Conditions</a></li>
+                        <li class:current={isActive('/privacy', true)}><a href="/privacy" onclick={() => (mobileNavOpen = false)}>Privacy Policy</a></li>
                     </ul>
                 </li>
-                <li>
+                <li class:current={isActive('/booking', true)}>
                     <a href="/booking" onclick={() => (mobileNavOpen = false)}>Booking</a>
                 </li>
-                <li>
+                <li class:current={isActive('/contact', true)}>
                     <a href="/contact" onclick={() => (mobileNavOpen = false)}>Contact</a>
                 </li>
             </ul>
@@ -347,6 +365,14 @@
         font-size: 15px;
         text-decoration: none;
         transition: color 0.2s;
+    }
+
+    :global(.mobile-nav__container .main-menu__list > li.current > a) {
+        color: var(--travhub-base, #e52029);
+    }
+    
+    :global(.mobile-nav__container .main-menu__list .dropdown > ul li.current > a) {
+        color: var(--travhub-base, #e52029);
     }
 
     :global(.mobile-nav__container .main-menu__list li a:hover) {
