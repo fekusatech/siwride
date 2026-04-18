@@ -68,7 +68,7 @@
                             <div class="col-md-6">
                                 <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
                                     <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
-                                        <i class="flaticon-car" style="font-size: 32px;"></i>
+                                        <i class="fa fa-car" style="font-size: 32px;"></i>
                                     </div>
                                     <h5 class="why-choose-one__box__title">Examples</h5>
                                     <p class="why-choose-one__box__text">{vehicleInfo.examples}</p>
@@ -91,11 +91,11 @@
                 <!-- Action Buttons -->
                 <div class="row mt-5">
                     <div class="col-12 text-center wow fadeInUp" data-wow-delay="300ms">
-                        <a href="/booking" class="travhub-btn" style="margin-right: 15px;">
+                        <a href="/booking" class="travhub-btn mt-2" style="margin-right: 15px;">
                             <span>Book This Vehicle</span>
                         </a>
                         <!-- Link to contact page with a stylized custom dark button -->
-                        <a href="/contact" class="travhub-btn" style="background-color: #222;">
+                        <a href="/contact" class="travhub-btn mt-2" style="background-color: #222;">
                             <span>Ask About This Vehicle</span>
                         </a>
                     </div>
@@ -115,7 +115,7 @@
                     <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="100ms">
                         <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
                             <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
-                                <i class="flaticon-car" style="font-size: 32px;"></i>
+                                <i class="fa fa-car" style="font-size: 32px;"></i>
                             </div>
                             <h5 class="why-choose-one__box__title mb-3">Standard Cars</h5>
                             <a href="/vehicles/standard-cars" class="travhub-btn" style="font-size: 14px; padding: 12px 25px;"><span>View Details</span></a>
@@ -124,7 +124,7 @@
                     <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="200ms">
                         <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
                             <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
-                                <i class="flaticon-car" style="font-size: 32px;"></i>
+                                <i class="fa fa-car" style="font-size: 32px;"></i>
                             </div>
                             <h5 class="why-choose-one__box__title mb-3">Premium Cars</h5>
                             <a href="/vehicles/premium-cars" class="travhub-btn" style="font-size: 14px; padding: 12px 25px;"><span>View Details</span></a>

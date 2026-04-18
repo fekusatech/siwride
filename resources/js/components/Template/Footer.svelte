@@ -24,7 +24,7 @@
                     >       
                         <a href="#" class="travhub-btn" style="background: #4285f4; border-color: #4285f4; padding: 12px 30px; font-size: 16px; display: inline-flex; align-items: center; text-decoration: none;">
                             <i class="fab fa-google-play" style="margin-right: 10px; font-size: 20px;"></i>
-                            <span>Get it on Google Play</span>
+                            <span>Google Play</span>
                         </a>
                     </form>
                 </div>
@@ -36,7 +36,7 @@
                 <div class="footer-widget footer-widget--about">
                     <a href="/" class="footer-widget__logo" style="display: flex; align-items: center; gap: 12px;">
                         <img
-                            src="assets/images/siwride_logo.png"
+                            src="/assets/images/siwride_logo.png"
                             width="50"
                             style="border: 2px solid white; border-radius: 50%; padding: 2px; background-color: white;"
                             alt="Siwride"
@@ -44,7 +44,7 @@
                         <span style="color: white; font-size: 24px; font-weight: 700; letter-spacing: 1px;">SIWRIDE</span>
                     </a>
                     <p class="footer-widget__text">
-                        Your premium ride partner in Bali.<br />Safe, reliable, and comfortable<br />transportation solutions.
+                        Your premium ride partner in Bali. <br />Safe, reliable, and comfortable<br />transportation solutions.
                     </p>
                     <div class="main-footer__social">
                         <a href="https://facebook.com">
@@ -145,7 +145,7 @@
         <div class="logo-box">
             <a href="/" aria-label="logo image"
                 ><img
-                    src="assets/images/siwride_logo.png"
+                    src="/assets/images/siwride_logo.png"
                     width="155"
                     alt="Siwride"
                 /></a

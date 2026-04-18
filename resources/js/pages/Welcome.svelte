@@ -400,7 +400,7 @@
                                     <i class="flaticon-add"></i>
                                 </div>
                             </div>
-                            <h5 class="why-choose-one__count">
+                            <h5 class="why-choose-one__count ms-1">
                                 10k+<span>Happy Passengers</span>
                             </h5>
                         </div>
@@ -429,7 +429,7 @@
                 </div>
             </div>
             
-            <div class="tours-one__carousel travhub-owl__carousel travhub-owl__carousel--basic-nav owl-carousel" data-owl-options={'{"loop": true,"autoplay": true,"autoplayTimeout": 3000,"autoplayHoverPause": true,"items": 1,"nav": false,"navText": ["<span class=\\"icon-right-arrow\\"></span>","<span class=\\"icon-right-arrow\\"></span>"],"dots": true,"margin": 8,"responsive": {"0": {"items": 1,"margin": 8},"575": {"items": 2,"margin": 10},"992": {"items": 3,"margin": 12},"1200": {"items": 4,"margin": 15}}}'}>
+            <div class="tours-one__carousel travhub-owl__carousel travhub-owl__carousel--basic-nav owl-carousel" data-owl-options={'{"loop": true,"autoplay": true,"autoplayTimeout": 3000,"autoplayHoverPause": true,"items": 1,"nav": false,"navText": ["<span class=\\"icon-right-arrow\\"></span>","<span class=\\"icon-right-arrow\\"></span>"],"dots": true,"margin": 8,"responsive": {"0": {"items": 1,"margin": 5},"575": {"items": 2,"margin": 10},"992": {"items": 3,"margin": 12},"1200": {"items": 4,"margin": 15}}}'}>
                 {#each vehicleCategories as vehicle}
                 <div class="item">
                     <div role="presentation" class="vehicle-card" style="border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.06); transition: transform 0.3s ease; height: 100%; border: 1px solid #f1f1f1;" onmouseenter={(e) => e.currentTarget.style.transform = 'translateY(-8px)'} onmouseleave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
@@ -619,28 +619,16 @@
     /* Vehicle carousel styling */
     :global(.vehicle-category .owl-stage-outer) {
         overflow: hidden !important; 
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding-top: 10px !important;
-        padding-bottom: 40px !important;
-        margin-top: -10px !important;
-        margin-bottom: -40px !important;
+        padding: 20px 10px 50px 10px !important;
+        margin: -20px -10px -50px -10px !important;
     }
-    :global(.vehicle-category .owl-item) {
+    :global(.vehicle-category .item) {
         display: flex !important;
         flex: 1;
         width: 100%;
-        padding: 0 0 10px 0 !important; /* Only bottom padding, let owl margin handle horizontal gap */
-        visibility: visible !important;
-        opacity: 1 !important;
+        padding: 0 5px 10px 5px !important;
     }
-    :global(.vehicle-category .owl-item .vehicle-card) {
-        visibility: visible !important;
-        opacity: 1 !important;
-        display: block !important;
-        min-width: 300px !important;
+    :global(.vehicle-category .vehicle-card) {
         width: 100% !important;
     }
 
@@ -686,20 +674,4 @@
         }
     }
 
-    /* Vehicle cards responsive for mobile */
-    @media (max-width: 767px) {
-        :global(.vehicle-category .owl-item) {
-            width: 100% !important;
-            min-width: 350px !important;
-            max-width: 400px !important;
-            flex: 0 0 auto !important;
-        }
-        
-        :global(.vehicle-category .owl-item .vehicle-card) {
-            width: 100% !important;
-            min-width: 350px !important;
-            max-width: 400px !important;
-            margin: 0 auto !important;
-        }
-    }
 </style>
