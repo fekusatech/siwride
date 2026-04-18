@@ -24,52 +24,78 @@
     <Header />
     
     <!-- Page Header -->
-    <section class="page-header" style="background: linear-gradient(135deg, var(--travhub-base) 0%, #1a1a1a 100%); padding: 80px 0; text-align: center;">
+    <section class="page-header">
+        <div class="page-header__bg"></div>
+        <div class="page-header__shape-one"></div>
+        <div class="page-header__shape-two"></div>
         <div class="container">
-            <h1 style="color: white; font-size: 48px; font-weight: 700; margin-bottom: 20px;">{vehicleInfo?.title || 'Vehicles'}</h1>
-            <p style="color: rgba(255,255,255,0.8); font-size: 18px; max-width: 600px; margin: 0 auto;">{vehicleInfo?.description || 'Find the perfect vehicle for your journey'}</p>
+            <h2 class="page-header__title bw-split-in-right">{vehicleInfo?.title || 'Vehicles'}</h2>
+            <ul class="travhub-breadcrumb list-unstyled">
+                <li><a href="/">Home</a></li>
+                <li><a href="/vehicles">Vehicles</a></li>
+                <li><span>{vehicleInfo?.title || 'Details'}</span></li>
+            </ul>
         </div>
     </section>
 
     <!-- Vehicle Category Content -->
     {#if isValid && vehicleInfo}
-        <section class="about-section" style="padding: 80px 0;">
+        <section class="about-section pt-120 pb-120">
             <div class="container">
-                <div class="row">
-                    <div class="col-lg-6" style="margin-bottom: 40px;">
-                        <h2 style="font-size: 36px; font-weight: 700; color: var(--travhub-black); margin-bottom: 30px;">Vehicle Specifications</h2>
-                        <div class="why-choose-one__box" style="background: #fff; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; margin-bottom: 30px;">
-                            <div class="why-choose-one__box__icon" style="width: 60px; height: 60px; background: var(--travhub-base); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px;">
-                                <i class="icon-traveler-with-a-suitcase-1"></i>
-                            </div>
-                            <h5 style="font-size: 20px; font-weight: 700; margin-bottom: 15px;">Capacity</h5>
-                            <p style="color: #666; font-size: 16px; line-height: 1.8;">{vehicleInfo.capacity}</p>
+                <div class="row align-items-center">
+                    <div class="col-lg-6 wow fadeInLeft" data-wow-delay="100ms">
+                        <div class="sec-title mb-4">
+                            <div class="sec-title__tagline bw-split-in-right">Vehicle Specifications<img src="/assets/images/shapes/sec-title-shape.png" alt="travhub"></div>
+                            <h3 class="sec-title__title bw-split-in-left">{vehicleInfo.title} Details</h3>
                         </div>
+                        <p class="mb-5" style="color: #666; font-size: 18px;">
+                            {vehicleInfo.description || 'Find the perfect vehicle for your journey'}
+                        </p>
                         
-                        <div class="why-choose-one__box" style="background: #fff; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s;">
-                            <div class="why-choose-one__box__icon" style="width: 60px; height: 60px; background: var(--travhub-base); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px;">
-                                <i class="flaticon-car"></i>
+                        <div class="row gutter-y-20">
+                            <!-- Capacity -->
+                            <div class="col-md-6">
+                                <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                                    <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                        <i class="icon-traveler-with-a-suitcase-1" style="font-size: 32px;"></i>
+                                    </div>
+                                    <h5 class="why-choose-one__box__title">Capacity</h5>
+                                    <p class="why-choose-one__box__text">{vehicleInfo.capacity}</p>
+                                </div>
                             </div>
-                            <h5 style="font-size: 20px; font-weight: 700; margin-bottom: 15px;">Examples</h5>
-                            <p style="color: #666; font-size: 16px; line-height: 1.8;">{vehicleInfo.examples}</p>
+                            
+                            <!-- Examples -->
+                            <div class="col-md-6">
+                                <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                                    <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                        <i class="flaticon-car" style="font-size: 32px;"></i>
+                                    </div>
+                                    <h5 class="why-choose-one__box__title">Examples</h5>
+                                    <p class="why-choose-one__box__text">{vehicleInfo.examples}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-lg-6" style="margin-bottom: 40px;">
-                        <div style="background: var(--travhub-base); border-radius: 20px; padding: 40px; text-align: center; height: 100%;">
-                            <img src="/assets/images/tours/tours-1-1.jpg" alt="{vehicleInfo.title}" style="width: 100%; height: 300px; object-fit: cover; border-radius: 10px; margin-bottom: 20px;" />
-                            <h3 style="color: white; font-size: 24px; font-weight: 700; margin-bottom: 15px;">{vehicleInfo.title}</h3>
-                            <p style="color: rgba(255,255,255,0.9); line-height: 1.6;">Professional {vehicleInfo.title.toLowerCase()} for your comfortable journey</p>
+                    
+                    <div class="col-lg-6 wow fadeInRight" data-wow-delay="200ms">
+                        <div class="about-three__image mt-5 mt-lg-0" style="position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.1);">
+                            <img src="/assets/images/tours/tours-1-1.jpg" alt="{vehicleInfo.title}" style="width: 100%; height: 500px; object-fit: cover;" />
+                            <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); padding: 40px 30px 30px;">
+                                <h3 style="color: white; font-size: 28px; font-weight: 700; margin-bottom: 5px;">{vehicleInfo.title}</h3>
+                                <p style="color: rgba(255,255,255,0.9); margin: 0;">Professional {vehicleInfo.title.toLowerCase()} for your comfortable journey</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Action Buttons -->
-                <div class="row" style="margin-top: 60px;">
-                    <div class="col-12 text-center">
+                <div class="row mt-5">
+                    <div class="col-12 text-center wow fadeInUp" data-wow-delay="300ms">
                         <a href="/booking" class="travhub-btn" style="margin-right: 15px;">
                             <span>Book This Vehicle</span>
                         </a>
-                        <a href="/contact" class="travhub-btn travhub-btn--secondary">
+                        <!-- Link to contact page with a stylized custom dark button -->
+                        <a href="/contact" class="travhub-btn" style="background-color: #222;">
                             <span>Ask About This Vehicle</span>
                         </a>
                     </div>
@@ -77,57 +103,58 @@
             </div>
         </section>
     {:else}
-        <section class="about-section" style="padding: 80px 0;">
+        <section class="about-section pt-120 pb-120">
             <div class="container text-center">
-                <div class="sec-title">
-                    <h2 style="font-size: 36px; font-weight: 700; color: var(--travhub-black); margin-bottom: 30px;">Vehicle Category Not Found</h2>
-                    <p style="color: #666; font-size: 18px; margin-bottom: 40px;">The vehicle category "{slug}" is not available.</p>
+                <div class="sec-title mb-5">
+                    <div class="sec-title__tagline bw-split-in-right">Oops!<img src="/assets/images/shapes/sec-title-shape.png" alt="travhub"></div>
+                    <h2 class="sec-title__title bw-split-in-left">Vehicle Category Not Found</h2>
+                    <p class="sec-title__text bw-split-in-up-fast">The vehicle category "{slug}" is not available.</p>
                 </div>
                 
-                <div class="row">
-                    <div class="col-lg-4 col-md-6" style="margin-bottom: 30px;">
-                        <div class="why-choose-one__box text-center">
-                            <div class="why-choose-one__box__icon">
-                                <i class="flaticon-car"></i>
+                <div class="row gutter-y-30">
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="100ms">
+                        <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                            <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                <i class="flaticon-car" style="font-size: 32px;"></i>
                             </div>
-                            <h5>Standard Cars</h5>
-                            <a href="/vehicles/standard-cars" class="travhub-btn">View Details</a>
+                            <h5 class="why-choose-one__box__title mb-3">Standard Cars</h5>
+                            <a href="/vehicles/standard-cars" class="travhub-btn" style="font-size: 14px; padding: 12px 25px;"><span>View Details</span></a>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6" style="margin-bottom: 30px;">
-                        <div class="why-choose-one__box text-center">
-                            <div class="why-choose-one__box__icon">
-                                <i class="flaticon-car"></i>
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="200ms">
+                        <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                            <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                <i class="flaticon-car" style="font-size: 32px;"></i>
                             </div>
-                            <h5>Premium Cars</h5>
-                            <a href="/vehicles/premium-cars" class="travhub-btn">View Details</a>
+                            <h5 class="why-choose-one__box__title mb-3">Premium Cars</h5>
+                            <a href="/vehicles/premium-cars" class="travhub-btn" style="font-size: 14px; padding: 12px 25px;"><span>View Details</span></a>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6" style="margin-bottom: 30px;">
-                        <div class="why-choose-one__box text-center">
-                            <div class="why-choose-one__box__icon">
-                                <i class="icon-traveler-with-a-suitcase-1"></i>
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="300ms">
+                        <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                            <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                <i class="icon-traveler-with-a-suitcase-1" style="font-size: 32px;"></i>
                             </div>
-                            <h5>Vans & Minibuses</h5>
-                            <a href="/vehicles/vans-minibuses" class="travhub-btn">View Details</a>
+                            <h5 class="why-choose-one__box__title mb-3">Vans & Minibuses</h5>
+                            <a href="/vehicles/vans-minibuses" class="travhub-btn" style="font-size: 14px; padding: 12px 25px;"><span>View Details</span></a>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6" style="margin-bottom: 30px;">
-                        <div class="why-choose-one__box text-center">
-                            <div class="why-choose-one__box__icon">
-                                <i class="flaticon-bus"></i>
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="400ms">
+                        <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                            <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                <i class="flaticon-bus" style="font-size: 32px;"></i>
                             </div>
-                            <h5>Buses</h5>
-                            <a href="/vehicles/buses" class="travhub-btn">View Details</a>
+                            <h5 class="why-choose-one__box__title mb-3">Buses</h5>
+                            <a href="/vehicles/buses" class="travhub-btn" style="font-size: 14px; padding: 12px 25px;"><span>View Details</span></a>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6" style="margin-bottom: 30px;">
-                        <div class="why-choose-one__box text-center">
-                            <div class="why-choose-one__box__icon">
-                                <i class="icon-settings"></i>
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="500ms">
+                        <div class="vehicle-feature-card why-choose-one__box text-center h-100 p-4" style="background-color: #fff;">
+                            <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                <i class="icon-settings" style="font-size: 32px;"></i>
                             </div>
-                            <h5>Special Vehicles</h5>
-                            <a href="/vehicles/special-vehicles" class="travhub-btn">View Details</a>
+                            <h5 class="why-choose-one__box__title mb-3">Special Vehicles</h5>
+                            <a href="/vehicles/special-vehicles" class="travhub-btn" style="font-size: 14px; padding: 12px 25px;"><span>View Details</span></a>
                         </div>
                     </div>
                 </div>
@@ -139,5 +166,16 @@
 </div>
 
 <style>
-    /* Vehicle category page styles will be added here */
+    .vehicle-feature-card {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #f0f0f0;
+    }
+    
+    .vehicle-feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        border-color: var(--travhub-base);
+    }
 </style>
