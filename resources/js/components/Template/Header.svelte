@@ -74,10 +74,10 @@
                     <li class:current={isActive('/', true)}>
                         <Link href="/">Home</Link>
                     </li>
-                    <li class="dropdown" class:current={isActive('/about')}>
+                    <li class="dropdown" class:current={isActive('/about') || isActive('/about', true) || isActive('/services', true) || isActive('/area-coverage', true)}>
                         <Link href="/about">About</Link>
                         <ul>
-                            <li class:current={isActive('/about-us', true)}><Link href="/about-us">About Us</Link></li>
+                            <li class:current={isActive('/about', true)}><Link href="/about">About Us</Link></li>
                             <li class:current={isActive('/services', true)}><Link href="/services">Our Services</Link></li>
                             <li class:current={isActive('/area-coverage', true)}><Link href="/area-coverage">Area Coverage</Link></li>
                         </ul>
@@ -164,13 +164,13 @@
                 <li class:current={isActive('/', true)}>
                     <a href="/" onclick={() => (mobileNavOpen = false)}>Home</a>
                 </li>
-                <li class="dropdown" class:current={isActive('/about')}>
+                <li class="dropdown" class:current={isActive('/about') || isActive('/about', true) || isActive('/services', true) || isActive('/area-coverage', true)}>
                     <!-- svelte-ignore a11y_invalid_attribute -->
                     <a href="#" onclick={toggleSubMenu}>
                         About <i class="fa fa-angle-down"></i>
                     </a>
                     <ul>
-                        <li class:current={isActive('/about-us', true)}><a href="/about-us" onclick={() => (mobileNavOpen = false)}>About Us</a></li>
+                        <li class:current={isActive('/about', true)}><a href="/about" onclick={() => (mobileNavOpen = false)}>About Us</a></li>
                         <li class:current={isActive('/services', true)}><a href="/services" onclick={() => (mobileNavOpen = false)}>Our Services</a></li>
                         <li class:current={isActive('/area-coverage', true)}><a href="/area-coverage" onclick={() => (mobileNavOpen = false)}>Area Coverage</a></li>
                     </ul>
