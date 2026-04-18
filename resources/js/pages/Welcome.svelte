@@ -141,7 +141,7 @@
                 data-wow-duration="1500ms"
                 data-wow-delay="300ms"
             >
-                <form class="banner-form__wrapper" action="tour-listing-2.html">
+                <form class="banner-form__wrapper" action="/booking" method="GET">
                     <div class="banner-form row gutter-x-30 align-items-center">
                         <div
                             class="banner-form__control banner-form__col--1"
@@ -153,6 +153,7 @@
                                 type="text"
                                 name="pickup"
                                 placeholder="Airport, hotel, address..."
+                                required
                             />
                         </div>
                         <div class="banner-form__control banner-form__col--2">
@@ -163,6 +164,7 @@
                                 type="text"
                                 name="dropoff"
                                 placeholder="Airport, hotel, address..."
+                                required
                             />
                         </div>
                         <div
@@ -179,6 +181,7 @@
                                 autocomplete="off"
                                 readonly
                                 style="cursor: pointer;"
+                                required
                             />
                         </div>
                         <div class="banner-form__control banner-form__col--4">
