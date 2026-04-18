@@ -15,64 +15,181 @@
 <div class="page-wrapper">
     <Header />
     
-    <!-- About Section -->
-    <section class="page-header" style="background: linear-gradient(135deg, var(--travhub-base) 0%, #1a1a1a 100%); padding: 80px 0; text-align: center;">
+    <!-- ==================== Page Header ==================== -->
+    <section class="page-header">
+        <div class="page-header__bg"></div>
+        <div class="page-header__shape-one"></div>
+        <div class="page-header__shape-two"></div>
         <div class="container">
-            <h1 style="color: white; font-size: 48px; font-weight: 700; margin-bottom: 20px;">About Siwride</h1>
-            <p style="color: rgba(255,255,255,0.8); font-size: 18px; max-width: 600px; margin: 0 auto;">Your trusted partner for professional transportation services in Indonesia</p>
+            <h2 class="page-header__title bw-split-in-right">About Us</h2>
+            <ul class="travhub-breadcrumb list-unstyled">
+                <li><a href="/">Home</a></li>
+                <li>About Us</li>
+            </ul>
         </div>
     </section>
 
-    <section class="about-section" style="padding: 80px 0;">
+    <!-- ==================== Story / Why Choose Us ==================== -->
+    <section class="why-choose-one why-choose-one--about">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-6" style="margin-bottom: 40px;">
-                    <h2 style="font-size: 36px; font-weight: 700; color: var(--travhub-black); margin-bottom: 30px;">Our Story</h2>
-                    <p style="color: #666; line-height: 1.8; margin-bottom: 20px; font-size: 16px;">
-                        Siwride was founded with a simple mission: to provide reliable, comfortable, and affordable transportation services across Indonesia. What started as a small fleet of vehicles has grown into a comprehensive transportation solution serving thousands of satisfied customers.
-                    </p>
-                    <p style="color: #666; line-height: 1.8; margin-bottom: 20px; font-size: 16px;">
-                        We understand that every journey is important, whether it's a business trip, family vacation, or special occasion. That's why we've built our service around three core principles: safety, comfort, and reliability.
-                    </p>
-                </div>
-                <div class="col-lg-6" style="margin-bottom: 40px;">
-                    <div style="background: var(--travhub-base); border-radius: 20px; padding: 40px; text-align: center; height: 100%;">
-                        <img src="assets/images/siwride_logo.png" alt="Siwride" style="width: 120px; margin-bottom: 20px; border: 3px solid white; border-radius: 50%; padding: 5px; background: white;" />
-                        <h3 style="color: white; font-size: 24px; font-weight: 700; margin-bottom: 15px;">Professional Transportation</h3>
-                        <p style="color: rgba(255,255,255,0.9); line-height: 1.6;">Serving Indonesia with pride and excellence since 2020</p>
+            <div class="row d-flex align-items-center justify-content-center">
+                <!-- Content Side -->
+                <div class="col-lg-10 wow fadeInRight" data-wow-delay="200ms">
+                    <div class="why-choose-one__content">
+                        <div class="sec-title text-center">
+                            <div class="sec-title__tagline bw-split-in-right">Our Story<img src="/assets/images/shapes/sec-title-shape.png" alt="Travhub"></div>
+                            <h3 class="sec-title__title bw-split-in-left">Why Choose Siwride</h3>
+                            <p class="sec-title__text bw-split-in-up-fast">
+                                Siwride was founded with a simple mission: to provide reliable, comfortable, and affordable transportation services across Bali and surrounding islands. Based in Tabanan, we are your trusted local experts.
+                            </p>
+                        </div>
+                        <div class="row mt-5">
+                            <div class="col-md-6 mb-4">
+                                <div class="text-center h-100 p-4" >
+                                    <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                        <i class="flaticon-suitcase"></i>
+                                    </div>
+                                    <h5 style="font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);">Professional Drivers</h5>
+                                    <p style="color: #666; margin-bottom: 0;">Enjoy a safe and comfortable trip with our highly trained, experienced, and licensed local drivers.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="text-center h-100 p-4" >
+                                    <div class="why-choose-one__box__icon mx-auto" style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                                        <i class="flaticon-signpost"></i>
+                                    </div>
+                                    <h5 style="font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);">Tailored Destinations</h5>
+                                    <p style="color: #666; margin-bottom: 0;">Whether it's a popular tourist spot or a hidden gem in Bali, we will take you there with ease.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="why-choose-one__btn justify-content-center text-center mt-4">
+                            <a href="/booking" class="travhub-btn" style="width: 100%; max-width: 500px; padding: 15px 0;">
+                                <span>Start Booking</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="row" style="margin-top: 60px;">
-                <div class="col-12">
-                    <h2 style="font-size: 36px; font-weight: 700; color: var(--travhub-black); margin-bottom: 40px; text-align: center;">Why Choose Siwride?</h2>
-                </div>
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="feature-card" style="text-align: center; padding: 30px;">
-                        <div style="width: 70px; height: 70px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                            <i class="fa fa-shield-alt" style="color: white; font-size: 30px;"></i>
-                        </div>
-                        <h4 style="font-size: 20px; font-weight: 700; color: var(--travhub-black); margin-bottom: 15px;">Safety First</h4>
-                        <p style="color: #666; line-height: 1.6;">All our vehicles are regularly maintained and drivers are professionally trained and licensed.</p>
+        </div>
+    </section>
+
+    <!-- ==================== Statistics / Counters ==================== -->
+    <section class="counter-one">
+        <!-- Parallax Background Shape -->
+        <div class="counter-one__shape travhub-splax" data-para-options={JSON.stringify({ orientation: "up", scale: 2.0, overflow: true })}>
+            <img src="/assets/images/shapes/counter-1-shape.png" alt="Siwride">
+        </div>
+        <div class="container">
+            <div class="row align-items-end gutter-y-30">
+                <div class="col-lg-6">
+                    <div class="counter-one__image wow fadeInLeft" data-wow-duration="1500ms" data-wow-delay="100ms">
+                        <img src="/assets/images/resources/count-1-1.jpg" alt="Siwride Overview" style="width: 100%; border-radius: 20px; object-fit: cover; aspect-ratio: 4/3; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="feature-card" style="text-align: center; padding: 30px;">
-                        <div style="width: 70px; height: 70px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                            <i class="fa fa-clock" style="color: white; font-size: 30px;"></i>
+                <div class="col-lg-6">
+                    <div class="counter-one__funfact wow fadeInRight" data-wow-duration="1500ms" data-wow-delay="100ms">
+                        <div class="counter-one__funfact__item count-box">
+                            <h3 class="counter-one__funfact__count">
+                                <span class="count-text" data-stop="10" data-speed="1500">10</span>
+                                <span class="counter-one__funfact__count-tag">k+</span>
+                            </h3>
+                            <p class="counter-one__funfact__text">Satisfied Customers</p>
                         </div>
-                        <h4 style="font-size: 20px; font-weight: 700; color: var(--travhub-black); margin-bottom: 15px;">24/7 Service</h4>
-                        <p style="color: #666; line-height: 1.6;">Available round the clock to serve your transportation needs anytime, anywhere.</p>
+                        <div class="counter-one__funfact__item count-box">
+                            <h3 class="counter-one__funfact__count">
+                                <span class="count-text" data-stop="150" data-speed="1500">150</span>
+                                <span class="counter-one__funfact__count-tag">+</span>
+                            </h3>
+                            <p class="counter-one__funfact__text">Professional Drivers</p>
+                        </div>
+                        <div class="counter-one__funfact__item count-box">
+                            <h3 class="counter-one__funfact__count">
+                                <span class="count-text" data-stop="5" data-speed="1500">5</span>
+                                <span class="counter-one__funfact__count-tag">+</span>
+                            </h3>
+                            <p class="counter-one__funfact__text">Years of Experience</p>
+                        </div>
+                        <div class="counter-one__funfact__item count-box">
+                            <h3 class="counter-one__funfact__count">
+                                <span class="count-text" data-stop="100" data-speed="1500">100</span>
+                                <span class="counter-one__funfact__count-tag">%</span>
+                            </h3>
+                            <p class="counter-one__funfact__text">Secure Trips</p>
+                        </div>
+                        <div class="counter-one__funfact__item-two count-box">
+                            <h3 class="counter-one__funfact__item-two__count">
+                                <span class="count-text" data-stop="4.8" data-speed="1500">4.9</span>
+                            </h3>
+                        </div>
+                        <span class="counter-one__funfact__line"></span>
+                        <span class="counter-one__funfact__line-two"></span>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6" style="margin-bottom: 40px;">
-                    <div class="feature-card" style="text-align: center; padding: 30px;">
-                        <div style="width: 70px; height: 70px; background: var(--travhub-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                            <i class="fa fa-dollar-sign" style="color: white; font-size: 30px;"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== Professional Drivers / Team ==================== -->
+    <section class="team-one">
+        <div class="team-one__shape travhub-splax" data-para-options={JSON.stringify({ orientation: "up", scale: 2.5, overflow: true })}>
+            <img src="/assets/images/shapes/team-1-shape.png" alt="travhub"/>
+        </div>
+        <div class="container">
+            <div class="sec-title text-center wow fadeInUp" data-wow-delay="00ms">
+                <div class="sec-title__tagline bw-split-in-right">Friendly Experts<img src="/assets/images/shapes/sec-title-shape.png" alt="Travhub"></div>
+                <h3 class="sec-title__title bw-split-in-left">Meet Our Drivers</h3>
+                <p class="sec-title__text bw-split-in-up-fast">
+                    Our team consists of dedicated local experts who know the island inside out, ensuring your journey is safe and memorable.
+                </p>
+            </div>
+            <div class="row gutter-x-24 gutter-y-24">
+                <!-- Driver 1 -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="team-one__item wow fadeInUp" data-wow-delay="100ms">
+                        <div class="team-one__item__image">
+                            <img src="/assets/images/team/team-1-1.jpg" alt="Driver Made">
                         </div>
-                        <h4 style="font-size: 20px; font-weight: 700; color: var(--travhub-black); margin-bottom: 15px;">Competitive Pricing</h4>
-                        <p style="color: #666; line-height: 1.6;">Transparent pricing with no hidden fees. Quality service at affordable rates.</p>
+                        <div class="team-one__item__content">
+                            <h4 class="team-one__item__title">Bli Made</h4>
+                            <p class="team-one__item__text">Senior Driver</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Driver 2 -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="team-one__item wow fadeInUp" data-wow-delay="200ms">
+                        <div class="team-one__item__image">
+                            <img src="/assets/images/team/team-1-2.jpg" alt="Driver Wayan">
+                        </div>
+                        <div class="team-one__item__content">
+                            <h4 class="team-one__item__title">Bli Wayan</h4>
+                            <p class="team-one__item__text">Tour & Transport Specialist</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Driver 3 -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="team-one__item wow fadeInUp" data-wow-delay="300ms">
+                        <div class="team-one__item__image">
+                            <img src="/assets/images/team/team-1-3.jpg" alt="Driver Ketut">
+                        </div>
+                        <div class="team-one__item__content">
+                            <h4 class="team-one__item__title">Bli Ketut</h4>
+                            <p class="team-one__item__text">VIP Driver</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Driver 4 -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="team-one__item wow fadeInUp" data-wow-delay="400ms">
+                        <div class="team-one__item__image">
+                            <img src="/assets/images/team/team-1-4.jpg" alt="Driver Putu">
+                        </div>
+                        <div class="team-one__item__content">
+                            <h4 class="team-one__item__title">Bli Putu</h4>
+                            <p class="team-one__item__text">Minibus Expert</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -81,13 +198,3 @@
     
     <Footer />
 </div>
-
-<style>
-    .feature-card {
-        transition: transform 0.3s ease;
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-5px);
-    }
-</style>
