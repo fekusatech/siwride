@@ -236,9 +236,15 @@ class OrderController extends Controller
         $distance = $this->getDistance($order);
         $flightNumber = $order->flight_number ?: '-';
 
+        $vehicle = $driver->vehicles()->first();
+        $vehicleInfo = $vehicle ? "{$vehicle->brand} {$vehicle->model} ({$vehicle->registration_number})" : '-';
+
         $privateMessage = "*ORDER DIKONFIRMASI ADMIN*\n\n".
             "Booking Code: {$order->booking_code}\n".
             "Order Number: {$order->order_number}\n\n".
+            "*Driver:*\n".
+            "Nama: {$driver->name}\n".
+            "Mobil: {$vehicleInfo}\n\n".
             "*Customer:*\n".
             "Nama: {$order->customer_name}\n".
             "Telepon: {$order->customer_phone}\n".
@@ -294,9 +300,15 @@ class OrderController extends Controller
         $distance = $this->getDistance($order);
         $flightNumber = $order->flight_number ?: '-';
 
+        $vehicle = $driver->vehicles()->first();
+        $vehicleInfo = $vehicle ? "{$vehicle->brand} {$vehicle->model} ({$vehicle->registration_number})" : '-';
+
         $privateMessage = "*ORDER DIKONFIRMASI ADMIN*\n\n".
             "Booking Code: {$order->booking_code}\n".
             "Order Number: {$order->order_number}\n\n".
+            "*Driver:*\n".
+            "Nama: {$driver->name}\n".
+            "Mobil: {$vehicleInfo}\n\n".
             "*Customer:*\n".
             "Nama: {$order->customer_name}\n".
             "Telepon: {$order->customer_phone}\n".

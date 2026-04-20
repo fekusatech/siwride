@@ -193,10 +193,16 @@
         let message: string;
 
         if (order.driver) {
+            const vehicleInfo = order.vehicle
+                ? `${order.vehicle.brand} ${order.vehicle.model} (${order.vehicle.registration_number})`
+                : '-';
             message =
                 `*ORDER DIKONFIRMASI ADMIN*\n\n` +
                 `Booking Code: ${order.booking_code}\n` +
                 `Order Number: ${order.order_number}\n\n` +
+                `*Driver:*\n` +
+                `Nama: ${order.driver.name}\n` +
+                `Mobil: ${vehicleInfo}\n\n` +
                 `*Customer:*\n` +
                 `Nama: ${order.customer_name}\n` +
                 `Telepon: ${order.customer_phone}\n` +
