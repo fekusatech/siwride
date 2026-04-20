@@ -239,23 +239,23 @@ class OrderController extends Controller
         $vehicle = $driver->vehicles()->first();
         $vehicleInfo = $vehicle ? "{$vehicle->brand} {$vehicle->model} ({$vehicle->registration_number})" : '-';
 
-        $privateMessage = "*ORDER DIKONFIRMASI ADMIN*\n\n".
+        $privateMessage = "ORDER DIKONFIRMASI ADMIN\n\n".
             "Booking Code: {$order->booking_code}\n".
             "Order Number: {$order->order_number}\n\n".
-            "*Driver:*\n".
+            "Driver:\n".
             "Nama: {$driver->name}\n".
             "Mobil: {$vehicleInfo}\n\n".
-            "*Customer:*\n".
+            "Customer:\n".
             "Nama: {$order->customer_name}\n".
             "Telepon: {$order->customer_phone}\n".
             "Flight Number: {$flightNumber}\n\n".
-            "*Pickup:* {$order->pickup_address}\n".
-            "*Dropoff:* {$order->dropoff_address}\n".
-            ($distance !== '-' ? "*Jarak:* {$distance}\n" : '').
-            "*Tanggal:* {$dateStr}\n".
-            "*Jam:* {$timeStr} WITA\n".
-            "*Penumpang:* {$order->passengers} Pax\n".
-            '*Harga:* Rp '.number_format($order->price, 0, ',', '.')."\n\n".
+            "Pickup: {$order->pickup_address}\n\n".
+            "Dropoff: {$order->dropoff_address}\n\n".
+            ($distance !== '-' ? "Jarak: {$distance}\n" : '').
+            "Tanggal: {$dateStr}\n".
+            "Jam: {$timeStr} WITA\n".
+            "Penumpang: {$order->passengers} Pax\n".
+            'Harga: Rp '.number_format($order->price, 0, ',', '.')."\n\n".
             'Silakan hubungi customer untuk konfirmasi penjemputan!';
 
         $waService->sendPrivateMessage($driver->phone, $privateMessage);
@@ -303,23 +303,23 @@ class OrderController extends Controller
         $vehicle = $driver->vehicles()->first();
         $vehicleInfo = $vehicle ? "{$vehicle->brand} {$vehicle->model} ({$vehicle->registration_number})" : '-';
 
-        $privateMessage = "*ORDER DIKONFIRMASI ADMIN*\n\n".
+        $privateMessage = "ORDER DIKONFIRMASI ADMIN\n\n".
             "Booking Code: {$order->booking_code}\n".
             "Order Number: {$order->order_number}\n\n".
-            "*Driver:*\n".
+            "Driver:\n".
             "Nama: {$driver->name}\n".
             "Mobil: {$vehicleInfo}\n\n".
-            "*Customer:*\n".
+            "Customer:\n".
             "Nama: {$order->customer_name}\n".
             "Telepon: {$order->customer_phone}\n".
             "Flight Number: {$flightNumber}\n\n".
-            "*Pickup:* {$order->pickup_address}\n".
-            "*Dropoff:* {$order->dropoff_address}\n".
-            ($distance !== '-' ? "*Jarak:* {$distance}\n" : '').
-            "*Tanggal:* {$dateStr}\n".
-            "*Jam:* {$timeStr} WITA\n".
-            "*Penumpang:* {$order->passengers} Pax\n".
-            '*Harga:* Rp '.number_format($order->price, 0, ',', '.')."\n\n".
+            "Pickup: {$order->pickup_address}\n\n".
+            "Dropoff: {$order->dropoff_address}\n\n".
+            ($distance !== '-' ? "Jarak: {$distance}\n" : '').
+            "Tanggal: {$dateStr}\n".
+            "Jam: {$timeStr} WITA\n".
+            "Penumpang: {$order->passengers} Pax\n".
+            'Harga: Rp '.number_format($order->price, 0, ',', '.')."\n\n".
             'Silakan hubungi customer untuk konfirmasi penjemputan!';
 
         $response = $waService->sendPrivateMessage($driver->phone, $privateMessage);

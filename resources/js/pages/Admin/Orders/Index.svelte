@@ -197,23 +197,23 @@
                 ? `${order.vehicle.brand} ${order.vehicle.model} (${order.vehicle.registration_number})`
                 : '-';
             message =
-                `*ORDER DIKONFIRMASI ADMIN*\n\n` +
+                `ORDER DIKONFIRMASI ADMIN\n\n` +
                 `Booking Code: ${order.booking_code}\n` +
                 `Order Number: ${order.order_number}\n\n` +
-                `*Driver:*\n` +
+                `Driver:\n` +
                 `Nama: ${order.driver.name}\n` +
                 `Mobil: ${vehicleInfo}\n\n` +
-                `*Customer:*\n` +
+                `Customer:\n` +
                 `Nama: ${order.customer_name}\n` +
                 `Telepon: ${order.customer_phone}\n` +
                 `Flight Number: ${flightNumber}\n\n` +
-                `*Pickup:* ${order.pickup_address}\n` +
-                `*Dropoff:* ${order.dropoff_address}\n` +
-                (distance !== '-' ? `*Jarak:* ${distance}\n` : '') +
-                `*Tanggal:* ${dateStr}\n` +
-                `*Jam:* ${timeStr} WITA\n` +
-                `*Penumpang:* ${order.passengers} Pax\n` +
-                `*Harga:* Rp ${priceFormatted}\n\n` +
+                `Pickup: ${order.pickup_address}\n\n` +
+                `Dropoff: ${order.dropoff_address}\n\n` +
+                (distance !== '-' ? `Jarak: ${distance}\n` : '') +
+                `Tanggal: ${dateStr}\n` +
+                `Jam: ${timeStr} WITA\n` +
+                `Penumpang: ${order.passengers} Pax\n` +
+                `Harga: Rp ${priceFormatted}\n\n` +
                 `Silakan hubungi customer untuk konfirmasi penjemputan!`;
         } else {
             const claimUrl = `${window.location.origin}/c/${order.booking_code}`;
