@@ -73,13 +73,13 @@
                 <!-- Area 1 -->
                 <div class="col-xl-4 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="100ms">
                     <div class="destination-one__item">
-                        <img src="/assets/images/destination/destination-1-1.jpg" alt="Kuta">
+                        <img src="/assets/images/destination/tanahlot-temple.jpg" alt="Tanah Lot Temple">
                         <div class="destination-one__item__btn">
                             <a href="/booking" aria-label="Book for this destination"><span><i class="flaticon-top-right"></i></span></a>
                         </div>
                         <div class="destination-one__content">
-                            <h4 class="destination-one__item__title"><a href="/booking">Kuta & Seminyak</a></h4>
-                            <div class="destination-one__item__dec">Beaches & Nightlife</div>
+                            <h4 class="destination-one__item__title"><a href="/booking">Tanah Lot Temple</a></h4>
+                            <div class="destination-one__item__dec">Tabanan, Bali</div>
                         </div>
                     </div>
                 </div>
@@ -87,13 +87,13 @@
                 <!-- Area 2 -->
                 <div class="col-xl-4 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="200ms">
                     <div class="destination-one__item">
-                        <img src="/assets/images/destination/destination-1-2.jpg" alt="Canggu">
+                        <img src="/assets/images/destination/uluwatu-temple.webp" alt="Uluwatu Temple">
                         <div class="destination-one__item__btn">
                             <a href="/booking" aria-label="Book for this destination"><span><i class="flaticon-top-right"></i></span></a>
                         </div>
                         <div class="destination-one__content">
-                            <h4 class="destination-one__item__title"><a href="/booking">Canggu</a></h4>
-                            <div class="destination-one__item__dec">Surfing & Cafes</div>
+                            <h4 class="destination-one__item__title"><a href="/booking">Uluwatu Temple</a></h4>
+                            <div class="destination-one__item__dec">South Kuta, Bali</div>
                         </div>
                     </div>
                 </div>
@@ -101,13 +101,13 @@
                 <!-- Area 3 -->
                 <div class="col-xl-4 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="300ms">
                     <div class="destination-one__item">
-                        <img src="/assets/images/destination/destination-1-3.jpg" alt="Ubud">
+                        <img src="/assets/images/destination/tegallalang.webp" alt="Tegallalang Rice Terrace">
                         <div class="destination-one__item__btn">
                             <a href="/booking" aria-label="Book for this destination"><span><i class="flaticon-top-right"></i></span></a>
                         </div>
                         <div class="destination-one__content">
-                            <h4 class="destination-one__item__title"><a href="/booking">Ubud</a></h4>
-                            <div class="destination-one__item__dec">Arts & Culture</div>
+                            <h4 class="destination-one__item__title"><a href="/booking">Tegallalang Rice Terrace</a></h4>
+                            <div class="destination-one__item__dec">Ubud, Bali</div>
                         </div>
                     </div>
                 </div>
@@ -115,13 +115,13 @@
                 <!-- Area 4 -->
                 <div class="col-xl-4 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="400ms">
                     <div class="destination-one__item">
-                        <img src="/assets/images/destination/destination-1-4.jpg" alt="Uluwatu">
+                        <img src="/assets/images/destination/lempuyang.jpg" alt="Lempuyang Temple">
                         <div class="destination-one__item__btn">
                             <a href="/booking" aria-label="Book for this destination"><span><i class="flaticon-top-right"></i></span></a>
                         </div>
                         <div class="destination-one__content">
-                            <h4 class="destination-one__item__title"><a href="/booking">Uluwatu</a></h4>
-                            <div class="destination-one__item__dec">Cliffs & Temples</div>
+                            <h4 class="destination-one__item__title"><a href="/booking">Lempuyang Temple</a></h4>
+                            <div class="destination-one__item__dec">Karangasem, Bali</div>
                         </div>
                     </div>
                 </div>
@@ -129,13 +129,13 @@
                 <!-- Area 5 -->
                 <div class="col-xl-4 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="500ms">
                     <div class="destination-one__item">
-                        <img src="/assets/images/destination/destination-1-5.jpg" alt="Nusa Dua">
+                        <img src="/assets/images/destination/seminyak.webp" alt="Seminyak Beach">
                         <div class="destination-one__item__btn">
                             <a href="/booking" aria-label="Book for this destination"><span><i class="flaticon-top-right"></i></span></a>
                         </div>
                         <div class="destination-one__content">
-                            <h4 class="destination-one__item__title"><a href="/booking">Nusa Dua</a></h4>
-                            <div class="destination-one__item__dec">Luxury Resorts</div>
+                            <h4 class="destination-one__item__title"><a href="/booking">Seminyak Beach</a></h4>
+                            <div class="destination-one__item__dec">Kuta, Bali</div>
                         </div>
                     </div>
                 </div>
@@ -143,13 +143,13 @@
                 <!-- Area 6 -->
                 <div class="col-xl-4 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="600ms">
                     <div class="destination-one__item">
-                        <img src="/assets/images/destination/destination-1-6.jpg" alt="Sanur">
+                        <img src="/assets/images/destination/mount-batur.jpg" alt="Mount Batur">
                         <div class="destination-one__item__btn">
-                            <a href="/booking"><span><i class="flaticon-top-right"></i></span></a>
+                            <a href="/booking" aria-label="Book for this destination"><span><i class="flaticon-top-right"></i></span></a>
                         </div>
                         <div class="destination-one__content">
-                            <h4 class="destination-one__item__title"><a href="/booking">Sanur</a></h4>
-                            <div class="destination-one__item__dec">Sunrise & Relaxation</div>
+                            <h4 class="destination-one__item__title"><a href="/booking">Mount Batur</a></h4>
+                            <div class="destination-one__item__dec">Kintamani, Bali</div>
                         </div>
                     </div>
                 </div>
@@ -173,5 +173,14 @@
 </div>
 
 <style>
-    /* Destination specific overrides if needed */
+    /* Force uniform card height and cover-fit images */
+    :global(.destination-one__item) {
+        height: 350px;
+    }
+
+    :global(.destination-one__item img) {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    }
 </style>

@@ -4,31 +4,36 @@ export const VEHICLE_SLUGS = {
         title: 'Standard Cars',
         description: 'Comfortable and affordable standard vehicles for everyday travel',
         capacity: 'Up to 4 passengers',
-        examples: 'Toyota Avanza, Honda Mobilio, Suzuki Ertiga'
+        examples: 'Toyota Avanza, Honda Mobilio, Suzuki Ertiga',
+        img: '/assets/images/vehicles/sedan.png'
     },
     'premium-cars': {
         title: 'Premium Cars', 
         description: 'Luxury vehicles for premium travel experience',
         capacity: 'Up to 4 passengers',
-        examples: 'Toyota Camry, Honda Accord, Mercedes C-Class'
+        examples: 'Toyota Camry, Honda Accord, Mercedes C-Class',
+        img: '/assets/images/vehicles/business.png'
     },
     'vans-minibuses': {
         title: 'Vans & Minibuses',
         description: 'Spacious vehicles for group travel and family trips',
         capacity: 'Up to 15 passengers',
-        examples: 'Toyota Hiace, Suzuki APV, Mitsubishi L300'
+        examples: 'Toyota Hiace, Suzuki APV, Mitsubishi L300',
+        img: '/assets/images/vehicles/minibus.png'
     },
     'buses': {
         title: 'Buses',
         description: 'Large capacity buses for big groups and tours',
         capacity: 'Up to 50 passengers',
-        examples: 'Isuzu Elf, Hino Bus, Mitsubishi Bus'
+        examples: 'Isuzu Elf, Hino Bus, Mitsubishi Bus',
+        img: '/assets/images/vehicles/bus.png'
     },
     'special-vehicles': {
         title: 'Special Vehicles',
         description: 'Specialized vehicles for unique transportation needs',
         capacity: 'Varies by vehicle type',
-        examples: 'Wedding cars, cargo vehicles, modified transport'
+        examples: 'Wedding cars, cargo vehicles, modified transport',
+        img: '/assets/images/vehicles/electric.png'
     }
 } as const;
 
