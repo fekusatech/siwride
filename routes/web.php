@@ -12,6 +12,10 @@ Route::inertia('/', 'Welcome', [
 Route::get('/driver/register', [RegisteredDriverController::class, 'create'])->name('driver.register');
 Route::post('/driver/register', [RegisteredDriverController::class, 'store']);
 
+Route::get('/login', function () {
+    return Inertia::render('Admin/Login');
+})->name('login');
+
 Route::get('/login-admin', function () {
     return Inertia::render('Admin/Login');
 })->name('admin.login');
