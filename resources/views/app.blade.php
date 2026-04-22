@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 @php 
-    $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*'); 
+    $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*'); 
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
     @if($isDashboard)
