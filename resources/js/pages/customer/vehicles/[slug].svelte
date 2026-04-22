@@ -43,7 +43,7 @@
         <section class="about-section pt-120 pb-120">
             <div class="container">
                 <div class="row align-items-center">
-                    <div class="col-lg-6 wow fadeInLeft" data-wow-delay="100ms">
+                    <div class="col-lg-5 wow fadeInLeft" data-wow-delay="100ms">
                         <div class="sec-title mb-4">
                             <div class="sec-title__tagline bw-split-in-right">Vehicle Specifications<img src="/assets/images/shapes/sec-title-shape.png" alt="travhub"></div>
                             <h3 class="sec-title__title bw-split-in-left">{vehicleInfo.title} Details</h3>
@@ -77,9 +77,9 @@
                         </div>
                     </div>
                     
-                    <div class="col-lg-6 wow fadeInRight" data-wow-delay="200ms">
+                    <div class="col-lg-7 wow fadeInRight" data-wow-delay="200ms">
                         <div class="about-three__image mt-5 mt-lg-0" style="position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.1);">
-                            <img src="/assets/images/tours/tours-1-1.jpg" alt="{vehicleInfo.title}" style="width: 100%; height: 500px; object-fit: cover;" />
+                            <img src={vehicleInfo.img} alt="{vehicleInfo.title}" style="width: 100%; height: 500px; object-fit: cover;" />
                             <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); padding: 40px 30px 30px;">
                                 <h3 style="color: white; font-size: 28px; font-weight: 700; margin-bottom: 5px;">{vehicleInfo.title}</h3>
                                 <p style="color: rgba(255,255,255,0.9); margin: 0;">Professional {vehicleInfo.title.toLowerCase()} for your comfortable journey</p>
@@ -177,5 +177,9 @@
         transform: translateY(-10px);
         box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         border-color: var(--travhub-base);
+    }
+
+    :global(.about-three__image) {
+        margin-right: 0;
     }
 </style>

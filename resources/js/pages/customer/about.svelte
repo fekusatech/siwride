@@ -84,7 +84,7 @@
             <div class="row align-items-end gutter-y-30">
                 <div class="col-lg-6">
                     <div class="counter-one__image wow fadeInLeft" data-wow-duration="1500ms" data-wow-delay="100ms">
-                        <img src="/assets/images/resources/count-1-1.jpg" alt="Siwride Overview" style="width: 100%; border-radius: 20px; object-fit: cover; aspect-ratio: 4/3; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                        <img src="/assets/images/resources/why-choose-2.png" alt="Siwride Overview" style="width: 100%; border-radius: 20px; object-fit: cover; aspect-ratio: 4/3; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -130,7 +130,7 @@
         </div>
     </section>
 
-    <!-- ==================== Professional Drivers / Team ==================== -->
+    <!-- ==================== Professional Drivers / Team ====================
     <section class="team-one">
         <div class="team-one__shape travhub-splax" data-para-options={JSON.stringify({ orientation: "up", scale: 2.5, overflow: true })}>
             <img src="/assets/images/shapes/team-1-shape.png" alt="travhub"/>
@@ -144,7 +144,6 @@
                 </p>
             </div>
             <div class="row gutter-x-24 gutter-y-24">
-                <!-- Driver 1 -->
                 <div class="col-xl-3 col-md-6">
                     <div class="team-one__item wow fadeInUp" data-wow-delay="100ms">
                         <div class="team-one__item__image">
@@ -156,7 +155,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Driver 2 -->
                 <div class="col-xl-3 col-md-6">
                     <div class="team-one__item wow fadeInUp" data-wow-delay="200ms">
                         <div class="team-one__item__image">
@@ -168,7 +166,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Driver 3 -->
                 <div class="col-xl-3 col-md-6">
                     <div class="team-one__item wow fadeInUp" data-wow-delay="300ms">
                         <div class="team-one__item__image">
@@ -180,7 +177,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Driver 4 -->
+                
                 <div class="col-xl-3 col-md-6">
                     <div class="team-one__item wow fadeInUp" data-wow-delay="400ms">
                         <div class="team-one__item__image">
@@ -194,7 +191,69 @@
                 </div>
             </div>
         </div>
+    </section> -->
+
+    <section class="why-choose-one how-we-work" style="background-color: #f7f9fa;">
+        <div class="container">
+            <div class="sec-title text-center">
+                <div class="sec-title__tagline bw-split-in-right">How We Work<img src="/assets/images/shapes/sec-title-shape.png" alt="Travhub"></div>
+                <h3 class="sec-title__title bw-split-in-left">A Reliable Ride, Every Time</h3>
+                <p class="sec-title__text bw-split-in-up-fast" style="max-width: 700px; margin: 15px auto 0;">
+                    We focus on punctuality, safety, and clear communication so your trip stays smooth from pick-up to drop-off.
+                </p>
+            </div>
+
+            <div class="row gutter-y-30">
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="100ms">
+                    <div class="why-choose-one__box text-center" style="height: 100%;">
+                        <div class="why-choose-one__box__icon" style="position: relative; left: auto; top: auto; margin: 0 auto 18px; display: inline-flex; justify-content: center; align-items: center;">
+                            <i class="flaticon-time"></i>
+                        </div>
+                        <h5 class="why-choose-one__box__title">On-Time Pickups</h5>
+                        <p class="why-choose-one__box__text">We prioritize punctual schedules, especially for airport and hotel transfers.</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="200ms">
+                    <div class="why-choose-one__box text-center" style="height: 100%;">
+                        <div class="why-choose-one__box__icon" style="position: relative; left: auto; top: auto; margin: 0 auto 18px; display: inline-flex; justify-content: center; align-items: center;">
+                            <i class="flaticon-shield"></i>
+                        </div>
+                        <h5 class="why-choose-one__box__title">Safety First</h5>
+                        <p class="why-choose-one__box__text">Professional drivers, well-maintained vehicles, and a calm driving style.</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="300ms">
+                    <div class="why-choose-one__box text-center" style="height: 100%;">
+                        <div class="why-choose-one__box__icon" style="position: relative; left: auto; top: auto; margin: 0 auto 18px; display: inline-flex; justify-content: center; align-items: center;">
+                            <i class="flaticon-mail"></i>
+                        </div>
+                        <h5 class="why-choose-one__box__title">Clear Communication</h5>
+                        <p class="why-choose-one__box__text">We confirm details and keep you updated so there are no surprises.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center" style="margin-top: 35px;">
+                <a href="/booking" class="travhub-btn" style="max-width: 420px; width: 100%;">
+                    <span>Book Your Ride</span>
+                </a>
+            </div>
+        </div>
     </section>
     
     <Footer />
 </div>
+
+<style>
+    :global(.how-we-work .why-choose-one__box) {
+        padding: 0;
+    }
+
+    :global(.how-we-work .why-choose-one__box__icon) {
+        position: relative;
+        left: auto;
+        top: auto;
+    }
+</style>

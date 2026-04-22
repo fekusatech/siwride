@@ -6,42 +6,37 @@
     let passengerCount = $state(1);
 
     const vehicleCategories = [
-        { name: 'Sedan', passengers: 'Up to 3 passengers', img: '/assets/images/tours/tours-1-1.jpg' },
-        { name: 'Electrical Vehicle', passengers: 'Up to 4 passengers', img: '/assets/images/tours/tours-1-2.jpg' },
-        { name: 'Business', passengers: 'Up to 3 passengers', img: '/assets/images/tours/tours-1-3.jpg' },
-        { name: 'First Class', passengers: 'Up to 3 passengers', img: '/assets/images/tours/tours-1-1.jpg' },
-        { name: 'Super VIP', passengers: 'Up to 2 passengers', img: '/assets/images/tours/tours-1-2.jpg' },
-        { name: 'Limousine', passengers: 'Up to 16 passengers', img: '/assets/images/tours/tours-1-3.jpg' },
-        { name: 'SUV', passengers: 'Up to 6 passengers', img: '/assets/images/tours/tours-1-1.jpg' },
-        { name: 'Minivan', passengers: 'Up to 7 passengers', img: '/assets/images/tours/tours-1-2.jpg' },
-        { name: 'Minibus', passengers: 'Up to 15 passengers', img: '/assets/images/tours/tours-1-3.jpg' },
-        { name: 'Motorbike', passengers: 'Up to 1 passenger', img: '/assets/images/tours/tours-1-1.jpg' }
+        { name: 'Standard Cars', passengers: 'Up to 4 passengers', img: '/assets/images/vehicles/sedan.png', slug: 'standard-cars' },
+        { name: 'Premium Cars', passengers: 'Up to 4 passengers', img: '/assets/images/vehicles/business.png', slug: 'premium-cars' },
+        { name: 'Vans & Minibuses', passengers: 'Up to 15 passengers', img: '/assets/images/vehicles/minibus.png', slug: 'vans-minibuses' },
+        { name: 'Buses', passengers: 'Up to 50 passengers', img: '/assets/images/vehicles/bus.png', slug: 'buses' },
+        { name: 'Special Vehicles', passengers: 'Varies by vehicle type', img: '/assets/images/vehicles/electric.png', slug: 'special-vehicles' },
     ];
 
     const ourServices = [
-        { title: 'Airport Transfer', description: 'Punctual pick-up and drop-off to and from Ngurah Rai Airport. Start or end your journey stress-free.', icon: 'flaticon-signpost', img: '/assets/images/resources/why-choose-one-1.jpg' },
-        { title: 'Point-to-Point Ride', description: 'Quick and reliable everyday rides to take you from your hotel to the beach, restaurant, or anywhere in between.', icon: 'icon-pin-2', img: '/assets/images/resources/why-choose-one-2.jpg' },
-        { title: 'Hourly & Daily Rental', description: 'Explore Bali at your own pace with our flexible hourly and full-day vehicle rental complete with a professional driver.', icon: 'flaticon-camera-1', img: '/assets/images/gallery/gallery-1-3.jpg' },
-        { title: 'Intercity Travel', description: 'Comfortable long-distance travel across Bali for those planning to move between distant regions like Ubud to Uluwatu.', icon: 'flaticon-pin-1', img: '/assets/images/gallery/gallery-1-4.jpg' },
-        { title: 'Corporate Travel', description: 'Premium transportation solutions for business delegates, meetings, and corporate events with top-tier services.', icon: 'icon-traveler-with-a-suitcase-1', img: '/assets/images/gallery/gallery-1-5.jpg' },
-        { title: 'Tour Packages', description: 'Discover the hidden gems of the island with our curated half-day or full-day tour itineraries.', icon: 'flaticon-camera-2', img: '/assets/images/gallery/gallery-1-6.jpg' }
+        { title: 'Airport Transfer', description: 'Punctual pick-up and drop-off to and from Ngurah Rai Airport. Start or end your journey stress-free.', icon: 'flaticon-signpost', img: '/assets/images/services/airport-transfer.jpg' },
+        { title: 'Point-to-Point Ride', description: 'Quick and reliable everyday rides to take you from your hotel to the beach, restaurant, or anywhere in between.', icon: 'icon-pin-2', img: '/assets/images/services/point-to-point-ride.jpg' },
+        // { title: 'Hourly & Daily Rental', description: 'Explore Bali at your own pace with our flexible hourly and full-day vehicle rental complete with a professional driver.', icon: 'flaticon-camera-1', img: '/assets/images/gallery/gallery-1-3.jpg' },
+        { title: 'Intercity Travel', description: 'Comfortable long-distance travel across Bali for those planning to move between distant regions like Ubud to Uluwatu.', icon: 'flaticon-distance', img: '/assets/images/services/intercity-travel.webp' },
+        { title: 'Corporate Travel', description: 'Premium transportation solutions for business delegates, meetings, and corporate events with top-tier services.', icon: 'icon-traveler-with-a-suitcase-1', img: '/assets/images/services/corporate-travel.jpg' },
+        { title: 'Hotel Transfer', description: 'Convenient hotel transfer services for comfortable travel to and from your accommodation.', icon: 'fa fa-hotel', img: '/assets/images/services/hotel-transfer.jpg' }
     ];
 
     const popularDestinations = [
-        { name: 'Tanah Lot Temple', location: 'Tabanan, Bali', img: 'https://placehold.co/800x600/e9ecef/6c757d?text=Tanah+Lot' },
-        { name: 'Uluwatu Temple', location: 'South Kuta, Bali', img: 'https://placehold.co/800x600/e9ecef/6c757d?text=Uluwatu' },
-        { name: 'Tegallalang Rice Terrace', location: 'Ubud, Bali', img: 'https://placehold.co/800x600/e9ecef/6c757d?text=Tegallalang' },
-        { name: 'Lempuyang Temple', location: 'Karangasem, Bali', img: 'https://placehold.co/800x600/e9ecef/6c757d?text=Lempuyang' },
-        { name: 'Seminyak Beach', location: 'Kuta, Bali', img: 'https://placehold.co/800x600/e9ecef/6c757d?text=Seminyak' },
-        { name: 'Mount Batur', location: 'Kintamani, Bali', img: 'https://placehold.co/800x600/e9ecef/6c757d?text=Mount+Batur' }
+        { name: 'Tanah Lot Temple', location: 'Tabanan, Bali', img: '/assets/images/destination/tanahlot-temple.jpg' },
+        { name: 'Uluwatu Temple', location: 'South Kuta, Bali', img: '/assets/images/destination/uluwatu-temple.webp' },
+        { name: 'Tegallalang Rice Terrace', location: 'Ubud, Bali', img: '/assets/images/destination/tegallalang.webp' },
+        { name: 'Lempuyang Temple', location: 'Karangasem, Bali', img: '/assets/images/destination/lempuyang.jpg' },
+        { name: 'Seminyak Beach', location: 'Kuta, Bali', img: '/assets/images/destination/seminyak.webp' },
+        { name: 'Mount Batur', location: 'Kintamani, Bali', img: '/assets/images/destination/mount-batur.jpg' }
     ];
 
     const customerTestimonials = [
-        { name: 'Sarah Miller', country: 'Australia', comment: 'Booking my airport transfer via Siwride was the best decision. The driver was already there with a sign, and the car was incredibly clean and fresh!', rating: 5, img: '/assets/images/resources/test-1-1.jpg' },
-        { name: 'James Chen', country: 'Hong Kong', comment: 'We used the SUV for a full day trip to Ubud. Our driver knew exactly where to go and was very patient with our children. Highly recommended!', rating: 5, img: '/assets/images/resources/test-1-2.jpg' },
-        { name: 'Linda Wagner', country: 'Germany', comment: 'Safe driving and easy booking. I felt very secure as a solo traveler. The transparent pricing is a huge plus compared to other local options.', rating: 5, img: '/assets/images/resources/test-1-3.jpg' },
-        { name: 'David Smith', country: 'USA', comment: 'Excellent service! The app was easy to use and the pickup was on time. The driver was professional and the car was very comfortable.', rating: 5, img: '/assets/images/resources/test-1-4.jpg' },
-        { name: 'Emilia Clarke', country: 'UK', comment: 'Siwride is my go-to for Bali travel. Reliable, transparent, and superior fleet quality compared to others. Worth every penny!', rating: 5, img: '/assets/images/resources/test-1-5.jpg' }
+        { name: 'Sarah Miller', country: 'Australia', comment: 'Booking my airport transfer via Siwride was the best decision. The driver was already there with a sign, and the car was incredibly clean and fresh!', rating: 5, img: '/assets/images/resources/why-choose-one-author-1.png' },
+        { name: 'James Chen', country: 'Hong Kong', comment: 'We used the SUV for a full day trip to Ubud. Our driver knew exactly where to go and was very patient with our children. Highly recommended!', rating: 5, img: '/assets/images/resources/why-choose-one-author-5.png' },
+        { name: 'Linda Wagner', country: 'Germany', comment: 'Safe driving and easy booking. I felt very secure as a solo traveler. The transparent pricing is a huge plus compared to other local options.', rating: 5, img: '/assets/images/resources/why-choose-one-author-4.png' },
+        { name: 'David Singh', country: 'India', comment: 'Excellent service! The app was easy to use and the pickup was on time. The driver was professional and the car was very comfortable.', rating: 5, img: '/assets/images/resources/why-choose-one-author-3.png' },
+        { name: 'Emilia Clarke', country: 'UK', comment: 'Siwride is my go-to for Bali travel. Reliable, transparent, and superior fleet quality compared to others. Worth every penny!', rating: 5, img: '/assets/images/resources/why-choose-one-author-2.png' }
     ];
 
     onMount(() => {
@@ -211,7 +206,7 @@
             class="hero-one__shape-one"
             style="background-image: url(/assets/images/shapes/group-1-1.png);"
         ></div>
-        <div class="hero-one__image">
+        <!-- <div class="hero-one__image">
             <div
                 class="hero-one__image-one travhub-splax"
                 data-para-options={'{"orientation": "up","scale": 2.5,"overflow": true}'}
@@ -236,7 +231,7 @@
             >
                 <img src="/assets/images/resources/image-hero-1-4.png" alt="" />
             </div>
-        </div>
+        </div> -->
         <div class="hero-one__shape-two">
             <img src="/assets/images/shapes/plane.png" alt="" />
         </div>
@@ -302,20 +297,20 @@
             <div class="row d-flex align-items-center">
                 <div class="col-xl-6 wow fadeInUp" data-wow-delay="300ms">
                     <div class="why-choose-one__image">
-                        <img
-                            src="/assets/images/resources/why-choose-one-1.jpg"
+                        <img style="width:438px; height:544px;"
+                            src="/assets/images/resources/why-choose.jpg"
                             alt="travhub"
                         />
-                        <div
+                        <!-- <div
                             class="why-choose-one__image__shape"
-                            style="background-image: url(/assets/images/shapes/why-choose-one-shape.png);"
-                        ></div>
-                        <div class="why-choose-one__image__two">
+                            style="background-image: url(/assets/images/shapes/why-choose.jpg);"
+                        ></div> -->
+                        <!-- <div class="why-choose-one__image__two">
                             <img
                                 src="/assets/images/resources/why-choose-one-2.jpg"
                                 alt="travhub"
                             />
-                        </div>
+                        </div> -->
                         <div class="why-choose-one__check">
                             <div class="why-choose-one__check__icon">
                                 <i class="flaticon-check"></i>
@@ -326,7 +321,7 @@
                         </div>
                         <div class="why-choose-one__rm">
                             <a
-                                href="about.html"
+                                href="/about"
                                 aria-label="Read more about our services"
                                 ><i class="flaticon-top-right"></i></a
                             >
@@ -372,25 +367,25 @@
                             </p>
                         </div>
                         <div class="why-choose-one__btn">
-                            <a href="#/" class="travhub-btn">
+                            <a href="/booking" class="travhub-btn">
                                 <span>Book a Ride</span>
                             </a>
                             <div class="why-choose-one__author">
                                 <div class="why-choose-one__author__item">
                                     <img
-                                        src="/assets/images/resources/why-choose-one-author-1.jpg"
+                                        src="/assets/images/resources/why-choose-one-author-1.png"
                                         alt="Travhub"
                                     />
                                 </div>
                                 <div class="why-choose-one__author__item">
                                     <img
-                                        src="/assets/images/resources/why-choose-one-author-2.jpg"
+                                        src="/assets/images/resources/why-choose-one-author-2.png"
                                         alt="Travhub"
                                     />
                                 </div>
                                 <div class="why-choose-one__author__item">
                                     <img
-                                        src="/assets/images/resources/why-choose-one-author-3.jpg"
+                                        src="/assets/images/resources/why-choose-one-author-3.png"
                                         alt="Travhub"
                                     />
                                 </div>
@@ -425,7 +420,7 @@
                     </p>
                 </div>
                 <div class="see-all-btn d-none d-md-block" style="padding-bottom: 20px;">
-                    <a href="#/" class="travhub-btn travhub-btn--base"><span>See All</span></a>
+                    <a href="/vehicles" class="travhub-btn travhub-btn--base"><span>See All</span></a>
                 </div>
             </div>
             
@@ -437,12 +432,12 @@
                             <img src={vehicle.img} alt={vehicle.name} style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; transition: transform 0.5s ease;" role="presentation" onmouseenter={(e) => e.currentTarget.style.transform = 'scale(1.08)'} onmouseleave={(e) => e.currentTarget.style.transform = 'scale(1)'}/>
                         </div>
                         <div class="vehicle-card__content" style="padding: 25px;">
-                            <h4 style="font-size: 20px; font-weight: 700; margin-bottom: 15px;"><a href="#/" style="color: inherit; text-decoration: none;">{vehicle.name}</a></h4>
+                            <h4 style="font-size: 20px; font-weight: 700; margin-bottom: 15px;"><a href={`/vehicles/${vehicle.slug}`} style="color: inherit; text-decoration: none;">{vehicle.name}</a></h4>
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div style="display: flex; align-items: center; color: #666; font-size: 15px; font-weight: 500;">
                                     <i class="icon-traveler-with-a-suitcase-1" style="margin-right: 8px; font-size: 18px; color: var(--travhub-base, #e52029);"></i> {vehicle.passengers}
                                 </div>
-                                <a href="#/" style="width: 35px; height: 35px; border-radius: 50%; background: #f7f9fa; display: flex; align-items: center; justify-content: center; color: var(--travhub-base, #e52029); transition: 0.3s; text-decoration: none;" onmouseenter={(e) => { e.currentTarget.style.background = 'var(--travhub-base, #e52029)'; e.currentTarget.style.color = '#fff'; }} onmouseleave={(e) => { e.currentTarget.style.background = '#f7f9fa'; e.currentTarget.style.color = 'var(--travhub-base, #e52029)'; }}>
+                                <a href={`/vehicles/${vehicle.slug}`} style="width: 35px; height: 35px; border-radius: 50%; background: #f7f9fa; display: flex; align-items: center; justify-content: center; color: var(--travhub-base, #e52029); transition: 0.3s; text-decoration: none;" onmouseenter={(e) => { e.currentTarget.style.background = 'var(--travhub-base, #e52029)'; e.currentTarget.style.color = '#fff'; }} onmouseleave={(e) => { e.currentTarget.style.background = '#f7f9fa'; e.currentTarget.style.color = 'var(--travhub-base, #e52029)'; }}>
                                     <i class="flaticon-top-right"></i>
                                 </a>
                             </div>
@@ -468,7 +463,7 @@
                 </p>
             </div>
             
-            <div class="row gutter-y-30">
+            <div class="row gutter-y-30 justify-content-center">
                 {#each ourServices as service, index}
                 <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay={index * 100 + "ms"}>
                     <div class="service-card" style="background: #fff; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s;" role="presentation" onmouseenter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'} onmouseleave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
@@ -485,9 +480,9 @@
                             <p style="color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 20px;">
                                 {service.description}
                             </p>
-                            <a href="#/" style="display: inline-flex; align-items: center; color: var(--travhub-base, #e52029); font-weight: 600; text-decoration: none; font-size: 15px; transition: 0.3s;" role="presentation" onmouseenter={(e) => e.currentTarget.style.letterSpacing = '1px'} onmouseleave={(e) => e.currentTarget.style.letterSpacing = '0'}>
+                            <!-- <a href="#/" style="display: inline-flex; align-items: center; color: var(--travhub-base, #e52029); font-weight: 600; text-decoration: none; font-size: 15px; transition: 0.3s;" role="presentation" onmouseenter={(e) => e.currentTarget.style.letterSpacing = '1px'} onmouseleave={(e) => e.currentTarget.style.letterSpacing = '0'}>
                                 Read More <i class="icon-right-arrow" style="margin-left: 8px; font-size: 12px;"></i>
-                            </a>
+                            </a> -->
                         </div>
                     </div>
                 </div>
@@ -549,7 +544,7 @@
                             <h4 style="color: #fff; font-size: 24px; font-weight: 700; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">{dest.name}</h4>
                             <div style="color: #eee; font-size: 15px; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
                                 <div><i class="icon-pin-2" style="color: var(--travhub-base, #e52029); margin-right: 8px; font-size: 16px;"></i> {dest.location}</div>
-                                <a href="#/" class="destination-btn" style="background: var(--travhub-base, #e52029); color: #fff; padding: 6px 15px; border-radius: 4px; font-size: 13px; font-weight: 600; text-decoration: none; transition: 0.3s; transform: translateY(10px); opacity: 0;">Book Now</a>
+                                <a href="/booking" class="destination-btn" style="background: var(--travhub-base, #e52029); color: #fff; padding: 6px 15px; border-radius: 4px; font-size: 13px; font-weight: 600; text-decoration: none; transition: 0.3s; transform: translateY(10px); opacity: 0;">Book Now</a>
                             </div>
                         </div>
                     </div>

@@ -32,7 +32,6 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
 // Public Frontend Routes - Customer Pages
 Route::inertia('/about', 'customer/about')->name('about');
-// Route::inertia('/about-us', 'customer/about')->name('about-us');
 Route::inertia('/services', 'customer/services')->name('services');
 Route::inertia('/area-coverage', 'customer/area-coverage')->name('area-coverage');
 Route::inertia('/vehicles', 'customer/vehicles')->name('vehicles');

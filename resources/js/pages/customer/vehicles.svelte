@@ -46,7 +46,7 @@
                 <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="100ms">
                     <div class="vehicle-feature-card text-center h-100 p-4" style="background-color: #fff;">
                         <div style="border-radius: 10px; overflow: hidden; margin-bottom: 20px; height: 180px;">
-                            <img src="https://placehold.co/600x400/eef2f5/888?text=Standard+Cars+Image" alt="Standard Cars" style="width: 100%; height: 100%; object-fit: cover;" />
+                            <img src="/assets/images/vehicles/sedan.png" alt="Standard Cars" style="width: 100%; height: 100%; object-fit: cover;" />
                         </div>
                         <h4 class="mb-3" style="font-size: 24px; font-weight: 700;">Standard Cars</h4>
                         <p class="mb-4" style="color: #666; font-size: 15px;">Comfortable and affordable standard vehicles for everyday travel.</p>
@@ -58,7 +58,7 @@
                 <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="200ms">
                     <div class="vehicle-feature-card text-center h-100 p-4" style="background-color: #fff;">
                         <div style="border-radius: 10px; overflow: hidden; margin-bottom: 20px; height: 180px;">
-                            <img src="https://placehold.co/600x400/eef2f5/888?text=Premium+Cars+Image" alt="Premium Cars" style="width: 100%; height: 100%; object-fit: cover;" />
+                            <img src="/assets/images/vehicles/business.png" alt="Premium Cars" style="width: 100%; height: 100%; object-fit: cover;" />
                         </div>
                         <h4 class="mb-3" style="font-size: 24px; font-weight: 700;">Premium Cars</h4>
                         <p class="mb-4" style="color: #666; font-size: 15px;">Luxury vehicles for a premium and prestigious travel experience.</p>
@@ -70,7 +70,7 @@
                 <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="300ms">
                     <div class="vehicle-feature-card text-center h-100 p-4" style="background-color: #fff;">
                         <div style="border-radius: 10px; overflow: hidden; margin-bottom: 20px; height: 180px;">
-                            <img src="https://placehold.co/600x400/eef2f5/888?text=Vans+%26+Minibuses+Image" alt="Vans & Minibuses" style="width: 100%; height: 100%; object-fit: cover;" />
+                            <img src="/assets/images/vehicles/minibus.png" alt="Vans & Minibuses" style="width: 100%; height: 100%; object-fit: cover;" />
                         </div>
                         <h4 class="mb-3" style="font-size: 24px; font-weight: 700;">Vans & Minibuses</h4>
                         <p class="mb-4" style="color: #666; font-size: 15px;">Spacious vehicles tailored for larger families and group tours.</p>
@@ -82,7 +82,7 @@
                 <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="400ms">
                     <div class="vehicle-feature-card text-center h-100 p-4" style="background-color: #fff;">
                         <div style="border-radius: 10px; overflow: hidden; margin-bottom: 20px; height: 180px;">
-                            <img src="https://placehold.co/600x400/eef2f5/888?text=Buses+Image" alt="Buses" style="width: 100%; height: 100%; object-fit: cover;" />
+                            <img src="/assets/images/vehicles/bus.png" alt="Buses" style="width: 100%; height: 100%; object-fit: cover;" />
                         </div>
                         <h4 class="mb-3" style="font-size: 24px; font-weight: 700;">Buses</h4>
                         <p class="mb-4" style="color: #666; font-size: 15px;">High-capacity buses reserved for monumental groups and large excursions.</p>
@@ -94,7 +94,7 @@
                 <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="500ms">
                     <div class="vehicle-feature-card text-center h-100 p-4" style="background-color: #fff;">
                         <div style="border-radius: 10px; overflow: hidden; margin-bottom: 20px; height: 180px;">
-                            <img src="https://placehold.co/600x400/eef2f5/888?text=Special+Vehicles+Image" alt="Special Vehicles" style="width: 100%; height: 100%; object-fit: cover;" />
+                            <img src="/assets/images/vehicles/electric.png" alt="Special Vehicles" style="width: 100%; height: 100%; object-fit: cover;" />
                         </div>
                         <h4 class="mb-3" style="font-size: 24px; font-weight: 700;">Special Vehicles</h4>
                         <p class="mb-4" style="color: #666; font-size: 15px;">Specialized and stylized transport for weddings or customized requirements.</p>
