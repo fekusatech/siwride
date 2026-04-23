@@ -91,7 +91,7 @@
                 <!-- Action Buttons -->
                 <div class="row mt-5">
                     <div class="col-12 text-center wow fadeInUp" data-wow-delay="300ms">
-                        <a href="/booking" class="travhub-btn mt-2" style="margin-right: 15px;">
+                        <a href="/booking?vehicle={vehicleInfo.vehicleType}" class="travhub-btn mt-2" style="margin-right: 15px;">
                             <span>Book This Vehicle</span>
                         </a>
                         <!-- Link to contact page with a stylized custom dark button -->

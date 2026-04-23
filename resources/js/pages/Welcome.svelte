@@ -44,22 +44,25 @@
 
         if ((window as any).$) {
             const jQuery = (window as any).$;
-            
+
             // Wait for DOM
             setTimeout(() => {
-                // Initialize DatePicker
+                // Initialize DatePicker with minDate today to disable past dates
                 let dateEl = jQuery('#pickup_date');
                 if (dateEl.length && dateEl.daterangepicker) {
                     dateEl.daterangepicker({
                         autoUpdateInput: false,
                         singleDatePicker: true,
                         timePicker: false,
+                        minDate: new Date(),
                         locale: {
                             format: 'D MMM YYYY'
                         }
                     });
                     dateEl.on("apply.daterangepicker", function (this: HTMLElement, ev: any, picker: any) {
                         jQuery(this).val(picker.startDate.format("D MMM YYYY"));
+                        // Store ISO format in hidden input
+                        jQuery('#date_iso').val(picker.startDate.format("YYYY-MM-DD"));
                     });
                 }
 
@@ -171,13 +174,14 @@
                                 class="travhub-multi-datepicker"
                                 id="pickup_date"
                                 type="text"
-                                name="pickup_date"
                                 placeholder="Select Date"
                                 autocomplete="off"
                                 readonly
                                 style="cursor: pointer;"
                                 required
                             />
+                            <!-- Hidden input for ISO date format -->
+                            <input type="hidden" id="date_iso" name="date" />
                         </div>
                         <div class="banner-form__control banner-form__col--4">
                             <i class="icon icon-traveler-with-a-suitcase-1"></i>

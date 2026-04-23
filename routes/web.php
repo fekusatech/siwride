@@ -28,25 +28,29 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\ZoneController;
 use App\Http\Controllers\PublicClaimController;
+use App\Http\Controllers\CustomerOrderController;
 
 Route::get('/c/{booking_code}', [PublicClaimController::class, 'show'])->name('orders.claim.show');
 Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name('orders.claim.store');
 
+Route::inertia('/about', 'customer/about')->name('about');
+Route::inertia('/services', 'customer/services')->name('services');
+Route::inertia('/area-coverage', 'customer/area-coverage')->name('area-coverage');
+Route::inertia('/vehicles', 'customer/vehicles')->name('vehicles');
+Route::inertia('/vehicles/{slug}', 'customer/vehicles/[slug]')->name('vehicles.slug');
+Route::inertia('/testimonials', 'customer/testimonials')->name('testimonials');
+Route::inertia('/faq', 'customer/faq')->name('faq');
+Route::inertia('/terms', 'customer/terms')->name('terms');
+Route::inertia('/privacy', 'customer/privacy')->name('privacy');
+// Booking route moved outside auth middleware
+Route::inertia('/contact', 'customer/contact')->name('contact');
+// Public Customer Booking Routes (No Auth Required)
+Route::get('/booking', [CustomerOrderController::class, 'index'])->name('booking');
+Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
+Route::get('/booking/success', [CustomerOrderController::class, 'success'])->name('booking.success');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Public Frontend Routes - Customer Pages
-    Route::inertia('/about', 'customer/about')->name('about');
-    Route::inertia('/services', 'customer/services')->name('services');
-    Route::inertia('/area-coverage', 'customer/area-coverage')->name('area-coverage');
-    Route::inertia('/vehicles', 'customer/vehicles')->name('vehicles');
-    Route::inertia('/vehicles/{slug}', 'customer/vehicles/[slug]')->name('vehicles.slug');
-    Route::inertia('/testimonials', 'customer/testimonials')->name('testimonials');
-    Route::inertia('/faq', 'customer/faq')->name('faq');
-    Route::inertia('/terms', 'customer/terms')->name('terms');
-    Route::inertia('/privacy', 'customer/privacy')->name('privacy');
-    Route::inertia('/booking', 'customer/booking')->name('booking');
-    Route::inertia('/contact', 'customer/contact')->name('contact');
 
     Route::get('admin/profile', [ProfileController::class, 'edit'])->name('admin.profile');
     Route::put('admin/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
