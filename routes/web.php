@@ -27,8 +27,9 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\ZoneController;
-use App\Http\Controllers\PublicClaimController;
 use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\LocationSearchController;
+use App\Http\Controllers\PublicClaimController;
 
 Route::get('/c/{booking_code}', [PublicClaimController::class, 'show'])->name('orders.claim.show');
 Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name('orders.claim.store');
@@ -45,6 +46,7 @@ Route::inertia('/privacy', 'customer/privacy')->name('privacy');
 // Booking route moved outside auth middleware
 Route::inertia('/contact', 'customer/contact')->name('contact');
 // Public Customer Booking Routes (No Auth Required)
+Route::get('/locations/search', [LocationSearchController::class, 'search'])->name('locations.search');
 Route::get('/booking', [CustomerOrderController::class, 'index'])->name('booking');
 Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
 Route::get('/booking/success', [CustomerOrderController::class, 'success'])->name('booking.success');

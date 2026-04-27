@@ -1,10 +1,11 @@
-﻿<script lang="ts">
+<script lang="ts">
     import { page } from '@inertiajs/svelte';
     import { useForm } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
+    import LocationSearchInput from '@/components/LocationSearchInput.svelte';
 
     // Receive prefill data from controller
     let { prefill } = $props<{
@@ -228,14 +229,13 @@
                             <div class="row">
                                 <div class="col-md-6" style="margin-bottom: 25px;">
                                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Pickup Location *</label>
-                                    <input
-                                        type="text"
+                                    <LocationSearchInput
+                                        id="pickup_address"
                                         bind:value={form.pickup_address}
-                                        required
-                                        minlength="5"
-                                        maxlength="100"
-                                        class="premium-input"
                                         placeholder="Hotel Name / Airport / Area"
+                                        required
+                                        variant="premium"
+                                        onchange={(v) => (form.pickup_address = v)}
                                     />
                                     {#if form.errors.pickup_address}
                                         <small class="text-danger" style="font-size: 12px;">{form.errors.pickup_address}</small>
@@ -243,14 +243,13 @@
                                 </div>
                                 <div class="col-md-6" style="margin-bottom: 25px;">
                                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #444;">Destination *</label>
-                                    <input
-                                        type="text"
+                                    <LocationSearchInput
+                                        id="dropoff_address"
                                         bind:value={form.dropoff_address}
-                                        required
-                                        minlength="5"
-                                        maxlength="100"
-                                        class="premium-input"
                                         placeholder="Beach / Temple / Area"
+                                        required
+                                        variant="premium"
+                                        onchange={(v) => (form.dropoff_address = v)}
                                     />
                                     {#if form.errors.dropoff_address}
                                         <small class="text-danger" style="font-size: 12px;">{form.errors.dropoff_address}</small>

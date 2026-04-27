@@ -2,6 +2,10 @@
     import { page } from '@inertiajs/svelte';
     import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import LocationSearchInput from '@/components/LocationSearchInput.svelte';
+
+    let heroPickup = $state('');
+    let heroDropoff = $state('');
 
     let passengerCount = $state(1);
 
@@ -145,23 +149,24 @@
                             class="banner-form__control banner-form__col--1"
                         >
                             <i class="icon icon-pin-2"></i>
-                            <label for="pickup">Pick-up *</label>
-                            <input
-                                id="pickup"
-                                type="text"
-                                name="pickup"
-                                placeholder="Airport, hotel, address..."
+                            <label for="hero_pickup">Pick-up *</label>
+                            <!-- Hidden input carries value to the GET form submission -->
+                            <input type="hidden" name="pickup" value={heroPickup} />
+                            <LocationSearchInput
+                                id="hero_pickup"
+                                bind:value={heroPickup}
+                                placeholder="Hotel, airport, area..."
                                 required
                             />
                         </div>
                         <div class="banner-form__control banner-form__col--2">
                             <i class="icon icon-pin-2"></i>
-                            <label for="dropoff">Drop-off *</label>
-                            <input
-                                id="dropoff"
-                                type="text"
-                                name="dropoff"
-                                placeholder="Airport, hotel, address..."
+                            <label for="hero_dropoff">Drop-off *</label>
+                            <input type="hidden" name="dropoff" value={heroDropoff} />
+                            <LocationSearchInput
+                                id="hero_dropoff"
+                                bind:value={heroDropoff}
+                                placeholder="Beach, temple, area..."
                                 required
                             />
                         </div>
