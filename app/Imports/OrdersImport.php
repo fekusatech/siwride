@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\Customer;
 use App\Models\Driver;
 use App\Models\Order;
 use App\Models\Vehicle;
@@ -23,7 +24,7 @@ class OrdersImport implements ToModel, WithBatchInserts, WithHeadingRow, WithVal
             'date' => 'required|date',
             'time' => 'required',
             'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'required|string|max:50',
+            'customer_phone' => 'nullable|string|max:50',
             'pickup_address' => 'required|string',
             'dropoff_address' => 'required|string',
             'passengers' => 'nullable|integer|min:1',
@@ -83,13 +84,31 @@ class OrdersImport implements ToModel, WithBatchInserts, WithHeadingRow, WithVal
             $status = 'pending';
         }
 
+        // Find or create the customer from import data
+        $customerName = $row['customer_name'] ?? '';
+        $customerPhone = $row['customer_phone'] ?? null;
+        $customerEmail = $row['email'] ?? $row['customer_email'] ?? null;
+
+        $customer = null;
+        if ($customerEmail) {
+            $customer = Customer::firstOrCreate(
+                ['email' => $customerEmail],
+                ['name' => $customerName, 'phone' => $customerPhone]
+            );
+        } elseif ($customerName) {
+            // No email provided — create by name+phone
+            $customer = Customer::firstOrCreate(
+                ['name' => $customerName, 'phone' => $customerPhone],
+                ['email' => strtolower(str_replace(' ', '.', $customerName)) . '@imported.local']
+            );
+        }
+
         return new Order([
             'booking_code' => $bookingCode,
             'order_number' => $orderNumber,
+            'customer_id' => $customer?->id,
             'date' => $date,
             'time' => $time,
-            'customer_name' => $row['customer_name'] ?? '',
-            'customer_phone' => $row['customer_phone'] ?? '',
             'flight_number' => $row['flight_number'] ?? null,
             'driver_id' => $driverId,
             'vehicle_id' => $vehicleId,

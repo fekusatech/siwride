@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Imports\OrdersImport;
+use App\Models\Customer;
 use App\Models\Driver;
 use App\Models\Order;
 use App\Services\WhatsAppService;
@@ -27,12 +28,14 @@ class OrderController extends Controller
     public function index(Request $request): Response
     {
         return Inertia::render('Admin/Orders/Index', [
-            'orders' => Order::with(['driver', 'vehicle', 'claimedDriver'])
+            'orders' => Order::with(['driver', 'vehicle', 'claimedDriver', 'customer'])
                 ->when($request->search, function ($query, $search) {
                     $query->where(function ($q) use ($search) {
-                        $q->where('customer_name', 'like', "%{$search}%")
-                            ->orWhere('booking_code', 'like', "%{$search}%")
+                        $q->where('booking_code', 'like', "%{$search}%")
                             ->orWhere('order_number', 'like', "%{$search}%")
+                            ->orWhereHas('customer', function ($cq) use ($search) {
+                                $cq->where('name', 'like', "%{$search}%");
+                            })
                             ->orWhereHas('driver', function ($dq) use ($search) {
                                 $dq->where('name', 'like', "%{$search}%");
                             });
@@ -65,7 +68,7 @@ class OrderController extends Controller
     public function calendar(Request $request): Response
     {
         return Inertia::render('Admin/Orders/Calendar', [
-            'orders' => Order::with(['driver', 'vehicle'])->get(),
+            'orders' => Order::with(['driver', 'vehicle', 'customer'])->get(),
             'drivers' => Driver::with('vehicles')->get(),
             'google_maps_api_key' => config('services.google.maps_api_key'),
         ]);
@@ -93,7 +96,8 @@ class OrderController extends Controller
             'date' => ['required', 'date'],
             'time' => ['required'],
             'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:50'],
+            'customer_phone' => ['nullable', 'string', 'max:50'],
+            'customer_email' => ['required', 'email', 'max:255'],
             'flight_number' => ['nullable', 'string', 'max:50'],
             'driver_id' => ['nullable', 'exists:drivers,id'],
             'vehicle_id' => ['nullable', 'exists:vehicles,id'],
@@ -108,7 +112,18 @@ class OrderController extends Controller
             'parking_gas_fee' => ['required', 'numeric', 'min:0'],
         ]);
 
-        Order::create($validated);
+        $customer = Customer::firstOrCreate(
+            ['email' => $validated['customer_email']],
+            [
+                'name' => $validated['customer_name'],
+                'phone' => $validated['customer_phone'] ?? null,
+            ]
+        );
+
+        Order::create(array_merge(
+            collect($validated)->except(['customer_name', 'customer_phone', 'customer_email'])->toArray(),
+            ['customer_id' => $customer->id]
+        ));
 
         return redirect()->route('admin.orders.index')
             ->with('success', 'Order created successfully.');
@@ -141,7 +156,8 @@ class OrderController extends Controller
             'date' => ['required', 'date'],
             'time' => ['required'],
             'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:50'],
+            'customer_phone' => ['nullable', 'string', 'max:50'],
+            'customer_email' => ['required', 'email', 'max:255'],
             'flight_number' => ['nullable', 'string', 'max:50'],
             'driver_id' => ['nullable', 'exists:drivers,id'],
             'vehicle_id' => ['nullable', 'exists:vehicles,id'],
@@ -157,7 +173,24 @@ class OrderController extends Controller
             'status' => ['required', 'string', 'in:pending,completed,cancelled'],
         ]);
 
-        $order->update($validated);
+        $customer = Customer::firstOrCreate(
+            ['email' => $validated['customer_email']],
+            [
+                'name' => $validated['customer_name'],
+                'phone' => $validated['customer_phone'] ?? null,
+            ]
+        );
+
+        // Update customer info if they already exist
+        $customer->update([
+            'name' => $validated['customer_name'],
+            'phone' => $validated['customer_phone'] ?? $customer->phone,
+        ]);
+
+        $order->update(array_merge(
+            collect($validated)->except(['customer_name', 'customer_phone', 'customer_email'])->toArray(),
+            ['customer_id' => $customer->id]
+        ));
 
         return redirect()->back()
             ->with('success', 'Order updated successfully.');
@@ -246,8 +279,8 @@ class OrderController extends Controller
             "Nama: {$driver->name}\n".
             "Mobil: {$vehicleInfo}\n\n".
             "Customer:\n".
-            "Nama: {$order->customer_name}\n".
-            "Telepon: {$order->customer_phone}\n".
+            "Nama: {$order->customer?->name}\n".
+            "Telepon: {$order->customer?->phone}\n".
             "Flight Number: {$flightNumber}\n\n".
             "Pickup: {$order->pickup_address}\n\n".
             "Dropoff: {$order->dropoff_address}\n\n".
@@ -310,8 +343,8 @@ class OrderController extends Controller
             "Nama: {$driver->name}\n".
             "Mobil: {$vehicleInfo}\n\n".
             "Customer:\n".
-            "Nama: {$order->customer_name}\n".
-            "Telepon: {$order->customer_phone}\n".
+            "Nama: {$order->customer?->name}\n".
+            "Telepon: {$order->customer?->phone}\n".
             "Flight Number: {$flightNumber}\n\n".
             "Pickup: {$order->pickup_address}\n\n".
             "Dropoff: {$order->dropoff_address}\n\n".

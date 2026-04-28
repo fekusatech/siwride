@@ -25,6 +25,9 @@ class StoreCustomerOrderRequest extends FormRequest
             'passengers' => ['required', 'integer', 'min:1', 'max:50'],
             'vehicle_type' => ['required', 'string', Rule::in(['economy', 'premium', 'van', 'bus', 'special'])],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'create_account' => ['nullable', 'boolean'],
+            'password' => ['nullable', 'string', 'min:8', 'required_if_accepted:create_account'],
+            'payment_method' => ['nullable', 'string', 'in:cash,transfer'],
         ];
     }
 
@@ -62,6 +65,8 @@ class StoreCustomerOrderRequest extends FormRequest
             'passengers.required' => 'Jumlah penumpang wajib diisi.',
             'vehicle_type.required' => 'Tipe kendaraan wajib dipilih.',
             'vehicle_type.in' => 'Tipe kendaraan tidak valid.',
+            'password.required_if_accepted' => 'Password wajib diisi jika Anda memilih untuk membuat akun.',
+            'password.min' => 'Password minimal 8 karakter.',
         ];
     }
 }

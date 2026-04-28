@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCustomerOrderRequest;
+use App\Models\Customer;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,21 +36,51 @@ class CustomerOrderController extends Controller
     {
         $validated = $request->validated();
 
-        // Generate unique booking code (SW + 6 digits)
+        // Find existing customer by email
+        $customer = Customer::where('email', $validated['email'])->first();
+        
+        $customerData = [
+            'name' => $validated['customer_name'],
+            'phone' => $validated['customer_phone'] ?? null,
+        ];
+
+        // Hash password if user wants to create an account
+        if ($request->boolean('create_account') && isset($validated['password'])) {
+            $customerData['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        }
+
+        if ($customer) {
+            // If customer exists, update missing details (like phone or password if not set)
+            $updateData = [];
+            if (!$customer->phone && isset($customerData['phone'])) {
+                $updateData['phone'] = $customerData['phone'];
+            }
+            if (!$customer->password && isset($customerData['password'])) {
+                $updateData['password'] = $customerData['password'];
+            }
+            
+            if (!empty($updateData)) {
+                $customer->update($updateData);
+            }
+        } else {
+            // Create new customer
+            $customerData['email'] = $validated['email'];
+            $customer = Customer::create($customerData);
+        }
+
+        // Generate unique booking code (SW + 6 chars)
         $bookingCode = $this->generateUniqueBookingCode();
 
         // Generate order number (ORD + timestamp + random)
         $orderNumber = 'ORD' . date('Ymd') . strtoupper(Str::random(4));
 
-        // Create order
-        $order = Order::create([
+        // Create order linked to customer
+        Order::create([
             'booking_code' => $bookingCode,
             'order_number' => $orderNumber,
+            'customer_id' => $customer->id,
             'date' => $validated['date'],
             'time' => $validated['time'],
-            'customer_name' => $validated['customer_name'],
-            'customer_phone' => $validated['customer_phone'] ?? null,
-            'email' => $validated['email'],
             'pickup_address' => $validated['pickup_address'],
             'dropoff_address' => $validated['dropoff_address'],
             'passengers' => $validated['passengers'],
@@ -70,13 +101,13 @@ class CustomerOrderController extends Controller
     {
         $bookingCode = $request->query('code', '');
 
-        $order = Order::where('booking_code', $bookingCode)->first();
+        $order = Order::with('customer')->where('booking_code', $bookingCode)->first();
 
         return Inertia::render('customer/booking-success', [
             'booking_code' => $bookingCode,
             'order' => $order ? [
-                'customer_name' => $order->customer_name,
-                'email' => $order->email,
+                'customer_name' => $order->customer?->name,
+                'email' => $order->customer?->email,
                 'pickup_address' => $order->pickup_address,
                 'dropoff_address' => $order->dropoff_address,
                 'date' => $order->date->format('Y-m-d'),

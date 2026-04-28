@@ -13,11 +13,9 @@ class Order extends Model
     protected $fillable = [
         'booking_code',
         'order_number',
+        'customer_id',
         'date',
         'time',
-        'customer_name',
-        'customer_phone',
-        'email',
         'flight_number',
         'notes',
         'driver_id',
@@ -44,6 +42,11 @@ class Order extends Model
         'dropoff_latitude' => 'decimal:8',
         'dropoff_longitude' => 'decimal:8',
     ];
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function driver(): BelongsTo
     {
