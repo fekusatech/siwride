@@ -41,7 +41,7 @@ class CustomerAuthController extends Controller
         if (Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('booking'));
+            return redirect()->intended(route('customer.profile'));
         }
 
         throw ValidationException::withMessages([
@@ -96,7 +96,7 @@ class CustomerAuthController extends Controller
 
         Auth::guard('customer')->login($customer);
 
-        return redirect()->route('booking');
+        return redirect()->route('customer.profile')->with('success', 'Welcome! Your account has been created successfully.');
     }
 
     /**
