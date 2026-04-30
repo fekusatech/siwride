@@ -35,6 +35,7 @@
         notes: '',
         create_account: false,
         password: '',
+        password_confirmation: '',
         payment_method: 'cash'
     });
 
@@ -66,6 +67,7 @@
     
     // Password visibility state
     let showPassword = $state(false);
+    let showConfirmPassword = $state(false);
 
     // Calculate minimum time (if today is selected, min time is current time)
     let minTime = $derived(() => {
@@ -100,6 +102,10 @@
             }
             if (form.create_account && (!form.password || form.password.length < 8)) {
                 stepError = 'Please enter a password with at least 8 characters.';
+                return;
+            }
+            if (form.create_account && form.password !== form.password_confirmation) {
+                stepError = 'Passwords do not match. Please confirm your password.';
                 return;
             }
             
@@ -433,12 +439,39 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Password *</label>
                                         <div class="password-wrapper">
-                                            <input type={showPassword ? 'text' : 'password'} bind:value={form.password} class="premium-input" placeholder="Create a secure password" />
+                                            <input type={showPassword ? 'text' : 'password'} bind:value={form.password} class="premium-input" class:is-invalid={form.password.length > 0 && form.password.length < 8} placeholder="Create a secure password" />
                                             <button type="button" class="password-toggle" onclick={() => showPassword = !showPassword}>
                                                 <i class="fas {showPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>
                                             </button>
                                         </div>
-                                        <small class="form-text text-muted" style="font-size: 12px; margin-top: 5px; display: block;">Minimum 8 characters.</small>
+                                        {#if form.password.length > 0 && form.password.length < 8}
+                                            <small class="text-danger" style="font-size: 12px; margin-top: 5px; display: block;"><i class="fas fa-exclamation-circle"></i> Minimum 8 characters required.</small>
+                                        {:else}
+                                            <small class="form-text text-muted" style="font-size: 12px; margin-top: 5px; display: block;">Minimum 8 characters.</small>
+                                        {/if}
+                                    </div>
+                                    <div class="col-md-6" style="margin-top: 0;">
+                                        <label class="form-label">Confirm Password *</label>
+                                        <div class="password-wrapper">
+                                            <input 
+                                                type={showConfirmPassword ? 'text' : 'password'} 
+                                                bind:value={form.password_confirmation} 
+                                                class="premium-input" 
+                                                class:is-invalid={form.password_confirmation.length > 0 && form.password !== form.password_confirmation}
+                                                class:is-valid={form.password_confirmation.length > 0 && form.password === form.password_confirmation}
+                                                placeholder="Repeat your password" 
+                                            />
+                                            <button type="button" class="password-toggle" onclick={() => showConfirmPassword = !showConfirmPassword}>
+                                                <i class="fas {showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                                            </button>
+                                        </div>
+                                        {#if form.password_confirmation.length > 0 && form.password !== form.password_confirmation}
+                                            <small class="text-danger" style="font-size: 12px; margin-top: 5px; display: block;"><i class="fas fa-times-circle"></i> Passwords do not match.</small>
+                                        {:else if form.password_confirmation.length > 0 && form.password === form.password_confirmation}
+                                            <small class="text-success" style="font-size: 12px; margin-top: 5px; display: block;"><i class="fas fa-check-circle"></i> Passwords match.</small>
+                                        {:else}
+                                            <small class="form-text text-muted" style="font-size: 12px; margin-top: 5px; display: block;">Must match the password above.</small>
+                                        {/if}
                                     </div>
                                 </div>
                                 {/if}
