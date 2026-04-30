@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from '@inertiajs/svelte';
-    import { useForm } from '@inertiajs/svelte';
+    import { useForm, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -40,11 +40,28 @@
     let currentStep = $state(1);
     let stepError = $state('');
 
+    let useProfileData = $state(false);
+
+    $effect(() => {
+        if (useProfileData && page.props.auth?.customer) {
+            form.customer_name = page.props.auth.customer.name;
+            form.email = page.props.auth.customer.email;
+            if (page.props.auth.customer.phone) {
+                form.customer_phone = page.props.auth.customer.phone;
+            }
+        } else if (!useProfileData && page.props.auth?.customer) {
+            // Optional: reset to empty if unchecked, but usually we just let them edit it manually
+        }
+    });
+
     // Initialize passenger count from prefill or default to 1
     let passengerCount = $state(parseInt(prefill?.passengers || '1'));
 
     // Email validation state
     let emailError = $state('');
+    
+    // Step validation loading state
+    let isValidatingStep = $state(false);
     
     // Password visibility state
     let showPassword = $state(false);
@@ -67,11 +84,11 @@
         form.passengers = String(passengerCount);
     });
 
-    const nextStep = () => {
+    const nextStep = async () => {
         stepError = '';
         
         if (currentStep === 1) {
-            // Validate Step 1
+            // Validate Step 1 - Basic validation
             if (!form.customer_name || form.customer_name.length < 3) {
                 stepError = 'Please enter a valid full name.';
                 return;
@@ -84,6 +101,38 @@
                 stepError = 'Please enter a password with at least 8 characters.';
                 return;
             }
+            
+            // Server-side email validation (only for guests creating account)
+            if (!page.props.auth?.customer && form.create_account) {
+                isValidatingStep = true;
+                try {
+                    const response = await fetch('/booking/validate-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        },
+                        body: JSON.stringify({
+                            email: form.email,
+                            create_account: form.create_account,
+                        }),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.valid) {
+                        stepError = data.message || 'Email validation failed.';
+                        isValidatingStep = false;
+                        return;
+                    }
+                } catch (error) {
+                    stepError = 'Unable to validate email. Please try again.';
+                    isValidatingStep = false;
+                    return;
+                }
+                isValidatingStep = false;
+            }
+            
             currentStep = 2;
         } else if (currentStep === 2) {
             // Validate Step 2
@@ -317,11 +366,11 @@
                                 <div class="row">
                                     <div class="col-md-6" style="margin-bottom: 20px;">
                                         <label class="form-label">Full Name *</label>
-                                        <input type="text" value={form.customer_name} oninput={validateName} class="premium-input" placeholder="Enter your full name" />
+                                        <input type="text" value={form.customer_name} oninput={validateName} class="premium-input" minlength="2" maxlength="50" placeholder="Enter your full name" />
                                     </div>
                                     <div class="col-md-6" style="margin-bottom: 20px;">
                                         <label class="form-label">Email Address *</label>
-                                        <input type="email" value={form.email} oninput={validateEmail} class="premium-input {emailError ? 'has-error' : ''}" placeholder="your.email@example.com" />
+                                        <input type="email" value={form.email} oninput={validateEmail} class="premium-input {emailError ? 'has-error' : ''}" placeholder="your.email@example.com" maxlength="25"/>
                                         {#if emailError}<small class="text-danger error-text">{emailError}</small>{/if}
                                     </div>
                                 </div>
@@ -329,7 +378,7 @@
                                 <div class="row">
                                     <div class="col-md-6" style="margin-bottom: 20px;">
                                         <label class="form-label">WhatsApp / Phone Number</label>
-                                        <input type="tel" value={form.customer_phone} oninput={validatePhone} class="premium-input" placeholder="+62 812 3456 7890" />
+                                        <input type="tel" maxlength="15" value={form.customer_phone} oninput={validatePhone} class="premium-input" placeholder="+62 812 3456 7890" />
                                     </div>
                                     <div class="col-md-6" style="margin-bottom: 20px;">
                                         <label class="form-label">Total Passengers *</label>
@@ -341,6 +390,7 @@
                                     </div>
                                 </div>
 
+                                {#if !page.props.auth?.customer}
                                 <div class="row">
                                     <div class="col-12" style="margin-top: 10px;">
                                         <div class="account-creation-box">
@@ -349,7 +399,7 @@
                                                 Create an account for faster booking next time
                                             </label>
                                             <span class="login-prompt">
-                                                Already have an account? <a href="/login">Login here</a>
+                                                Already have an account? <a href="/customer/login">Login here</a>
                                             </span>
                                         </div>
                                     </div>
@@ -366,6 +416,18 @@
                                             </button>
                                         </div>
                                         <small class="form-text text-muted" style="font-size: 12px; margin-top: 5px; display: block;">Minimum 8 characters.</small>
+                                    </div>
+                                </div>
+                                {/if}
+                                {:else}
+                                <div class="row">
+                                    <div class="col-12" style="margin-top: 10px;">
+                                        <div class="account-creation-box" style="background: #e6f4ea; border-color: #81c784;">
+                                            <label class="checkbox-label" style="color: #2e7d32;">
+                                                <input type="checkbox" bind:checked={useProfileData}>
+                                                Pesan menggunakan data profil saya
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                                 {/if}
@@ -501,8 +563,12 @@
                                 {/if}
 
                                 {#if currentStep < 3}
-                                    <button type="button" class="btn-next" onclick={nextStep}>
-                                        Next Step <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+                                    <button type="button" class="btn-next" onclick={nextStep} disabled={isValidatingStep}>
+                                        {#if isValidatingStep}
+                                            Validating... <i class="fas fa-spinner fa-spin" style="margin-left: 8px;"></i>
+                                        {:else}
+                                            Next Step <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+                                        {/if}
                                     </button>
                                 {:else}
                                     <button type="submit" class="btn-submit" disabled={form.processing}>

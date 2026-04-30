@@ -44,7 +44,7 @@ class StoreCustomerOrderRequest extends FormRequest
             if ($selectedDate === $today) {
                 $currentTime = now()->format('H:i');
                 if ($value <= $currentTime) {
-                    $fail('Waktu pickup harus di masa depan. Silakan pilih waktu setelah ' . $currentTime . '.');
+                    $fail('Waktu pickup harus di masa depan. Silakan pilih waktu setelah '.$currentTime.'.');
                 }
             }
         };

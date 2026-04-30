@@ -99,7 +99,7 @@ class OrdersImport implements ToModel, WithBatchInserts, WithHeadingRow, WithVal
             // No email provided — create by name+phone
             $customer = Customer::firstOrCreate(
                 ['name' => $customerName, 'phone' => $customerPhone],
-                ['email' => strtolower(str_replace(' ', '.', $customerName)) . '@imported.local']
+                ['email' => strtolower(str_replace(' ', '.', $customerName)).'@imported.local']
             );
         }
 

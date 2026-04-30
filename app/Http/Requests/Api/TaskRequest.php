@@ -36,7 +36,7 @@ class TaskRequest extends FormRequest
         ];
 
         if ($this->isMethod('PUT')) {
-            $rules['kode_booking'] = ['required', 'string', 'max:50', 'unique:mobile_tasks,kode_booking,' . $this->route('task')];
+            $rules['kode_booking'] = ['required', 'string', 'max:50', 'unique:mobile_tasks,kode_booking,'.$this->route('task')];
         }
 
         return $rules;

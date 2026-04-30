@@ -7,9 +7,12 @@ use App\Models\Customer;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Validation\ValidationException;
 
 class CustomerOrderController extends Controller
 {
@@ -30,6 +33,33 @@ class CustomerOrderController extends Controller
     }
 
     /**
+     * Validate email availability for booking step 1.
+     */
+    public function validateEmail(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+            'create_account' => ['nullable', 'boolean'],
+        ]);
+
+        $customer = Customer::where('email', $validated['email'])->first();
+
+        // If trying to create account but email already registered with password
+        if ($request->boolean('create_account') && $customer && $customer->password) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Email ini sudah terdaftar. Silakan login terlebih dahulu untuk melanjutkan booking.',
+            ]);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'exists' => (bool) $customer,
+            'has_password' => $customer ? (bool) $customer->password : false,
+        ]);
+    }
+
+    /**
      * Store a new customer order.
      */
     public function store(StoreCustomerOrderRequest $request): RedirectResponse
@@ -38,7 +68,14 @@ class CustomerOrderController extends Controller
 
         // Find existing customer by email
         $customer = Customer::where('email', $validated['email'])->first();
-        
+
+        // If trying to create account but email already registered with password
+        if ($request->boolean('create_account') && $customer && $customer->password) {
+            throw ValidationException::withMessages([
+                'email' => 'Email ini sudah terdaftar. Silakan login terlebih dahulu untuk melanjutkan booking.',
+            ]);
+        }
+
         $customerData = [
             'name' => $validated['customer_name'],
             'phone' => $validated['customer_phone'] ?? null,
@@ -46,22 +83,25 @@ class CustomerOrderController extends Controller
 
         // Hash password if user wants to create an account
         if ($request->boolean('create_account') && isset($validated['password'])) {
-            $customerData['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+            $customerData['password'] = Hash::make($validated['password']);
         }
 
         if ($customer) {
-            // If customer exists, update missing details (like phone or password if not set)
-            $updateData = [];
-            if (!$customer->phone && isset($customerData['phone'])) {
+            // Update customer data to latest from booking form
+            $updateData = [
+                'name' => $customerData['name'],
+            ];
+
+            if (isset($customerData['phone'])) {
                 $updateData['phone'] = $customerData['phone'];
             }
-            if (!$customer->password && isset($customerData['password'])) {
+
+            // Only set password if not exists and user wants to create account
+            if (! $customer->password && isset($customerData['password'])) {
                 $updateData['password'] = $customerData['password'];
             }
-            
-            if (!empty($updateData)) {
-                $customer->update($updateData);
-            }
+
+            $customer->update($updateData);
         } else {
             // Create new customer
             $customerData['email'] = $validated['email'];
@@ -72,7 +112,7 @@ class CustomerOrderController extends Controller
         $bookingCode = $this->generateUniqueBookingCode();
 
         // Generate order number (ORD + timestamp + random)
-        $orderNumber = 'ORD' . date('Ymd') . strtoupper(Str::random(4));
+        $orderNumber = 'ORD'.date('Ymd').strtoupper(Str::random(4));
 
         // Create order linked to customer
         Order::create([
@@ -90,8 +130,13 @@ class CustomerOrderController extends Controller
             'status' => 'pending',
         ]);
 
+        // Auto-login customer if they just created an account
+        if ($request->boolean('create_account')) {
+            Auth::guard('customer')->login($customer);
+        }
+
         return redirect()->route('booking.success', ['code' => $bookingCode, 'vehicle' => $validated['vehicle_type']])
-            ->with('success', 'Order berhasil dibuat! Booking code Anda: ' . $bookingCode);
+            ->with('success', 'Order berhasil dibuat! Booking code Anda: '.$bookingCode);
     }
 
     /**
@@ -119,12 +164,24 @@ class CustomerOrderController extends Controller
     }
 
     /**
+     * Display customer booking details.
+     */
+    public function show($bookingCode): Response
+    {
+        $order = Order::with(['customer', 'driver'])->where('booking_code', $bookingCode)->firstOrFail();
+
+        return Inertia::render('customer/booking-detail', [
+            'order' => $order
+        ]);
+    }
+
+    /**
      * Generate unique booking code.
      */
     private function generateUniqueBookingCode(): string
     {
         do {
-            $code = 'SW' . strtoupper(Str::random(6));
+            $code = 'SW'.strtoupper(Str::random(6));
         } while (Order::where('booking_code', $code)->exists());
 
         return $code;

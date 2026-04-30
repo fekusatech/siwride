@@ -12,9 +12,9 @@ Route::inertia('/', 'Welcome', [
 Route::get('/driver/register', [RegisteredDriverController::class, 'create'])->name('driver.register');
 Route::post('/driver/register', [RegisteredDriverController::class, 'store']);
 
-Route::get('/login', function () {
-    return Inertia::render('Admin/Login');
-})->name('login');
+// Route::get('/login', function () {
+//     return Inertia::render('Admin/Login');
+// })->name('login');
 
 Route::get('/login-admin', function () {
     return Inertia::render('Admin/Login');
@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\ZoneController;
+use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\LocationSearchController;
 use App\Http\Controllers\PublicClaimController;
@@ -46,10 +47,27 @@ Route::inertia('/privacy', 'customer/privacy')->name('privacy');
 // Booking route moved outside auth middleware
 Route::inertia('/contact', 'customer/contact')->name('contact');
 // Public Customer Booking Routes (No Auth Required)
+Route::middleware('guest:customer')->group(function () {
+    Route::get('/customer/login', [CustomerAuthController::class, 'showLoginForm'])->name('customer.login');
+    Route::post('/customer/login', [CustomerAuthController::class, 'login']);
+    Route::get('/customer/register', [CustomerAuthController::class, 'showRegisterForm'])->name('customer.register');
+    Route::post('/customer/register', [CustomerAuthController::class, 'register']);
+});
+
+use App\Http\Controllers\CustomerProfileController;
+
+Route::middleware('auth:customer')->group(function () {
+    Route::get('/customer/profile', [CustomerProfileController::class, 'index'])->name('customer.profile');
+    Route::put('/customer/profile', [CustomerProfileController::class, 'update'])->name('customer.profile.update');
+    Route::post('/customer/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
+});
+
 Route::get('/locations/search', [LocationSearchController::class, 'search'])->name('locations.search');
 Route::get('/booking', [CustomerOrderController::class, 'index'])->name('booking');
+Route::post('/booking/validate-email', [CustomerOrderController::class, 'validateEmail'])->name('booking.validate-email');
 Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
 Route::get('/booking/success', [CustomerOrderController::class, 'success'])->name('booking.success');
+Route::get('/booking/{booking_code}', [CustomerOrderController::class, 'show'])->name('booking.show');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

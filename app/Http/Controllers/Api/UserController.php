@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Models\Mobile\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Enum;
-use Symfony\Component\HttpFoundation\Response;
 
 class UserController
 {

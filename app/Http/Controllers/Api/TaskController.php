@@ -8,8 +8,6 @@ use App\Models\Mobile\TaskCheckin;
 use App\Models\Mobile\TaskProof;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class TaskController

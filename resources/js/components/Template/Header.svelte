@@ -2,8 +2,6 @@
     import { onMount, onDestroy } from 'svelte';
     import { Link, page } from '@inertiajs/svelte';
 
-    const { auth = null }: { auth?: any } = $props();
-
     let scrolled = $state(false);
     let mobileNavOpen = $state(false);
     let headerElement: HTMLElement;
@@ -118,13 +116,13 @@
                     <span></span>
                 </button>
 
-                {#if auth?.user}
+                {#if page.props.auth?.customer}
                     <div class="main-header__btn ml-2">
-                        <a href="/dashboard" class="travhub-btn"><span>Dashboard</span></a>
+                        <a href="/customer/profile" class="travhub-btn"><span>Profile</span></a>
                     </div>
                 {:else}
                     <div class="main-header__btn ml-2">
-                        <a href="/login" class="travhub-btn"><span>Log in</span></a>
+                        <a href="/customer/login" class="travhub-btn"><span>Log in</span></a>
                     </div>
                 {/if}
             </div>
@@ -211,12 +209,12 @@
 
         <!-- Login / Dashboard button -->
         <div class="mobile-nav__btn-wrap">
-            {#if auth?.user}
-                <a href="/dashboard" class="travhub-btn" style="width: 100%; justify-content: center; display: flex;" onclick={() => (mobileNavOpen = false)}>
-                    <span>Dashboard</span>
+            {#if page.props.auth?.customer}
+                <a href="/customer/profile" class="travhub-btn" style="width: 100%; justify-content: center; display: flex;" onclick={() => (mobileNavOpen = false)}>
+                    <span>Profile</span>
                 </a>
             {:else}
-                <a href="/login" class="travhub-btn" style="width: 100%; justify-content: center; display: flex;" onclick={() => (mobileNavOpen = false)}>
+                <a href="/customer/login" class="travhub-btn" style="width: 100%; justify-content: center; display: flex;" onclick={() => (mobileNavOpen = false)}>
                     <span>Log in</span>
                 </a>
             {/if}
