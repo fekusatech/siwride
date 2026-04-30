@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCustomerOrderRequest;
 use App\Models\Customer;
 use App\Models\Order;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Validation\ValidationException;
 
 class CustomerOrderController extends Controller
 {
@@ -35,7 +36,7 @@ class CustomerOrderController extends Controller
     /**
      * Validate email availability for booking step 1.
      */
-    public function validateEmail(Request $request): \Illuminate\Http\JsonResponse
+    public function validateEmail(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'email' => ['required', 'email'],
@@ -62,7 +63,7 @@ class CustomerOrderController extends Controller
     /**
      * Search bookings by booking code for guest tracking.
      */
-    public function searchBookings(Request $request): \Illuminate\Http\JsonResponse
+    public function searchBookings(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'query' => ['required', 'string', 'min:2'],
@@ -202,7 +203,7 @@ class CustomerOrderController extends Controller
         $order = Order::with(['customer', 'driver'])->where('booking_code', $bookingCode)->firstOrFail();
 
         return Inertia::render('customer/booking-detail', [
-            'order' => $order
+            'order' => $order,
         ]);
     }
 

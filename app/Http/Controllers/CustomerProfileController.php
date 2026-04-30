@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -15,8 +17,8 @@ class CustomerProfileController extends Controller
     public function index()
     {
         $customer = Auth::guard('customer')->user();
-        
-        $orders = \App\Models\Order::where('customer_id', $customer->id)
+
+        $orders = Order::where('customer_id', $customer->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -30,7 +32,7 @@ class CustomerProfileController extends Controller
      */
     public function update(Request $request)
     {
-        /** @var \App\Models\Customer $customer */
+        /** @var Customer $customer */
         $customer = Auth::guard('customer')->user();
 
         $validated = $request->validate([
@@ -44,7 +46,7 @@ class CustomerProfileController extends Controller
             'phone' => $validated['phone'],
         ];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);
         }
 

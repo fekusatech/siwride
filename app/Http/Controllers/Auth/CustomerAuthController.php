@@ -33,7 +33,7 @@ class CustomerAuthController extends Controller
 
         // Check if email exists in customers table and has a password
         $customer = Customer::where('email', $credentials['email'])->first();
-        if (!$customer || is_null($customer->password)) {
+        if (! $customer || is_null($customer->password)) {
             return redirect()->route('customer.register', ['email' => $credentials['email']])
                 ->with('error', 'This email address is not registered. Please create an account first.');
         }

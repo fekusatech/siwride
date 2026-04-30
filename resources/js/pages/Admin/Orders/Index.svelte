@@ -204,8 +204,8 @@
                 `Nama: ${order.driver.name}\n` +
                 `Mobil: ${vehicleInfo}\n\n` +
                 `Customer:\n` +
-                `Nama: ${order.customer_name}\n` +
-                `Telepon: ${order.customer_phone}\n` +
+                `Nama: ${order.customer?.name || '-'}\n` +
+                `Telepon: ${order.customer?.phone || '-'}\n` +
                 `Flight Number: ${flightNumber}\n\n` +
                 `Pickup: ${order.pickup_address}\n\n` +
                 `Dropoff: ${order.dropoff_address}\n\n` +
@@ -611,10 +611,10 @@
                                     </td>
                                     <td>
                                         <div class="fw-medium">
-                                            {order.customer_name}
+                                            {order.customer?.name || '-'}
                                         </div>
                                         <small class="text-muted"
-                                            >{order.customer_phone}</small
+                                            >{order.customer?.phone || '-'}</small
                                         >
                                     </td>
                                     <td>{order.flight_number || '-'}</td>
@@ -987,10 +987,10 @@
                                         </div>
                                         <div>
                                             <h5 class="mb-0">
-                                                {selectedOrder.customer_name}
+                                                {selectedOrder.customer?.name || '-'}
                                             </h5>
                                             <p class="mb-0 text-muted">
-                                                {selectedOrder.customer_phone}
+                                                {selectedOrder.customer?.phone || '-'}
                                             </p>
                                         </div>
                                     </div>

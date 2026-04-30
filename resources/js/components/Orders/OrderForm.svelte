@@ -21,8 +21,9 @@
         order_number: order?.order_number ?? '',
         date: order ? order.date.split('T')[0] : initialDate,
         time: order?.time ?? '',
-        customer_name: order?.customer_name ?? '',
-        customer_phone: order?.customer_phone ?? '',
+        customer_name: order?.customer?.name ?? '',
+        customer_phone: order?.customer?.phone ?? '',
+        customer_email: order?.customer?.email ?? '',
         flight_number: order?.flight_number ?? '',
         driver_id: order?.driver_id?.toString() ?? '',
         vehicle_id: order?.vehicle_id?.toString() ?? '',
@@ -255,21 +256,40 @@
             <label for="customer_name" class="form-label">Customer Name</label>
             <input
                 type="text"
-                class="form-control"
+                class="form-control {form.errors.customer_name ? 'is-invalid' : ''}"
                 id="customer_name"
                 bind:value={form.customer_name}
                 required
             />
+            {#if form.errors.customer_name}<div class="invalid-feedback">
+                    {form.errors.customer_name}
+                </div>{/if}
         </div>
         <div class="col-md-6">
             <label for="customer_phone" class="form-label">Phone</label>
             <input
                 type="tel"
-                class="form-control"
+                class="form-control {form.errors.customer_phone ? 'is-invalid' : ''}"
                 id="customer_phone"
                 bind:value={form.customer_phone}
                 required
             />
+            {#if form.errors.customer_phone}<div class="invalid-feedback">
+                    {form.errors.customer_phone}
+                </div>{/if}
+        </div>
+        <div class="col-md-6">
+            <label for="customer_email" class="form-label">Email</label>
+            <input
+                type="email"
+                class="form-control {form.errors.customer_email ? 'is-invalid' : ''}"
+                id="customer_email"
+                bind:value={form.customer_email}
+                required
+            />
+            {#if form.errors.customer_email}<div class="invalid-feedback">
+                    {form.errors.customer_email}
+                </div>{/if}
         </div>
         <div class="col-md-6">
             <label for="flight_number" class="form-label">Flight Number</label>
