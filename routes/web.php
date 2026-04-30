@@ -65,6 +65,7 @@ Route::middleware('auth:customer')->group(function () {
 Route::get('/locations/search', [LocationSearchController::class, 'search'])->name('locations.search');
 Route::get('/booking', [CustomerOrderController::class, 'index'])->name('booking');
 Route::post('/booking/validate-email', [CustomerOrderController::class, 'validateEmail'])->name('booking.validate-email');
+Route::get('/booking/search', [CustomerOrderController::class, 'searchBookings'])->name('booking.search');
 Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
 Route::get('/booking/success', [CustomerOrderController::class, 'success'])->name('booking.success');
 Route::get('/booking/{booking_code}', [CustomerOrderController::class, 'show'])->name('booking.show');

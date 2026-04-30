@@ -168,7 +168,7 @@
 
                         </div>
                         <div class="ticket-footer text-center">
-                            <Link href="/customer/profile" class="travhub-btn"><span>Back to Dashboard</span></Link>
+                            <Link href="/" class="travhub-btn"><span>Back to Dashboard</span></Link>
                         </div>
                     </div>
                 </div>

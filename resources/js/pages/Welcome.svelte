@@ -107,6 +107,7 @@
     import Topbar from '@/components/Template/Topbar.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
+    import BookingSearch from '@/components/BookingSearch.svelte';
 
     const auth = $derived(page.props.auth);
 </script>
@@ -246,6 +247,32 @@
         </div>
         <div class="hero-one__shape-four">
             <img src="/assets/images/shapes/cloude-1-2.png" alt="" />
+        </div>
+    </section>
+
+    <section class="booking-tracker" style="padding: 60px 0; background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7">
+                    <div class="text-center mb-4">
+                        <div style="display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 50px; margin-bottom: 20px;">
+                            <i class="fas fa-search-location" style="color: #fbbf24;"></i>
+                            <span style="color: #fff; font-size: 14px; font-weight: 500;">Track Your Booking</span>
+                        </div>
+                        <h3 style="color: #fff; font-size: 28px; font-weight: 700; margin-bottom: 10px;">
+                            Already Booked? Track Your Ride
+                        </h3>
+                        <p style="color: rgba(255,255,255,0.7); font-size: 16px; margin-bottom: 30px;">
+                            Enter your booking code to check status and view details instantly
+                        </p>
+                    </div>
+                    <BookingSearch variant="hero" />
+                    <div class="text-center mt-4" style="color: rgba(255,255,255,0.5); font-size: 13px;">
+                        <i class="fas fa-info-circle"></i> 
+                        Booking code starts with "SW" followed by 6 characters (e.g., SWABC123)
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 

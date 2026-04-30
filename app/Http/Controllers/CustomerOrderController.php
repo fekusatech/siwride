@@ -60,6 +60,37 @@ class CustomerOrderController extends Controller
     }
 
     /**
+     * Search bookings by booking code for guest tracking.
+     */
+    public function searchBookings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'query' => ['required', 'string', 'min:2'],
+        ]);
+
+        $query = $validated['query'];
+
+        $orders = Order::with(['customer', 'driver'])
+            ->where('booking_code', 'like', "%{$query}%")
+            ->orWhere('order_number', 'like', "%{$query}%")
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'orders' => $orders->map(fn ($order) => [
+                'booking_code' => $order->booking_code,
+                'order_number' => $order->order_number,
+                'pickup_address' => $order->pickup_address,
+                'dropoff_address' => $order->dropoff_address,
+                'date' => $order->date->format('Y-m-d'),
+                'status' => $order->status,
+                'customer_name' => $order->customer?->name,
+                'driver_name' => $order->driver?->name,
+            ]),
+        ]);
+    }
+
+    /**
      * Store a new customer order.
      */
     public function store(StoreCustomerOrderRequest $request): RedirectResponse
