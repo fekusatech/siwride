@@ -22,7 +22,7 @@
 
             return {
                 id: order.id,
-                title: `${order.customer?.name || '-'} (${order.booking_code})`,
+                title: `${order.customer_name || '-'} (${order.booking_code})`,
                 start: `${datePart}T${timePart}`,
                 color:
                     order.status === 'completed'
@@ -193,10 +193,10 @@
                                         </div>
                                         <div>
                                             <h5 class="mb-0">
-                                                {selectedOrder.customer?.name || '-'}
+                                                {selectedOrder.customer_name || '-'}
                                             </h5>
                                             <p class="mb-0 text-muted">
-                                                {selectedOrder.customer?.phone || '-'}
+                                                {selectedOrder.customer_phone || '-'}
                                             </p>
                                         </div>
                                     </div>

@@ -85,7 +85,7 @@ class CustomerOrderController extends Controller
                 'dropoff_address' => $order->dropoff_address,
                 'date' => $order->date->format('Y-m-d'),
                 'status' => $order->status,
-                'customer_name' => $order->customer?->name,
+                'customer_name' => $order->customer_name,
                 'driver_name' => $order->driver?->name,
             ]),
         ]);
@@ -151,6 +151,9 @@ class CustomerOrderController extends Controller
             'booking_code' => $bookingCode,
             'order_number' => $orderNumber,
             'customer_id' => $customer->id,
+            'customer_name' => $validated['customer_name'],
+            'customer_phone' => $validated['customer_phone'] ?? null,
+            'customer_email' => $validated['email'],
             'date' => $validated['date'],
             'time' => $validated['time'],
             'pickup_address' => $validated['pickup_address'],
@@ -183,8 +186,8 @@ class CustomerOrderController extends Controller
         return Inertia::render('customer/booking-success', [
             'booking_code' => $bookingCode,
             'order' => $order ? [
-                'customer_name' => $order->customer?->name,
-                'email' => $order->customer?->email,
+                'customer_name' => $order->customer_name,
+                'email' => $order->customer_email,
                 'pickup_address' => $order->pickup_address,
                 'dropoff_address' => $order->dropoff_address,
                 'date' => $order->date->format('Y-m-d'),

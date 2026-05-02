@@ -133,9 +133,9 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3 mb-md-0">
                                     <h6 class="section-title">Passenger Details</h6>
-                                    <p class="detail-text"><i class="fas fa-user text-muted mr-2"></i> {order.customer?.name || 'Guest'}</p>
-                                    {#if order.customer?.phone}
-                                        <p class="detail-text"><i class="fas fa-phone-alt text-muted mr-2"></i> {order.customer.phone}</p>
+                                    <p class="detail-text"><i class="fas fa-user text-muted mr-2"></i> {order.customer_name || 'Guest'}</p>
+                                    {#if order.customer_phone}
+                                        <p class="detail-text"><i class="fas fa-phone-alt text-muted mr-2"></i> {order.customer_phone}</p>
                                     {/if}
                                 </div>
                                 <div class="col-md-6">

@@ -11,6 +11,7 @@ use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -33,6 +34,7 @@ class OrderController extends Controller
                     $query->where(function ($q) use ($search) {
                         $q->where('booking_code', 'like', "%{$search}%")
                             ->orWhere('order_number', 'like', "%{$search}%")
+                            ->orWhere('customer_name', 'like', "%{$search}%")
                             ->orWhereHas('customer', function ($cq) use ($search) {
                                 $cq->where('name', 'like', "%{$search}%");
                             })
@@ -121,7 +123,7 @@ class OrderController extends Controller
         );
 
         Order::create(array_merge(
-            collect($validated)->except(['customer_name', 'customer_phone', 'customer_email'])->toArray(),
+            $validated,
             ['customer_id' => $customer->id]
         ));
 
@@ -150,50 +152,53 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        $validated = $request->validate([
-            'booking_code' => ['required', 'string', 'unique:orders,booking_code,'.$order->id],
-            'order_number' => ['required', 'string'],
-            'date' => ['required', 'date'],
-            'time' => ['required'],
-            'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['nullable', 'string', 'max:50'],
-            'customer_email' => ['required', 'email', 'max:255'],
-            'flight_number' => ['nullable', 'string', 'max:50'],
-            'driver_id' => ['nullable', 'exists:drivers,id'],
-            'vehicle_id' => ['nullable', 'exists:vehicles,id'],
-            'pickup_address' => ['required', 'string'],
-            'pickup_latitude' => ['nullable', 'numeric'],
-            'pickup_longitude' => ['nullable', 'numeric'],
-            'dropoff_address' => ['required', 'string'],
-            'dropoff_latitude' => ['nullable', 'numeric'],
-            'dropoff_longitude' => ['nullable', 'numeric'],
-            'passengers' => ['required', 'integer', 'min:1'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'parking_gas_fee' => ['required', 'numeric', 'min:0'],
-            'status' => ['required', 'string', 'in:pending,completed,cancelled'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'booking_code' => ['required', 'string', 'unique:orders,booking_code,'.$order->id],
+                'order_number' => ['required', 'string'],
+                'date' => ['required', 'date'],
+                'time' => ['required'],
+                'customer_name' => ['required', 'string', 'max:255'],
+                'customer_phone' => ['nullable', 'string', 'max:50'],
+                'customer_email' => ['required', 'email', 'max:255'],
+                'flight_number' => ['nullable', 'string', 'max:50'],
+                'driver_id' => ['nullable', 'exists:drivers,id'],
+                'vehicle_id' => ['nullable', 'exists:vehicles,id'],
+                'pickup_address' => ['required', 'string'],
+                'pickup_latitude' => ['nullable', 'numeric'],
+                'pickup_longitude' => ['nullable', 'numeric'],
+                'dropoff_address' => ['required', 'string'],
+                'dropoff_latitude' => ['nullable', 'numeric'],
+                'dropoff_longitude' => ['nullable', 'numeric'],
+                'passengers' => ['required', 'integer', 'min:1'],
+                'price' => ['required', 'numeric', 'min:0'],
+                'parking_gas_fee' => ['required', 'numeric', 'min:0'],
+                'status' => ['required', 'string', 'in:pending,completed,cancelled'],
+            ]);
 
-        $customer = Customer::firstOrCreate(
-            ['email' => $validated['customer_email']],
-            [
-                'name' => $validated['customer_name'],
-                'phone' => $validated['customer_phone'] ?? null,
-            ]
-        );
+            $customer = Customer::firstOrCreate(
+                ['email' => $validated['customer_email']],
+                [
+                    'name' => $validated['customer_name'],
+                    'phone' => $validated['customer_phone'] ?? null,
+                ]
+            );
 
-        // Update customer info if they already exist
-        $customer->update([
-            'name' => $validated['customer_name'],
-            'phone' => $validated['customer_phone'] ?? $customer->phone,
-        ]);
+            $order->update(array_merge(
+                $validated,
+                ['customer_id' => $customer->id]
+            ));
 
-        $order->update(array_merge(
-            collect($validated)->except(['customer_name', 'customer_phone', 'customer_email'])->toArray(),
-            ['customer_id' => $customer->id]
-        ));
+            return redirect()->back()
+                ->with('success', 'Order updated successfully.');
+        } catch (ValidationException $e) {
+            Log::error('Validation error on order update: '.json_encode($e->errors()));
+            throw $e; // Re-throw to let Inertia handle it and display errors in form
+        } catch (\Exception $e) {
+            Log::error('Error updating order: '.$e->getMessage());
 
-        return redirect()->back()
-            ->with('success', 'Order updated successfully.');
+            return redirect()->back()->with('error', 'Error updating order: '.$e->getMessage());
+        }
     }
 
     public function updateStatus(Request $request, Order $order)
@@ -279,8 +284,8 @@ class OrderController extends Controller
             "Nama: {$driver->name}\n".
             "Mobil: {$vehicleInfo}\n\n".
             "Customer:\n".
-            "Nama: {$order->customer?->name}\n".
-            "Telepon: {$order->customer?->phone}\n".
+            "Nama: {$order->customer_name}\n".
+            "Telepon: {$order->customer_phone}\n".
             "Flight Number: {$flightNumber}\n\n".
             "Pickup: {$order->pickup_address}\n\n".
             "Dropoff: {$order->dropoff_address}\n\n".
@@ -343,8 +348,8 @@ class OrderController extends Controller
             "Nama: {$driver->name}\n".
             "Mobil: {$vehicleInfo}\n\n".
             "Customer:\n".
-            "Nama: {$order->customer?->name}\n".
-            "Telepon: {$order->customer?->phone}\n".
+            "Nama: {$order->customer_name}\n".
+            "Telepon: {$order->customer_phone}\n".
             "Flight Number: {$flightNumber}\n\n".
             "Pickup: {$order->pickup_address}\n\n".
             "Dropoff: {$order->dropoff_address}\n\n".
