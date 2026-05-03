@@ -19,14 +19,18 @@
     let logoPreview = $state<string | null>(null);
     let faviconPreview = $state<string | null>(null);
 
+    function storagePreview(path: string | null) {
+        if (!path || path === '0' || path === 'false') {
+            return null;
+        }
+
+        return `/storage/${path}?v=${new Date(setting.updated_at).getTime()}`;
+    }
+
     // Sync previews with props when they change (after successful submission)
     $effect(() => {
-        logoPreview = setting.logo
-            ? `/storage/${setting.logo}?v=${new Date(setting.updated_at).getTime()}`
-            : null;
-        faviconPreview = setting.favicon
-            ? `/storage/${setting.favicon}?v=${new Date(setting.updated_at).getTime()}`
-            : null;
+        logoPreview = storagePreview(setting.logo);
+        faviconPreview = storagePreview(setting.favicon);
     });
 
     function handleLogoChange(e: Event) {

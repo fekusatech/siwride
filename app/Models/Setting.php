@@ -13,13 +13,23 @@ class Setting extends Model
 
     public static function getValue(string $key, mixed $default = null): mixed
     {
-        return static::query()
+        $value = static::query()
             ->where('setting_key', $key)
-            ->value('setting_value') ?? $default;
+            ->value('setting_value');
+
+        if (in_array($value, ['0', 0, 'false', false], true) && in_array($key, ['logo', 'favicon'], true)) {
+            return $default;
+        }
+
+        return $value ?? $default;
     }
 
     public static function setValue(string $key, mixed $value): void
     {
+        if (in_array($key, ['logo', 'favicon'], true) && blank($value)) {
+            $value = null;
+        }
+
         static::query()->updateOrCreate(
             ['setting_key' => $key],
             ['setting_value' => $value]

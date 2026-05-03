@@ -52,7 +52,7 @@ class SettingController extends Controller
 
         $currentLogo = Setting::getValue('logo');
         if ($request->hasFile('logo')) {
-            if ($currentLogo) {
+            if ($currentLogo && $currentLogo !== '0') {
                 Storage::disk('public')->delete($currentLogo);
             }
 
@@ -63,7 +63,7 @@ class SettingController extends Controller
 
         $currentFavicon = Setting::getValue('favicon');
         if ($request->hasFile('favicon')) {
-            if ($currentFavicon) {
+            if ($currentFavicon && $currentFavicon !== '0') {
                 Storage::disk('public')->delete($currentFavicon);
             }
 
