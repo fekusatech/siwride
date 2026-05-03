@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Zone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -103,6 +104,49 @@ class ZoneController extends Controller
         return redirect()->back()->with('success', 'Zone deleted successfully.');
     }
 
+    public function boundarySuggestions(Request $request)
+    {
+        $validated = $request->validate([
+            'query' => ['required', 'string', 'min:3', 'max:120'],
+        ]);
+
+        $response = Http::withHeaders([
+            'User-Agent' => config('app.name', 'Siwride').'/1.0',
+        ])
+            ->timeout(10)
+            ->connectTimeout(5)
+            ->get('https://nominatim.openstreetmap.org/search', [
+                'q' => $validated['query'],
+                'format' => 'jsonv2',
+                'polygon_geojson' => 1,
+                'addressdetails' => 1,
+                'limit' => 8,
+                'countrycodes' => 'id',
+            ]);
+
+        $suggestions = collect($response->json())
+            ->map(function (array $item) {
+                $coordinates = $this->geoJsonToCoordinates($item['geojson'] ?? null);
+
+                if (count($coordinates) < 3) {
+                    return null;
+                }
+
+                return [
+                    'name' => $item['display_name'] ?? 'Unknown Area',
+                    'type' => $item['type'] ?? null,
+                    'class' => $item['class'] ?? null,
+                    'coordinates' => $coordinates,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        return response()->json([
+            'data' => $suggestions,
+        ]);
+    }
+
     /**
      * Validate if a point is within any active zone.
      */
@@ -116,5 +160,32 @@ class ZoneController extends Controller
         $inside = Zone::containsPoint($request->lat, $request->lng);
 
         return response()->json(['inside' => $inside]);
+    }
+
+    /**
+     * @return array<int, array{lat: float, lng: float}>
+     */
+    private function geoJsonToCoordinates(?array $geoJson): array
+    {
+        if (! $geoJson || ! isset($geoJson['type'], $geoJson['coordinates'])) {
+            return [];
+        }
+
+        $points = match ($geoJson['type']) {
+            'Polygon' => $geoJson['coordinates'][0] ?? [],
+            'MultiPolygon' => collect($geoJson['coordinates'])
+                ->sortByDesc(fn ($polygon) => count($polygon[0] ?? []))
+                ->first()[0] ?? [],
+            default => [],
+        };
+
+        return collect($points)
+            ->map(fn ($point) => [
+                'lat' => (float) ($point[1] ?? 0),
+                'lng' => (float) ($point[0] ?? 0),
+            ])
+            ->filter(fn ($point) => $point['lat'] !== 0.0 && $point['lng'] !== 0.0)
+            ->values()
+            ->all();
     }
 }

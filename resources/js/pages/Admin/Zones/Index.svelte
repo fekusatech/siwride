@@ -30,6 +30,10 @@
     let selectedPolygon: any = null;
     let currentPolygons: any[] = [];
     let isEditing = $state(false);
+    let boundaryQuery = $state('');
+    let boundarySuggestions = $state<any[]>([]);
+    let searchingBoundary = $state(false);
+    let boundaryError = $state<string | null>(null);
 
     function initMap() {
         if (!google_maps_api_key) return;
@@ -142,6 +146,73 @@
             coords.push({ lat: point.lat(), lng: point.lng() });
         }
         form.coordinates = coords;
+    }
+
+    async function searchBoundaries() {
+        if (boundaryQuery.trim().length < 3) {
+            boundaryError = 'Type at least 3 characters.';
+            return;
+        }
+
+        searchingBoundary = true;
+        boundaryError = null;
+
+        try {
+            const response = await fetch(
+                `/admin/zones/boundary-suggestions?query=${encodeURIComponent(boundaryQuery.trim())}`,
+            );
+            const result = await response.json();
+            boundarySuggestions = result.data ?? [];
+
+            if (boundarySuggestions.length === 0) {
+                boundaryError =
+                    'No boundary polygon found. Try another keyword.';
+            }
+        } catch (error) {
+            boundaryError = 'Failed to search boundaries.';
+            console.error('Boundary search error:', error);
+        } finally {
+            searchingBoundary = false;
+        }
+    }
+
+    function useBoundarySuggestion(suggestion: any) {
+        form.name = suggestion.name.split(',')[0] ?? suggestion.name;
+        form.coordinates = suggestion.coordinates;
+
+        if (selectedPolygon) {
+            selectedPolygon.setMap(null);
+        }
+
+        if (map && typeof google !== 'undefined' && google.maps) {
+            selectedPolygon = new google.maps.Polygon({
+                paths: suggestion.coordinates,
+                editable: true,
+                draggable: true,
+                fillColor: '#22c55e',
+                fillOpacity: 0.35,
+                strokeColor: '#16a34a',
+                strokeWeight: 2,
+                map,
+            });
+
+            google.maps.event.addListener(
+                selectedPolygon.getPath(),
+                'set_at',
+                () => updateCoordinatesFromPolygon(selectedPolygon),
+            );
+            google.maps.event.addListener(
+                selectedPolygon.getPath(),
+                'insert_at',
+                () => updateCoordinatesFromPolygon(selectedPolygon),
+            );
+
+            const bounds = new google.maps.LatLngBounds();
+            suggestion.coordinates.forEach((coord: any) => {
+                bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
+            });
+            map.fitBounds(bounds);
+        }
     }
 
     function editZone(zone: any) {
@@ -274,6 +345,72 @@
                         }}
                         class="p-4 space-y-4"
                     >
+                        <div
+                            class="rounded-lg border border-emerald-100 bg-emerald-50 p-3 space-y-3"
+                        >
+                            <div>
+                                <label
+                                    for="boundary-search"
+                                    class="block text-sm font-medium text-emerald-900 mb-1"
+                                >
+                                    Search Boundary
+                                </label>
+                                <div class="flex gap-2">
+                                    <input
+                                        id="boundary-search"
+                                        type="search"
+                                        bind:value={boundaryQuery}
+                                        placeholder="e.g. Denpasar, Badung, Bali"
+                                        class="w-full px-3 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                                        onkeydown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                searchBoundaries();
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onclick={searchBoundaries}
+                                        disabled={searchingBoundary}
+                                        class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-50"
+                                    >
+                                        {searchingBoundary ? '...' : 'Search'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {#if boundaryError}
+                                <p class="text-xs text-amber-700">
+                                    {boundaryError}
+                                </p>
+                            {/if}
+
+                            {#if boundarySuggestions.length > 0}
+                                <div class="space-y-2 max-h-48 overflow-y-auto">
+                                    {#each boundarySuggestions as suggestion}
+                                        <button
+                                            type="button"
+                                            onclick={() =>
+                                                useBoundarySuggestion(
+                                                    suggestion,
+                                                )}
+                                            class="w-full text-left bg-white border border-emerald-100 hover:border-emerald-400 rounded-lg p-2 transition-colors"
+                                        >
+                                            <div
+                                                class="text-sm font-medium text-gray-900 line-clamp-2"
+                                            >
+                                                {suggestion.name}
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                {suggestion.coordinates.length} points
+                                            </div>
+                                        </button>
+                                    {/each}
+                                </div>
+                            {/if}
+                        </div>
+
                         <div>
                             <label
                                 for="zone-name"

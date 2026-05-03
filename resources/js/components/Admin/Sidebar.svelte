@@ -4,7 +4,7 @@
 
     let { toggleSidebar, closeSidebar } = $props();
     const settings = $derived(page.props.settings as any);
-    
+
     let closeBtnRef: HTMLButtonElement;
 
     function handleToggleSidebar(e: Event) {
@@ -21,12 +21,12 @@
 
     onMount(() => {
         // Boron's app.js aggressively binds its own click handler to .button-close-fullsidebar
-        // which conflicts with our Svelte state. By cloning and replacing the node, 
+        // which conflicts with our Svelte state. By cloning and replacing the node,
         // we strip the jQuery/vanilla JS event listeners attached by the template.
         if (closeBtnRef) {
             const clone = closeBtnRef.cloneNode(true) as HTMLButtonElement;
             closeBtnRef.parentNode?.replaceChild(clone, closeBtnRef);
-            
+
             // Re-bind our Svelte handler to the fresh clone
             clone.addEventListener('click', handleCloseSidebar);
         }
@@ -172,6 +172,13 @@
                 <Link href="/admin/zones" class="side-nav-link">
                     <span class="menu-icon"><i class="ti ti-map-pin"></i></span>
                     <span class="menu-text"> Zones </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
+                <Link href="/admin/zones/pricing" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-cash"></i></span>
+                    <span class="menu-text"> Zone Pricing </span>
                 </Link>
             </li>
 

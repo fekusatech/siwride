@@ -51,6 +51,17 @@
     let dropoffInZone = $state(true);
     let validatingPickup = $state(false);
     let validatingDropoff = $state(false);
+    let calculatingPrice = $state(false);
+    let pricingMessage = $state<string | null>(null);
+    let pricingSummary = $state<string | null>(null);
+
+    function csrfToken() {
+        return (
+            document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content') || ''
+        );
+    }
 
     async function checkZone(
         lat: number,
@@ -65,10 +76,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken(),
                 },
                 body: JSON.stringify({ lat, lng }),
             });
@@ -80,6 +88,50 @@
         } finally {
             if (type === 'pickup') validatingPickup = false;
             else validatingDropoff = false;
+        }
+    }
+
+    async function calculateZonePrice() {
+        if (
+            !form.pickup_latitude ||
+            !form.pickup_longitude ||
+            !form.dropoff_latitude ||
+            !form.dropoff_longitude
+        ) {
+            return;
+        }
+
+        calculatingPrice = true;
+        pricingMessage = null;
+        pricingSummary = null;
+
+        try {
+            const response = await fetch('/admin/zones/pricing/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({
+                    pickup_latitude: form.pickup_latitude,
+                    pickup_longitude: form.pickup_longitude,
+                    dropoff_latitude: form.dropoff_latitude,
+                    dropoff_longitude: form.dropoff_longitude,
+                }),
+            });
+            const data = await response.json();
+
+            if (data.price !== null && data.price !== undefined) {
+                form.price = Math.round(Number(data.price));
+                pricingSummary = `${data.pickup_zone?.name ?? '-'} to ${data.dropoff_zone?.name ?? '-'} • ${data.distance_km} km`;
+            } else {
+                pricingMessage = data.message ?? 'No zone pricing found.';
+            }
+        } catch (error) {
+            pricingMessage = 'Failed to calculate zone price.';
+            console.error('Zone pricing error:', error);
+        } finally {
+            calculatingPrice = false;
         }
     }
 
@@ -158,6 +210,7 @@
                     form.pickup_longitude,
                     'pickup',
                 );
+                calculateZonePrice();
             }
         });
 
@@ -176,6 +229,7 @@
                     form.dropoff_longitude,
                     'dropoff',
                 );
+                calculateZonePrice();
             }
         });
     }
@@ -422,6 +476,15 @@
                 min="0"
                 required
             />
+            {#if calculatingPrice}
+                <div class="text-muted small mt-1">
+                    Calculating zone price...
+                </div>
+            {:else if pricingSummary}
+                <div class="text-success small mt-1">{pricingSummary}</div>
+            {:else if pricingMessage}
+                <div class="text-warning small mt-1">{pricingMessage}</div>
+            {/if}
         </div>
         <div class="col-md-4">
             <label for="parking_form" class="form-label">P/B (IDR)</label>

@@ -112,9 +112,9 @@
 {#if isMobileSidebarOpen}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div 
-        class="offcanvas-backdrop fade show custom-backdrop" 
-        onclick={closeSidebar} 
+    <div
+        class="offcanvas-backdrop fade show custom-backdrop"
+        onclick={closeSidebar}
         style="z-index: 1040;"
     ></div>
 {/if}

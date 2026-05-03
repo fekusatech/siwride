@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 class Zone extends Model
@@ -75,6 +76,16 @@ class Zone extends Model
         return $query->where('is_active', true);
     }
 
+    public function pickupPricingRules(): HasMany
+    {
+        return $this->hasMany(ZonePricingRule::class, 'pickup_zone_id');
+    }
+
+    public function dropoffPricingRules(): HasMany
+    {
+        return $this->hasMany(ZonePricingRule::class, 'dropoff_zone_id');
+    }
+
     /**
      * Check if a point is inside any active zone.
      */
@@ -83,5 +94,12 @@ class Zone extends Model
         return self::active()
             ->whereRaw("ST_Contains(coordinates, ST_GeomFromText('POINT($lat $lng)'))")
             ->exists();
+    }
+
+    public static function findContainingPoint(float $lat, float $lng): ?self
+    {
+        return self::active()
+            ->whereRaw("ST_Contains(coordinates, ST_GeomFromText('POINT($lat $lng)'))")
+            ->first();
     }
 }
