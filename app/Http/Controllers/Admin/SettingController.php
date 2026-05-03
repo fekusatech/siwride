@@ -57,6 +57,11 @@ class SettingController extends Controller
             }
 
             $logoPath = $request->file('logo')->store('settings', 'public');
+
+            if ($logoPath === false) {
+                return redirect()->back()->with('error', 'Failed to store business logo. Please check directory permissions.');
+            }
+
             Setting::setValue('logo', $logoPath);
             Log::info('New logo stored: '.$logoPath);
         }
@@ -68,6 +73,11 @@ class SettingController extends Controller
             }
 
             $faviconPath = $request->file('favicon')->store('settings', 'public');
+
+            if ($faviconPath === false) {
+                return redirect()->back()->with('error', 'Failed to store favicon. Please check directory permissions.');
+            }
+
             Setting::setValue('favicon', $faviconPath);
             Log::info('New favicon stored: '.$faviconPath);
         }

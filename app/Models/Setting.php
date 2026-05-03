@@ -26,7 +26,7 @@ class Setting extends Model
 
     public static function setValue(string $key, mixed $value): void
     {
-        if (in_array($key, ['logo', 'favicon'], true) && blank($value)) {
+        if (in_array($key, ['logo', 'favicon'], true) && (blank($value) || $value === false)) {
             $value = null;
         }
 

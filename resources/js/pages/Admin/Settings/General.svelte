@@ -57,14 +57,7 @@
     function submit(e: Event) {
         e.preventDefault();
 
-        const currentForm = e.currentTarget as HTMLFormElement;
-        const formData = new FormData(currentForm);
-        formData.set('business_name', form.business_name);
-        formData.set('recaptcha_enabled', form.recaptcha_enabled ? '1' : '0');
-        formData.set('recaptcha_site_key', form.recaptcha_site_key);
-        formData.set('recaptcha_secret_key', form.recaptcha_secret_key);
-
-        router.post('/admin/settings/general', formData, {
+        form.post('/admin/settings/general', {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
