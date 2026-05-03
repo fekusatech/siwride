@@ -14,7 +14,7 @@
         isMobileSidebarOpen = false;
         const html = document.documentElement;
         html.classList.remove('sidebar-enable');
-        html.setAttribute('data-sidenav-size', 'default');
+        // Do NOT change data-sidenav-size on mobile, it must stay 'full'
     }
 
     function toggleSidebar(e?: Event) {
@@ -25,24 +25,32 @@
 
         if (!isHydrated) return;
 
-        const isMobile = window.innerWidth < 992;
+        // Boron treats < 1140 as mobile/tablet (requires sidebar-enable to show if full)
+        const isMobile = window.innerWidth <= 1140;
         const html = document.documentElement;
         const currentSize = html.getAttribute('data-sidenav-size') || 'default';
-        let newSize = 'default';
+        let newSize = currentSize;
 
         if (isMobile) {
-            // Mobile: toggle between default (hidden) and full (visible overlay)
             isMobileSidebarOpen = !isMobileSidebarOpen;
             if (isMobileSidebarOpen) {
                 html.classList.add('sidebar-enable');
-                newSize = 'full';
             } else {
                 html.classList.remove('sidebar-enable');
-                newSize = 'default';
+            }
+            // Always ensure it's 'full' on mobile if we are toggling the overlay
+            if (window.innerWidth <= 767.98) {
+                newSize = 'full';
             }
         } else {
-            // Desktop: toggle between default and sm-hover-active
-            newSize = currentSize === 'default' ? 'sm-hover-active' : 'default';
+            // Desktop: toggle between default and condensed
+            if (currentSize === 'default') {
+                newSize = 'condensed';
+            } else {
+                newSize = 'default';
+            }
+            // Optionally toggle sm-hover-active if preferred
+            // newSize = currentSize === 'default' ? 'sm-hover-active' : 'default';
         }
 
         html.setAttribute('data-sidenav-size', newSize);
