@@ -115,10 +115,6 @@ return new class extends Migration
                     ]);
                 }
 
-                // Update foreign keys in orders and vehicles
-                DB::table('orders')->where('driver_id', $driver->id)->update(['driver_id' => $userId]);
-                DB::table('orders')->where('claimed_driver_id', $driver->id)->update(['claimed_driver_id' => $userId]);
-                DB::table('vehicles')->where('driver_id', $driver->id)->update(['driver_id' => $userId]);
             }
         }
     }
