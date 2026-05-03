@@ -1,8 +1,11 @@
 <script lang="ts">
     import { Link, page } from '@inertiajs/svelte';
+    import { onMount } from 'svelte';
 
     let { toggleSidebar, closeSidebar } = $props();
     const settings = $derived(page.props.settings as any);
+    
+    let closeBtnRef: HTMLButtonElement;
 
     function handleToggleSidebar(e: Event) {
         e.preventDefault();
@@ -15,6 +18,19 @@
         e.stopPropagation();
         closeSidebar();
     }
+
+    onMount(() => {
+        // Boron's app.js aggressively binds its own click handler to .button-close-fullsidebar
+        // which conflicts with our Svelte state. By cloning and replacing the node, 
+        // we strip the jQuery/vanilla JS event listeners attached by the template.
+        if (closeBtnRef) {
+            const clone = closeBtnRef.cloneNode(true) as HTMLButtonElement;
+            closeBtnRef.parentNode?.replaceChild(clone, closeBtnRef);
+            
+            // Re-bind our Svelte handler to the fresh clone
+            clone.addEventListener('click', handleCloseSidebar);
+        }
+    });
 </script>
 
 <!-- Sidenav Menu Start -->
@@ -99,8 +115,8 @@
 
     <!-- Close Button for Mobile -->
     <button
+        bind:this={closeBtnRef}
         class="button-close-fullsidebar"
-        onclick={handleCloseSidebar}
         aria-label="Close Sidebar"
         type="button"
     >
