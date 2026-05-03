@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 @php 
     $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*'); 
+    $favicon = \App\Models\Setting::getValue('favicon');
+    $faviconUrl = $favicon ? asset('storage/' . $favicon) : null;
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
     @if($isDashboard)
@@ -17,8 +19,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="icon" href="{{ $faviconUrl ?? '/favicon.ico' }}" sizes="any">
+        @if(!$faviconUrl)
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        @endif
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -58,7 +62,7 @@
             </script>
         @else
             <!-- Boron Admin Assets -->
-            <link rel="shortcut icon" href="/assets-admin/images/favicon.ico">
+            <link rel="shortcut icon" href="{{ $faviconUrl ?? '/assets-admin/images/favicon.ico' }}">
             <link href="/assets-admin/css/vendor.min.css" rel="stylesheet" type="text/css" />
             <link href="/assets-admin/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
             <link href="/assets-admin/css/icons.min.css" rel="stylesheet" type="text/css" />
