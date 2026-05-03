@@ -8,7 +8,7 @@
 
     let user = $derived(page.props.auth?.user);
 
-    let { toggleSidebar } = $props();
+    let { toggleSidebar, closeSidebar } = $props();
 
     onMount(() => {
         isHydrated = true;
@@ -26,46 +26,8 @@
             attributeFilter: ['data-bs-theme', 'data-sidenav-size'],
         });
 
-        const toggleBtn = document.querySelector('.sidenav-toggle-button');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const html = document.documentElement;
-                const currentSize =
-                    html.getAttribute('data-sidenav-size') || 'default';
-
-                if (currentSize === 'default') {
-                    html.setAttribute('data-sidenav-size', 'condensed');
-                } else {
-                    html.setAttribute('data-sidenav-size', 'default');
-                }
-
-                html.classList.toggle('sidebar-enable');
-
-                try {
-                    const config = {
-                        theme: 'light',
-                        topbar: { color: 'light' },
-                        menu: { color: 'dark' },
-                        sidenav: {
-                            size:
-                                html.getAttribute('data-sidenav-size') ||
-                                'default',
-                            user: true,
-                        },
-                        layout: { mode: 'fluid' },
-                    };
-                    sessionStorage.setItem(
-                        '__BORON_CONFIG__',
-                        JSON.stringify(config),
-                    );
-                } catch (err) {
-                    console.error('[Topbar] Failed to persist config', err);
-                }
-            });
-        }
+        // Toggle button logic is now handled in AdminLayout entirely
+        // Svelte handles it nicely without needing querySelector
 
         return () => {
             observer.disconnect();
@@ -80,12 +42,11 @@
         document.documentElement.setAttribute('data-topbar-color', newTheme);
     }
 
-    function closeSidebarMobile(e: Event) {
+    function handleCloseSidebarMobile(e: Event) {
         if (!isHydrated) return;
         e.preventDefault();
         e.stopPropagation();
-        document.documentElement.setAttribute('data-sidenav-size', 'default');
-        document.documentElement.classList.remove('sidebar-enable');
+        closeSidebar();
     }
 
     function submitBookingSearch(e: Event) {
@@ -123,6 +84,7 @@
             <!-- Sidebar Toggle Button (Desktop Only) -->
             <button
                 class="sidenav-toggle-button btn btn-secondary btn-icon d-none d-lg-flex"
+                onclick={(e) => toggleSidebar(e)}
                 aria-label="Toggle Sidebar"
             >
                 <i class="ti ti-menu-deep fs-24"></i>
@@ -141,7 +103,7 @@
             {#if isHydrated}
                 <button
                     class="nav-link button-close-sidebar-mobile d-lg-none"
-                    onclick={closeSidebarMobile}
+                    onclick={handleCloseSidebarMobile}
                     aria-label="Close Sidebar"
                     style="display: none;"
                 >

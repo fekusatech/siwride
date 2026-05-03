@@ -1,13 +1,19 @@
 <script lang="ts">
     import { Link, page } from '@inertiajs/svelte';
 
-    let { toggleSidebar } = $props();
+    let { toggleSidebar, closeSidebar } = $props();
     const settings = $derived(page.props.settings as any);
 
     function handleToggleSidebar(e: Event) {
         e.preventDefault();
         e.stopPropagation();
         toggleSidebar(e);
+    }
+
+    function handleCloseSidebar(e: Event) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeSidebar();
     }
 </script>
 
@@ -94,7 +100,7 @@
     <!-- Close Button for Mobile -->
     <button
         class="button-close-fullsidebar"
-        onclick={handleToggleSidebar}
+        onclick={handleCloseSidebar}
         aria-label="Close Sidebar"
         type="button"
     >

@@ -88,9 +88,9 @@
 </script>
 
 <div class="wrapper">
-    <Sidebar {toggleSidebar} />
+    <Sidebar {toggleSidebar} {closeSidebar} />
 
-    <Topbar {toggleSidebar} />
+    <Topbar {toggleSidebar} {closeSidebar} />
 
     <div class="page-content">
         <main class="page-container">
