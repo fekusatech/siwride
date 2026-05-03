@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, type Snippet } from 'svelte';
+    import { router } from '@inertiajs/svelte';
     import Sidebar from '../components/Admin/Sidebar.svelte';
     import Topbar from '../components/Admin/Topbar.svelte';
     import Footer from '../components/Admin/Footer.svelte';
@@ -7,6 +8,14 @@
     let { children }: { children: Snippet } = $props();
 
     let isHydrated = $state(false);
+    let isMobileSidebarOpen = $state(false);
+
+    function closeSidebar() {
+        isMobileSidebarOpen = false;
+        const html = document.documentElement;
+        html.classList.remove('sidebar-enable');
+        html.setAttribute('data-sidenav-size', 'default');
+    }
 
     function toggleSidebar(e?: Event) {
         if (e) {
@@ -16,25 +25,27 @@
 
         if (!isHydrated) return;
 
-        const isMobile = window.innerWidth < 768;
-        const currentSize =
-            document.documentElement.getAttribute('data-sidenav-size') ||
-            'default';
+        const isMobile = window.innerWidth < 992;
+        const html = document.documentElement;
+        const currentSize = html.getAttribute('data-sidenav-size') || 'default';
         let newSize = 'default';
 
         if (isMobile) {
             // Mobile: toggle between default (hidden) and full (visible overlay)
-            newSize = currentSize === 'default' ? 'full' : 'default';
+            isMobileSidebarOpen = !isMobileSidebarOpen;
+            if (isMobileSidebarOpen) {
+                html.classList.add('sidebar-enable');
+                newSize = 'full';
+            } else {
+                html.classList.remove('sidebar-enable');
+                newSize = 'default';
+            }
         } else {
             // Desktop: toggle between default and sm-hover-active
             newSize = currentSize === 'default' ? 'sm-hover-active' : 'default';
         }
 
-        console.log(
-            `[SidebarToggle] Mobile: ${isMobile}, Current: ${currentSize} -> New: ${newSize}`,
-        );
-
-        document.documentElement.setAttribute('data-sidenav-size', newSize);
+        html.setAttribute('data-sidenav-size', newSize);
 
         // Persist to sessionStorage
         try {
@@ -53,17 +64,25 @@
     }
 
     onMount(() => {
-        // Wait for hydration to complete
         isHydrated = true;
 
-        // Initial sync from DOM
-        const currentSize =
-            document.documentElement.getAttribute('data-sidenav-size') ||
-            'default';
+        // Sync initial state
+        const html = document.documentElement;
+        if (html.classList.contains('sidebar-enable')) {
+            isMobileSidebarOpen = true;
+        }
+
+        // Listen for Inertia navigation events to close mobile sidebar
+        const unsubscribe = router.on('navigate', () => {
+            if (window.innerWidth < 992 && isMobileSidebarOpen) {
+                closeSidebar();
+            }
+        });
 
         // Cleanup
         return () => {
             isHydrated = false;
+            unsubscribe();
         };
     });
 </script>
@@ -81,6 +100,16 @@
         <Footer />
     </div>
 </div>
+
+{#if isMobileSidebarOpen}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div 
+        class="offcanvas-backdrop fade show custom-backdrop" 
+        onclick={closeSidebar} 
+        style="z-index: 1040;"
+    ></div>
+{/if}
 
 <style>
     /* Admin Sidebar Custom Styles */
