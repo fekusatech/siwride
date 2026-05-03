@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Driver;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,16 +23,52 @@ class DriverController extends Controller
             'drivers' => Driver::query()
                 ->withCount('vehicles')
                 ->when($request->search, function ($query, $search) {
-                    $query->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('nid', 'like', "%{$search}%");
+                    $query->where(function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('nid', 'like', "%{$search}%");
+                    });
                 })
                 ->latest()
                 ->paginate(10)
-                ->withQueryString(),
+                ->withQueryString()
+                ->through(function ($driver) {
+                    // Check if user account exists
+                    $driver->has_user_account = User::where('email', $driver->email)->exists();
+
+                    return $driver;
+                }),
             'filters' => $request->only(['search']),
         ]);
+    }
+
+    /**
+     * Create a user account for an existing driver.
+     */
+    public function syncUser(Driver $driver)
+    {
+        if (User::where('email', $driver->email)->exists()) {
+            return redirect()->back()->with('error', 'User account already exists for this driver.');
+        }
+
+        // Split name for User model
+        $nameParts = explode(' ', $driver->name, 2);
+        $firstname = $nameParts[0];
+        $lastname = $nameParts[1] ?? '';
+
+        User::create([
+            'firstname' => $firstname,
+            'lastname' => $lastname,
+            'email' => $driver->email,
+            'phone' => $driver->phone,
+            'password' => Hash::make($driver->email), // Default password is email
+            'role' => 'driver',
+            'status' => $driver->status,
+            'nid' => $driver->nid,
+        ]);
+
+        return redirect()->back()->with('success', 'User account created successfully. Default password is the driver\'s email.');
     }
 
     /**
@@ -83,6 +121,23 @@ class DriverController extends Controller
             }
 
             $driver = Driver::create($validated);
+
+            // Split name for User model
+            $nameParts = explode(' ', $validated['name'], 2);
+            $firstname = $nameParts[0];
+            $lastname = $nameParts[1] ?? '';
+
+            // Create User record for Authentication
+            User::create([
+                'firstname' => $firstname,
+                'lastname' => $lastname,
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'driver',
+                'status' => $validated['status'],
+                'nid' => $validated['nid'],
+            ]);
 
             if ($request->boolean('add_vehicle')) {
                 $driver->vehicles()->create([
@@ -164,7 +219,32 @@ class DriverController extends Controller
             $validated['sim_image'] = $request->file('sim_image')->store('drivers/sim', 'public');
         }
 
+        $oldEmail = $driver->email;
         $driver->update($validated);
+
+        // Update corresponding User record
+        $user = User::where('email', $oldEmail)->first();
+        if ($user) {
+            $nameParts = explode(' ', $validated['name'], 2);
+            $firstname = $nameParts[0];
+            $lastname = $nameParts[1] ?? '';
+
+            $userData = [
+                'firstname' => $firstname,
+                'lastname' => $lastname,
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'status' => $validated['status'],
+                'nid' => $validated['nid'],
+                'role' => 'driver',
+            ];
+
+            if (! empty($validated['password'])) {
+                $userData['password'] = Hash::make($validated['password']);
+            }
+
+            $user->update($userData);
+        }
 
         return redirect()->route('admin.drivers.index')
             ->with('success', 'Driver updated successfully.');

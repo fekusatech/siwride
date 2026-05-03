@@ -177,7 +177,8 @@
                                     Menunggu Konfirmasi Admin
                                 </h5>
                                 <p class="mb-0">
-                                    Claim Anda sedang diproses. Admin akan segera mengkonfirmasi.
+                                    Claim Anda sedang diproses. Admin akan
+                                    segera mengkonfirmasi.
                                 </p>
                             </div>
                         {:else if isAssigned}

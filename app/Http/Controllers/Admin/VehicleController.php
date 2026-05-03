@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Driver;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,7 +25,7 @@ class VehicleController extends Controller
                         ->orWhere('brand', 'like', "%{$search}%")
                         ->orWhere('model', 'like', "%{$search}%")
                         ->orWhereHas('driver', function ($q) use ($search) {
-                            $q->where('name', 'like', "%{$search}%");
+                            $q->where(DB::raw("CONCAT(firstname, ' ', lastname)"), 'like', "%{$search}%");
                         });
                 })
                 ->latest()
@@ -50,7 +51,7 @@ class VehicleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'driver_id' => ['required', 'exists:drivers,id'],
+            'driver_id' => ['required', 'exists:users,id'],
             'brand' => ['nullable', 'string', 'max:255'],
             'model' => ['nullable', 'string', 'max:255'],
             'type' => ['nullable', 'string', 'max:100'],
@@ -90,7 +91,7 @@ class VehicleController extends Controller
     public function update(Request $request, Vehicle $vehicle)
     {
         $validated = $request->validate([
-            'driver_id' => ['required', 'exists:drivers,id'],
+            'driver_id' => ['required', 'exists:users,id'],
             'brand' => ['nullable', 'string', 'max:255'],
             'model' => ['nullable', 'string', 'max:255'],
             'type' => ['nullable', 'string', 'max:100'],

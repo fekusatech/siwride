@@ -14,21 +14,44 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = request()->user();
         $today = Carbon::today();
+        $driverId = null;
+
+        if ($user->role === 'driver') {
+            $driver = Driver::where('email', $user->email)->first();
+            $driverId = $driver ? $driver->id : 0;
+        }
 
         // KPIs
-        $totalOrders = Order::count();
-        $todayOrders = Order::whereDate('date', $today)->count();
+        $totalOrdersQuery = Order::query();
+        $todayOrdersQuery = Order::whereDate('date', $today);
+        $totalRevenueQuery = Order::where('status', 'completed');
+
+        if ($driverId !== null) {
+            $totalOrdersQuery->where('driver_id', $driverId);
+            $todayOrdersQuery->where('driver_id', $driverId);
+            $totalRevenueQuery->where('driver_id', $driverId);
+        }
+
+        $totalOrders = $totalOrdersQuery->count();
+        $todayOrders = $todayOrdersQuery->count();
         $pendingClaims = Order::whereNull('driver_id')->where('status', 'pending')->count();
-        $totalRevenue = Order::where('status', 'completed')->sum('price');
+        $totalRevenue = $totalRevenueQuery->sum('price');
 
         // Charts: 7 Day Revenue Trend
         $last7Days = collect(range(6, 0))->map(function ($days) {
             return Carbon::today()->subDays($days)->format('Y-m-d');
         });
 
-        $revenueData = Order::where('status', 'completed')
-            ->where('date', '>=', Carbon::today()->subDays(6))
+        $revenueDataQuery = Order::where('status', 'completed')
+            ->where('date', '>=', Carbon::today()->subDays(6));
+
+        if ($driverId !== null) {
+            $revenueDataQuery->where('driver_id', $driverId);
+        }
+
+        $revenueData = $revenueDataQuery
             ->select(DB::raw('DATE(date) as date'), DB::raw('SUM(price) as total'))
             ->groupBy('date')
             ->pluck('total', 'date');
@@ -41,9 +64,14 @@ class DashboardController extends Controller
         });
 
         // Charts: Status Distribution
-        $statusCounts = Order::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status');
+        $statusCountsQuery = Order::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status');
+
+        if ($driverId !== null) {
+            $statusCountsQuery->where('driver_id', $driverId);
+        }
+
+        $statusCounts = $statusCountsQuery->pluck('count', 'status');
 
         $statusDistribution = [
             'labels' => $statusCounts->keys()->toArray(),
@@ -51,10 +79,13 @@ class DashboardController extends Controller
         ];
 
         // Lists: Recent Orders
-        $recentOrders = Order::with(['driver', 'vehicle'])
-            ->latest()
-            ->take(5)
-            ->get();
+        $recentOrdersQuery = Order::with(['driver', 'vehicle'])->latest();
+
+        if ($driverId !== null) {
+            $recentOrdersQuery->where('driver_id', $driverId);
+        }
+
+        $recentOrders = $recentOrdersQuery->take(5)->get();
 
         // Extra Stats
         $totalDrivers = Driver::count();
@@ -74,6 +105,7 @@ class DashboardController extends Controller
                 'status_distribution' => $statusDistribution,
             ],
             'recent_orders' => $recentOrders,
+            'user_role' => $user->role,
         ]);
     }
 }

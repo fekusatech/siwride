@@ -2,40 +2,42 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Mobile\User;
-use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 
-class UserController
+class UserController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function indexPending()
     {
-        $query = User::query();
-
-        if ($request->has('role')) {
-            $query->where('role', $request->role);
-        }
-
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $users = $query->orderByDesc('created_at')->paginate($request->get('per_page', 15));
-
-        return response()->json($users);
-    }
-
-    public function updateStatus(Request $request, User $user): JsonResponse
-    {
-        $request->validate([
-            'status' => ['required', 'in:pending,approved,rejected,disabled'],
-        ]);
-
-        $user->update(['status' => $request->status]);
+        $drivers = User::where('role', 'driver')
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
 
         return response()->json([
-            'message' => 'User status updated successfully',
-            'user' => $user,
+            'status' => 'success',
+            'data' => $drivers,
+        ]);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:approved,rejected',
+        ]);
+
+        $user = User::where('role', 'driver')
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $user->update([
+            'status' => $request->status,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Status driver berhasil diperbarui menjadi {$request->status}.",
         ]);
     }
 }

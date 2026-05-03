@@ -125,6 +125,7 @@ class OrdersImport implements ToModel, WithBatchInserts, WithHeadingRow, WithVal
             'price' => $this->parseNumber($row['price'] ?? 0),
             'parking_gas_fee' => $this->parseNumber($row['parking_gas_fee'] ?? 0),
             'status' => $status,
+            'is_shared' => $driverId ? false : true,
         ]);
     }
 

@@ -11,6 +11,9 @@
         business_name: setting.business_name,
         logo: null as File | null,
         favicon: null as File | null,
+        recaptcha_enabled: setting.recaptcha_enabled === '1',
+        recaptcha_site_key: setting.recaptcha_site_key ?? '',
+        recaptcha_secret_key: setting.recaptcha_secret_key ?? '',
     });
 
     let logoPreview = $state<string | null>(null);
@@ -69,6 +72,38 @@
                 Customize your business identity and branding
             </p>
         </div>
+
+        {#if page.props.flash?.success}
+            <div
+                class="alert alert-success alert-dismissible fade show"
+                role="alert"
+            >
+                <i class="ti ti-circle-check me-2"></i>
+                {page.props.flash.success}
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+            </div>
+        {/if}
+
+        {#if page.props.flash?.error}
+            <div
+                class="alert alert-danger alert-dismissible fade show"
+                role="alert"
+            >
+                <i class="ti ti-alert-triangle me-2"></i>
+                {page.props.flash.error}
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+            </div>
+        {/if}
 
         <div class="row">
             <div class="col-lg-8">
@@ -213,6 +248,78 @@
                                         {#if form.errors.favicon}
                                             <div class="text-danger small mt-1">
                                                 {form.errors.favicon}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4 opacity-50" />
+
+                            <div class="mb-4">
+                                <div
+                                    class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3"
+                                >
+                                    <div>
+                                        <div class="form-label fw-bold mb-1">
+                                            Google reCAPTCHA v2
+                                        </div>
+                                        <div class="text-muted small">
+                                            Enable checkbox verification on
+                                            admin and customer login pages.
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input
+                                            id="recaptcha_enabled"
+                                            type="checkbox"
+                                            class="form-check-input"
+                                            bind:checked={
+                                                form.recaptcha_enabled
+                                            }
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label
+                                            for="recaptcha_site_key"
+                                            class="form-label fw-bold"
+                                            >Site Key</label
+                                        >
+                                        <input
+                                            id="recaptcha_site_key"
+                                            type="text"
+                                            class="form-control"
+                                            bind:value={form.recaptcha_site_key}
+                                            placeholder="Enter Google reCAPTCHA site key"
+                                        />
+                                        {#if form.errors.recaptcha_site_key}
+                                            <div class="text-danger small mt-1">
+                                                {form.errors.recaptcha_site_key}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label
+                                            for="recaptcha_secret_key"
+                                            class="form-label fw-bold"
+                                            >Secret Key</label
+                                        >
+                                        <input
+                                            id="recaptcha_secret_key"
+                                            type="text"
+                                            class="form-control"
+                                            bind:value={
+                                                form.recaptcha_secret_key
+                                            }
+                                            placeholder="Enter Google reCAPTCHA secret key"
+                                        />
+                                        {#if form.errors.recaptcha_secret_key}
+                                            <div class="text-danger small mt-1">
+                                                {form.errors
+                                                    .recaptcha_secret_key}
                                             </div>
                                         {/if}
                                     </div>

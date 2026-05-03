@@ -12,7 +12,8 @@
         driver_name: string | null;
     }
 
-    let { variant = 'default' }: { variant?: 'default' | 'compact' | 'hero' } = $props();
+    let { variant = 'default' }: { variant?: 'default' | 'compact' | 'hero' } =
+        $props();
 
     let searchQuery = $state('');
     let searchResults = $state<Order[]>([]);
@@ -48,7 +49,9 @@
         searchError = '';
 
         try {
-            const response = await fetch(`/booking/search?query=${encodeURIComponent(query)}`);
+            const response = await fetch(
+                `/booking/search?query=${encodeURIComponent(query)}`,
+            );
             const data = await response.json();
 
             if (response.ok) {
@@ -127,7 +130,9 @@
         <input
             type="text"
             class="search-input"
-            placeholder={variant === 'hero' ? 'Enter your booking code (e.g., SWABC123)' : 'Search booking code...'}
+            placeholder={variant === 'hero'
+                ? 'Enter your booking code (e.g., SWABC123)'
+                : 'Search booking code...'}
             value={searchQuery}
             oninput={handleInput}
             onkeydown={handleKeyDown}
@@ -139,7 +144,11 @@
             <button
                 type="button"
                 class="clear-btn"
-                onclick={() => { searchQuery = ''; searchResults = []; showDropdown = false; }}
+                onclick={() => {
+                    searchQuery = '';
+                    searchResults = [];
+                    showDropdown = false;
+                }}
             >
                 <i class="fas fa-times"></i>
             </button>
@@ -148,14 +157,20 @@
 
     {#if searchError}
         <div class="search-error">
-            <i class="fas fa-exclamation-circle"></i> {searchError}
+            <i class="fas fa-exclamation-circle"></i>
+            {searchError}
         </div>
     {/if}
 
     {#if showDropdown && searchResults.length > 0}
         <div class="search-dropdown">
             <div class="dropdown-header">
-                <span>Found {searchResults.length} result{searchResults.length > 1 ? 's' : ''}</span>
+                <span
+                    >Found {searchResults.length} result{searchResults.length >
+                    1
+                        ? 's'
+                        : ''}</span
+                >
             </div>
             {#each searchResults as order}
                 <button
@@ -166,15 +181,27 @@
                     <div class="result-main">
                         <div class="result-code">
                             <i class="fas fa-ticket-alt"></i>
-                            <span class="booking-code">{order.booking_code}</span>
-                            <span class="status-badge" style="background-color: {formatStatus(order.status).color}20; color: {formatStatus(order.status).color}">
+                            <span class="booking-code"
+                                >{order.booking_code}</span
+                            >
+                            <span
+                                class="status-badge"
+                                style="background-color: {formatStatus(
+                                    order.status,
+                                ).color}20; color: {formatStatus(order.status)
+                                    .color}"
+                            >
                                 {formatStatus(order.status).text}
                             </span>
                         </div>
                         <div class="result-route">
-                            <span class="location">{truncate(order.pickup_address)}</span>
+                            <span class="location"
+                                >{truncate(order.pickup_address)}</span
+                            >
                             <i class="fas fa-arrow-right route-arrow"></i>
-                            <span class="location">{truncate(order.dropoff_address)}</span>
+                            <span class="location"
+                                >{truncate(order.dropoff_address)}</span
+                            >
                         </div>
                     </div>
                     <div class="result-meta">

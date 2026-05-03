@@ -52,7 +52,11 @@
     let validatingPickup = $state(false);
     let validatingDropoff = $state(false);
 
-    async function checkZone(lat: number, lng: number, type: 'pickup' | 'dropoff') {
+    async function checkZone(
+        lat: number,
+        lng: number,
+        type: 'pickup' | 'dropoff',
+    ) {
         if (type === 'pickup') validatingPickup = true;
         else validatingDropoff = true;
 
@@ -61,7 +65,10 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({ lat, lng }),
             });
@@ -126,7 +133,7 @@
         // Define Bali bounds to restrict autocomplete suggestions
         const baliBounds = new google.maps.LatLngBounds(
             new google.maps.LatLng(-8.9472, 114.4173), // South West
-            new google.maps.LatLng(-8.0583, 115.7118)  // North East
+            new google.maps.LatLng(-8.0583, 115.7118), // North East
         );
 
         const autocompleteOptions = {
@@ -146,7 +153,11 @@
                 form.pickup_address = place.formatted_address || '';
                 form.pickup_latitude = place.geometry.location.lat();
                 form.pickup_longitude = place.geometry.location.lng();
-                checkZone(form.pickup_latitude, form.pickup_longitude, 'pickup');
+                checkZone(
+                    form.pickup_latitude,
+                    form.pickup_longitude,
+                    'pickup',
+                );
             }
         });
 
@@ -160,7 +171,11 @@
                 form.dropoff_address = place.formatted_address || '';
                 form.dropoff_latitude = place.geometry.location.lat();
                 form.dropoff_longitude = place.geometry.location.lng();
-                checkZone(form.dropoff_latitude, form.dropoff_longitude, 'dropoff');
+                checkZone(
+                    form.dropoff_latitude,
+                    form.dropoff_longitude,
+                    'dropoff',
+                );
             }
         });
     }
@@ -173,7 +188,9 @@
         e.preventDefault();
 
         if (!pickupInZone || !dropoffInZone) {
-            alert('Cannot save: One of the addresses is outside the service zones.');
+            alert(
+                'Cannot save: One of the addresses is outside the service zones.',
+            );
             return;
         }
 
@@ -256,7 +273,9 @@
             <label for="customer_name" class="form-label">Customer Name</label>
             <input
                 type="text"
-                class="form-control {form.errors.customer_name ? 'is-invalid' : ''}"
+                class="form-control {form.errors.customer_name
+                    ? 'is-invalid'
+                    : ''}"
                 id="customer_name"
                 bind:value={form.customer_name}
                 required
@@ -269,7 +288,9 @@
             <label for="customer_phone" class="form-label">Phone</label>
             <input
                 type="tel"
-                class="form-control {form.errors.customer_phone ? 'is-invalid' : ''}"
+                class="form-control {form.errors.customer_phone
+                    ? 'is-invalid'
+                    : ''}"
                 id="customer_phone"
                 bind:value={form.customer_phone}
                 required
@@ -282,7 +303,9 @@
             <label for="customer_email" class="form-label">Email</label>
             <input
                 type="email"
-                class="form-control {form.errors.customer_email ? 'is-invalid' : ''}"
+                class="form-control {form.errors.customer_email
+                    ? 'is-invalid'
+                    : ''}"
                 id="customer_email"
                 bind:value={form.customer_email}
                 required
@@ -353,7 +376,9 @@
             {#if validatingPickup}
                 <div class="text-muted small mt-1">Checking zone...</div>
             {:else if !pickupInZone}
-                <div class="invalid-feedback">Address is outside the service zones.</div>
+                <div class="invalid-feedback">
+                    Address is outside the service zones.
+                </div>
             {/if}
         </div>
         <div class="col-md-6">
@@ -371,7 +396,9 @@
             {#if validatingDropoff}
                 <div class="text-muted small mt-1">Checking zone...</div>
             {:else if !dropoffInZone}
-                <div class="invalid-feedback">Address is outside the service zones.</div>
+                <div class="invalid-feedback">
+                    Address is outside the service zones.
+                </div>
             {/if}
         </div>
         <div class="col-md-4">
@@ -410,12 +437,19 @@
     </div>
     <div class="mt-4 d-flex justify-content-end gap-2">
         {#if footer}
-            {@render footer({ processing: form.processing || validatingPickup || validatingDropoff })}
+            {@render footer({
+                processing:
+                    form.processing || validatingPickup || validatingDropoff,
+            })}
         {:else}
             <button
                 type="submit"
                 class="btn btn-primary"
-                disabled={form.processing || validatingPickup || validatingDropoff || !pickupInZone || !dropoffInZone}
+                disabled={form.processing ||
+                    validatingPickup ||
+                    validatingDropoff ||
+                    !pickupInZone ||
+                    !dropoffInZone}
             >
                 {form.processing ? 'Saving...' : 'Save Order'}
             </button>

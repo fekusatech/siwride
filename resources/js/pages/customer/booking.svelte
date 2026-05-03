@@ -7,7 +7,7 @@
     import Preloader from '@/components/Template/Preloader.svelte';
     import LocationSearchInput from '@/components/LocationSearchInput.svelte';
     import BookingSearch from '@/components/BookingSearch.svelte';
-    
+
     import flatpickr from 'flatpickr';
     import 'flatpickr/dist/flatpickr.min.css';
 
@@ -19,7 +19,7 @@
             date: string;
             passengers: string;
             vehicle: string;
-        }
+        };
     }>();
 
     const form = useForm({
@@ -36,7 +36,7 @@
         create_account: false,
         password: '',
         password_confirmation: '',
-        payment_method: 'cash'
+        payment_method: 'cash',
     });
 
     let currentStep = $state(1);
@@ -61,10 +61,10 @@
 
     // Email validation state
     let emailError = $state('');
-    
+
     // Step validation loading state
     let isValidatingStep = $state(false);
-    
+
     // Password visibility state
     let showPassword = $state(false);
     let showConfirmPassword = $state(false);
@@ -72,8 +72,12 @@
     // Calculate minimum time (if today is selected, min time is current time)
     let minTime = $derived(() => {
         const now = new Date();
-        const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        
+        const localDate = new Date(
+            now.getTime() - now.getTimezoneOffset() * 60000,
+        )
+            .toISOString()
+            .split('T')[0];
+
         if (form.date === localDate) {
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -89,7 +93,7 @@
 
     const nextStep = async () => {
         stepError = '';
-        
+
         if (currentStep === 1) {
             // Validate Step 1 - Basic validation
             if (!form.customer_name || form.customer_name.length < 3) {
@@ -100,15 +104,23 @@
                 stepError = 'Please enter a valid email address.';
                 return;
             }
-            if (form.create_account && (!form.password || form.password.length < 8)) {
-                stepError = 'Please enter a password with at least 8 characters.';
+            if (
+                form.create_account &&
+                (!form.password || form.password.length < 8)
+            ) {
+                stepError =
+                    'Please enter a password with at least 8 characters.';
                 return;
             }
-            if (form.create_account && form.password !== form.password_confirmation) {
-                stepError = 'Passwords do not match. Please confirm your password.';
+            if (
+                form.create_account &&
+                form.password !== form.password_confirmation
+            ) {
+                stepError =
+                    'Passwords do not match. Please confirm your password.';
                 return;
             }
-            
+
             // Server-side email validation (only for guests creating account)
             if (!page.props.auth?.customer && form.create_account) {
                 isValidatingStep = true;
@@ -117,16 +129,19 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            'X-CSRF-TOKEN':
+                                document
+                                    .querySelector('meta[name="csrf-token"]')
+                                    ?.getAttribute('content') || '',
                         },
                         body: JSON.stringify({
                             email: form.email,
                             create_account: form.create_account,
                         }),
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (!data.valid) {
                         stepError = data.message || 'Email validation failed.';
                         isValidatingStep = false;
@@ -139,7 +154,7 @@
                 }
                 isValidatingStep = false;
             }
-            
+
             currentStep = 2;
         } else if (currentStep === 2) {
             // Validate Step 2
@@ -158,14 +173,25 @@
 
             // Validate that the selected time is not in the past if the date is today
             const now = new Date();
-            const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            const localDate = new Date(
+                now.getTime() - now.getTimezoneOffset() * 60000,
+            )
+                .toISOString()
+                .split('T')[0];
             if (form.date === localDate) {
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
-                const [selectedHour, selectedMinute] = form.time.split(':').map(Number);
-                
-                if (selectedHour < currentHour || (selectedHour === currentHour && selectedMinute < currentMinute)) {
-                    stepError = 'The selected time has already passed. Please choose a future time.';
+                const [selectedHour, selectedMinute] = form.time
+                    .split(':')
+                    .map(Number);
+
+                if (
+                    selectedHour < currentHour ||
+                    (selectedHour === currentHour &&
+                        selectedMinute < currentMinute)
+                ) {
+                    stepError =
+                        'The selected time has already passed. Please choose a future time.';
                     return;
                 }
             }
@@ -187,7 +213,7 @@
 
     const handleSubmit = (e: Event) => {
         e.preventDefault();
-        
+
         if (currentStep !== 3) return;
 
         form.post('/orders', {
@@ -231,49 +257,73 @@
     // Flatpickr actions
     function datePicker(node: HTMLInputElement) {
         const fp = flatpickr(node, {
-            minDate: "today",
+            minDate: 'today',
             defaultDate: form.date || null,
-            disableMobile: "true", // Forces custom flatpickr UI on mobile
-            monthSelectorType: "static", // Uses a clean text span instead of a native select dropdown
+            disableMobile: 'true', // Forces custom flatpickr UI on mobile
+            monthSelectorType: 'static', // Uses a clean text span instead of a native select dropdown
             onChange: (selectedDates, dateStr) => {
                 form.date = dateStr;
-            }
+            },
         });
-        return { destroy() { fp.destroy(); } };
+        return {
+            destroy() {
+                fp.destroy();
+            },
+        };
     }
 
     function timePicker(node: HTMLInputElement, currentMinTime: string) {
         const fp = flatpickr(node, {
             enableTime: true,
             noCalendar: true,
-            dateFormat: "H:i",
+            dateFormat: 'H:i',
             time_24hr: true,
             minTime: currentMinTime || null,
             defaultDate: form.time || null,
-            disableMobile: "true",
+            disableMobile: 'true',
             onChange: (selectedDates, dateStr) => {
                 form.time = dateStr;
-            }
+            },
         });
         return {
             update(newMinTime: string) {
                 fp.set('minTime', newMinTime || null);
             },
-            destroy() { fp.destroy(); }
+            destroy() {
+                fp.destroy();
+            },
         };
     }
 
     // Custom Select State
     let isVehicleDropdownOpen = $state(false);
     const vehiclesList = [
-        { value: 'economy', label: 'Economy / Standard Hatchback (Up to 4 Passengers)', icon: 'fa-car' },
-        { value: 'premium', label: 'Premium SUV / Sedan (Up to 5 Passengers)', icon: 'fa-car-side' },
-        { value: 'van', label: 'Van / Minibus (Up to 14 Passengers)', icon: 'fa-shuttle-van' },
-        { value: 'bus', label: 'Mid/Large Bus (Up to 30+ Passengers)', icon: 'fa-bus' },
-        { value: 'special', label: 'Other / Custom Request', icon: 'fa-star' }
+        {
+            value: 'economy',
+            label: 'Economy / Standard Hatchback (Up to 4 Passengers)',
+            icon: 'fa-car',
+        },
+        {
+            value: 'premium',
+            label: 'Premium SUV / Sedan (Up to 5 Passengers)',
+            icon: 'fa-car-side',
+        },
+        {
+            value: 'van',
+            label: 'Van / Minibus (Up to 14 Passengers)',
+            icon: 'fa-shuttle-van',
+        },
+        {
+            value: 'bus',
+            label: 'Mid/Large Bus (Up to 30+ Passengers)',
+            icon: 'fa-bus',
+        },
+        { value: 'special', label: 'Other / Custom Request', icon: 'fa-star' },
     ];
 
-    let selectedVehicle = $derived(vehiclesList.find(v => v.value === form.vehicle_type));
+    let selectedVehicle = $derived(
+        vehiclesList.find((v) => v.value === form.vehicle_type),
+    );
 
     const toggleVehicleDropdown = (e: Event) => {
         e.stopPropagation();
@@ -303,7 +353,7 @@
 
 <div class="page-wrapper">
     <Header />
-    
+
     <!-- Page Header -->
     <section class="page-header">
         <div class="page-header__bg"></div>
@@ -319,17 +369,26 @@
     </section>
 
     <!-- Booking Tracker Section -->
-    <section class="booking-tracker-section" style="padding: 40px 0; background: linear-gradient(135deg, var(--travhub-base, #e52029) 0%, #c41820 100%);">
+    <section
+        class="booking-tracker-section"
+        style="padding: 40px 0; background: linear-gradient(135deg, var(--travhub-base, #e52029) 0%, #c41820 100%);"
+    >
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-5 mb-3 mb-lg-0">
                     <div style="color: #fff;">
-                        <h4 style="font-size: 22px; font-weight: 700; margin-bottom: 5px;">
-                            <i class="fas fa-search-location" style="margin-right: 10px;"></i>
+                        <h4
+                            style="font-size: 22px; font-weight: 700; margin-bottom: 5px;"
+                        >
+                            <i
+                                class="fas fa-search-location"
+                                style="margin-right: 10px;"
+                            ></i>
                             Track Your Booking
                         </h4>
                         <p style="font-size: 14px; opacity: 0.9; margin: 0;">
-                            Already have a booking? Enter your code to check status
+                            Already have a booking? Enter your code to check
+                            status
                         </p>
                     </div>
                 </div>
@@ -341,309 +400,716 @@
     </section>
 
     <!-- Booking Form Section -->
-    <section class="booking-section" style="padding: 80px 0 100px; background: #f4f7f9;">
+    <section
+        class="booking-section"
+        style="padding: 80px 0 100px; background: #f4f7f9;"
+    >
         <div class="container">
             <div class="row">
-                <div class="col-lg-10 col-xl-8 mx-auto wow fadeInUp" data-wow-delay="100ms">
-                    
+                <div
+                    class="col-lg-10 col-xl-8 mx-auto wow fadeInUp"
+                    data-wow-delay="100ms"
+                >
                     <div class="text-center mb-5">
-                        <h3 style="font-size: 36px; font-weight: 800; color: #111; letter-spacing: -1px;">Complete Your Booking</h3>
-                        <p style="color: #666; font-size: 16px; margin-top: 10px;">Follow the simple steps below to confirm your ride.</p>
+                        <h3
+                            style="font-size: 36px; font-weight: 800; color: #111; letter-spacing: -1px;"
+                        >
+                            Complete Your Booking
+                        </h3>
+                        <p
+                            style="color: #666; font-size: 16px; margin-top: 10px;"
+                        >
+                            Follow the simple steps below to confirm your ride.
+                        </p>
                     </div>
 
                     <div class="wizard-container">
                         <!-- Horizontal Stepper Header -->
                         <div class="wizard-stepper">
-                            <div class="step {currentStep >= 1 ? 'active' : ''} {currentStep > 1 ? 'completed' : ''}">
+                            <div
+                                class="step {currentStep >= 1
+                                    ? 'active'
+                                    : ''} {currentStep > 1 ? 'completed' : ''}"
+                            >
                                 <div class="step-icon">
-                                    {#if currentStep > 1}<i class="fas fa-check"></i>{:else}1{/if}
+                                    {#if currentStep > 1}<i class="fas fa-check"
+                                        ></i>{:else}1{/if}
                                 </div>
                                 <div class="step-text">Personal Info</div>
                             </div>
-                            <div class="step-line {currentStep >= 2 ? 'active' : ''}"></div>
-                            
-                            <div class="step {currentStep >= 2 ? 'active' : ''} {currentStep > 2 ? 'completed' : ''}">
+                            <div
+                                class="step-line {currentStep >= 2
+                                    ? 'active'
+                                    : ''}"
+                            ></div>
+
+                            <div
+                                class="step {currentStep >= 2
+                                    ? 'active'
+                                    : ''} {currentStep > 2 ? 'completed' : ''}"
+                            >
                                 <div class="step-icon">
-                                    {#if currentStep > 2}<i class="fas fa-check"></i>{:else}2{/if}
+                                    {#if currentStep > 2}<i class="fas fa-check"
+                                        ></i>{:else}2{/if}
                                 </div>
                                 <div class="step-text">Ride Details</div>
                             </div>
-                            <div class="step-line {currentStep >= 3 ? 'active' : ''}"></div>
-                            
-                            <div class="step {currentStep >= 3 ? 'active' : ''}">
+                            <div
+                                class="step-line {currentStep >= 3
+                                    ? 'active'
+                                    : ''}"
+                            ></div>
+
+                            <div
+                                class="step {currentStep >= 3 ? 'active' : ''}"
+                            >
                                 <div class="step-icon">3</div>
                                 <div class="step-text">Payment</div>
                             </div>
                         </div>
 
                         {#if stepError}
-                            <div class="alert alert-danger" style="border-radius: 10px; margin-bottom: 25px; font-size: 14px;">
-                                <i class="fas fa-exclamation-circle mr-2"></i> {stepError}
+                            <div
+                                class="alert alert-danger"
+                                style="border-radius: 10px; margin-bottom: 25px; font-size: 14px;"
+                            >
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                {stepError}
                             </div>
                         {/if}
 
                         <form onsubmit={handleSubmit} class="wizard-form">
-                            
                             <!-- Step 1: Personal Information -->
                             {#if currentStep === 1}
-                            <div class="step-content" style="animation: fadeInRight 0.4s ease;">
-                                <div class="step-header">
-                                    <h4>Personal Information</h4>
-                                    <p>How can our driver reach you?</p>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6" style="margin-bottom: 20px;">
-                                        <label class="form-label">Full Name *</label>
-                                        <input type="text" value={form.customer_name} oninput={validateName} class="premium-input" minlength="2" maxlength="50" placeholder="Enter your full name" />
+                                <div
+                                    class="step-content"
+                                    style="animation: fadeInRight 0.4s ease;"
+                                >
+                                    <div class="step-header">
+                                        <h4>Personal Information</h4>
+                                        <p>How can our driver reach you?</p>
                                     </div>
-                                    <div class="col-md-6" style="margin-bottom: 20px;">
-                                        <label class="form-label">Email Address *</label>
-                                        <input type="email" value={form.email} oninput={validateEmail} class="premium-input {emailError ? 'has-error' : ''}" placeholder="your.email@example.com" maxlength="25"/>
-                                        {#if emailError}<small class="text-danger error-text">{emailError}</small>{/if}
-                                    </div>
-                                </div>
 
-                                <div class="row">
-                                    <div class="col-md-6" style="margin-bottom: 20px;">
-                                        <label class="form-label">WhatsApp / Phone Number</label>
-                                        <input type="tel" maxlength="15" value={form.customer_phone} oninput={validatePhone} class="premium-input" placeholder="+62 812 3456 7890" />
-                                    </div>
-                                    <div class="col-md-6" style="margin-bottom: 20px;">
-                                        <label class="form-label">Total Passengers *</label>
-                                        <div class="passenger-counter">
-                                            <button type="button" onclick={() => { if (passengerCount > 1) passengerCount--; }}>-</button>
-                                            <span>{passengerCount} Passenger{passengerCount > 1 ? 's' : ''}</span>
-                                            <button type="button" onclick={() => { if (passengerCount < 50) passengerCount++; }}>+</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {#if !page.props.auth?.customer}
-                                <div class="row">
-                                    <div class="col-12" style="margin-top: 10px;">
-                                        <div class="account-creation-box">
-                                            <label class="checkbox-label">
-                                                <input type="checkbox" bind:checked={form.create_account}>
-                                                Create an account for faster booking next time
-                                            </label>
-                                            <span class="login-prompt">
-                                                Already have an account? <a href="/customer/login">Login here</a>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {#if form.create_account}
-                                <div class="row" style="animation: fadeIn 0.3s ease; margin-top: 20px;">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Password *</label>
-                                        <div class="password-wrapper">
-                                            <input type={showPassword ? 'text' : 'password'} bind:value={form.password} class="premium-input" class:is-invalid={form.password.length > 0 && form.password.length < 8} placeholder="Create a secure password" />
-                                            <button type="button" class="password-toggle" onclick={() => showPassword = !showPassword}>
-                                                <i class="fas {showPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                                            </button>
-                                        </div>
-                                        {#if form.password.length > 0 && form.password.length < 8}
-                                            <small class="text-danger" style="font-size: 12px; margin-top: 5px; display: block;"><i class="fas fa-exclamation-circle"></i> Minimum 8 characters required.</small>
-                                        {:else}
-                                            <small class="form-text text-muted" style="font-size: 12px; margin-top: 5px; display: block;">Minimum 8 characters.</small>
-                                        {/if}
-                                    </div>
-                                    <div class="col-md-6" style="margin-top: 0;">
-                                        <label class="form-label">Confirm Password *</label>
-                                        <div class="password-wrapper">
-                                            <input 
-                                                type={showConfirmPassword ? 'text' : 'password'} 
-                                                bind:value={form.password_confirmation} 
-                                                class="premium-input" 
-                                                class:is-invalid={form.password_confirmation.length > 0 && form.password !== form.password_confirmation}
-                                                class:is-valid={form.password_confirmation.length > 0 && form.password === form.password_confirmation}
-                                                placeholder="Repeat your password" 
+                                    <div class="row">
+                                        <div
+                                            class="col-md-6"
+                                            style="margin-bottom: 20px;"
+                                        >
+                                            <label class="form-label"
+                                                >Full Name *</label
+                                            >
+                                            <input
+                                                type="text"
+                                                value={form.customer_name}
+                                                oninput={validateName}
+                                                class="premium-input"
+                                                minlength="2"
+                                                maxlength="50"
+                                                placeholder="Enter your full name"
                                             />
-                                            <button type="button" class="password-toggle" onclick={() => showConfirmPassword = !showConfirmPassword}>
-                                                <i class="fas {showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                                            </button>
                                         </div>
-                                        {#if form.password_confirmation.length > 0 && form.password !== form.password_confirmation}
-                                            <small class="text-danger" style="font-size: 12px; margin-top: 5px; display: block;"><i class="fas fa-times-circle"></i> Passwords do not match.</small>
-                                        {:else if form.password_confirmation.length > 0 && form.password === form.password_confirmation}
-                                            <small class="text-success" style="font-size: 12px; margin-top: 5px; display: block;"><i class="fas fa-check-circle"></i> Passwords match.</small>
-                                        {:else}
-                                            <small class="form-text text-muted" style="font-size: 12px; margin-top: 5px; display: block;">Must match the password above.</small>
+                                        <div
+                                            class="col-md-6"
+                                            style="margin-bottom: 20px;"
+                                        >
+                                            <label class="form-label"
+                                                >Email Address *</label
+                                            >
+                                            <input
+                                                type="email"
+                                                value={form.email}
+                                                oninput={validateEmail}
+                                                class="premium-input {emailError
+                                                    ? 'has-error'
+                                                    : ''}"
+                                                placeholder="your.email@example.com"
+                                                maxlength="25"
+                                            />
+                                            {#if emailError}<small
+                                                    class="text-danger error-text"
+                                                    >{emailError}</small
+                                                >{/if}
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div
+                                            class="col-md-6"
+                                            style="margin-bottom: 20px;"
+                                        >
+                                            <label class="form-label"
+                                                >WhatsApp / Phone Number</label
+                                            >
+                                            <input
+                                                type="tel"
+                                                maxlength="15"
+                                                value={form.customer_phone}
+                                                oninput={validatePhone}
+                                                class="premium-input"
+                                                placeholder="+62 812 3456 7890"
+                                            />
+                                        </div>
+                                        <div
+                                            class="col-md-6"
+                                            style="margin-bottom: 20px;"
+                                        >
+                                            <label class="form-label"
+                                                >Total Passengers *</label
+                                            >
+                                            <div class="passenger-counter">
+                                                <button
+                                                    type="button"
+                                                    onclick={() => {
+                                                        if (passengerCount > 1)
+                                                            passengerCount--;
+                                                    }}>-</button
+                                                >
+                                                <span
+                                                    >{passengerCount} Passenger{passengerCount >
+                                                    1
+                                                        ? 's'
+                                                        : ''}</span
+                                                >
+                                                <button
+                                                    type="button"
+                                                    onclick={() => {
+                                                        if (passengerCount < 50)
+                                                            passengerCount++;
+                                                    }}>+</button
+                                                >
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {#if !page.props.auth?.customer}
+                                        <div class="row">
+                                            <div
+                                                class="col-12"
+                                                style="margin-top: 10px;"
+                                            >
+                                                <div
+                                                    class="account-creation-box"
+                                                >
+                                                    <label
+                                                        class="checkbox-label"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            bind:checked={
+                                                                form.create_account
+                                                            }
+                                                        />
+                                                        Create an account for faster
+                                                        booking next time
+                                                    </label>
+                                                    <span class="login-prompt">
+                                                        Already have an account? <a
+                                                            href="/customer/login"
+                                                            >Login here</a
+                                                        >
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {#if form.create_account}
+                                            <div
+                                                class="row"
+                                                style="animation: fadeIn 0.3s ease; margin-top: 20px;"
+                                            >
+                                                <div class="col-md-6">
+                                                    <label class="form-label"
+                                                        >Password *</label
+                                                    >
+                                                    <div
+                                                        class="password-wrapper"
+                                                    >
+                                                        <input
+                                                            type={showPassword
+                                                                ? 'text'
+                                                                : 'password'}
+                                                            bind:value={
+                                                                form.password
+                                                            }
+                                                            class="premium-input"
+                                                            class:is-invalid={form
+                                                                .password
+                                                                .length > 0 &&
+                                                                form.password
+                                                                    .length < 8}
+                                                            placeholder="Create a secure password"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            class="password-toggle"
+                                                            onclick={() =>
+                                                                (showPassword =
+                                                                    !showPassword)}
+                                                        >
+                                                            <i
+                                                                class="fas {showPassword
+                                                                    ? 'fa-eye-slash'
+                                                                    : 'fa-eye'}"
+                                                            ></i>
+                                                        </button>
+                                                    </div>
+                                                    {#if form.password.length > 0 && form.password.length < 8}
+                                                        <small
+                                                            class="text-danger"
+                                                            style="font-size: 12px; margin-top: 5px; display: block;"
+                                                            ><i
+                                                                class="fas fa-exclamation-circle"
+                                                            ></i> Minimum 8 characters
+                                                            required.</small
+                                                        >
+                                                    {:else}
+                                                        <small
+                                                            class="form-text text-muted"
+                                                            style="font-size: 12px; margin-top: 5px; display: block;"
+                                                            >Minimum 8
+                                                            characters.</small
+                                                        >
+                                                    {/if}
+                                                </div>
+                                                <div
+                                                    class="col-md-6"
+                                                    style="margin-top: 0;"
+                                                >
+                                                    <label class="form-label"
+                                                        >Confirm Password *</label
+                                                    >
+                                                    <div
+                                                        class="password-wrapper"
+                                                    >
+                                                        <input
+                                                            type={showConfirmPassword
+                                                                ? 'text'
+                                                                : 'password'}
+                                                            bind:value={
+                                                                form.password_confirmation
+                                                            }
+                                                            class="premium-input"
+                                                            class:is-invalid={form
+                                                                .password_confirmation
+                                                                .length > 0 &&
+                                                                form.password !==
+                                                                    form.password_confirmation}
+                                                            class:is-valid={form
+                                                                .password_confirmation
+                                                                .length > 0 &&
+                                                                form.password ===
+                                                                    form.password_confirmation}
+                                                            placeholder="Repeat your password"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            class="password-toggle"
+                                                            onclick={() =>
+                                                                (showConfirmPassword =
+                                                                    !showConfirmPassword)}
+                                                        >
+                                                            <i
+                                                                class="fas {showConfirmPassword
+                                                                    ? 'fa-eye-slash'
+                                                                    : 'fa-eye'}"
+                                                            ></i>
+                                                        </button>
+                                                    </div>
+                                                    {#if form.password_confirmation.length > 0 && form.password !== form.password_confirmation}
+                                                        <small
+                                                            class="text-danger"
+                                                            style="font-size: 12px; margin-top: 5px; display: block;"
+                                                            ><i
+                                                                class="fas fa-times-circle"
+                                                            ></i> Passwords do not
+                                                            match.</small
+                                                        >
+                                                    {:else if form.password_confirmation.length > 0 && form.password === form.password_confirmation}
+                                                        <small
+                                                            class="text-success"
+                                                            style="font-size: 12px; margin-top: 5px; display: block;"
+                                                            ><i
+                                                                class="fas fa-check-circle"
+                                                            ></i> Passwords match.</small
+                                                        >
+                                                    {:else}
+                                                        <small
+                                                            class="form-text text-muted"
+                                                            style="font-size: 12px; margin-top: 5px; display: block;"
+                                                            >Must match the
+                                                            password above.</small
+                                                        >
+                                                    {/if}
+                                                </div>
+                                            </div>
                                         {/if}
-                                    </div>
-                                </div>
-                                {/if}
-                                {:else}
-                                <div class="row">
-                                    <div class="col-12" style="margin-top: 10px;">
-                                        <div class="account-creation-box" style="background: #e6f4ea; border-color: #81c784;">
-                                            <label class="checkbox-label" style="color: #2e7d32;">
-                                                <input type="checkbox" bind:checked={useProfileData}>
-                                                Pesan menggunakan data profil saya
-                                            </label>
+                                    {:else}
+                                        <div class="row">
+                                            <div
+                                                class="col-12"
+                                                style="margin-top: 10px;"
+                                            >
+                                                <div
+                                                    class="account-creation-box"
+                                                    style="background: #e6f4ea; border-color: #81c784;"
+                                                >
+                                                    <label
+                                                        class="checkbox-label"
+                                                        style="color: #2e7d32;"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            bind:checked={
+                                                                useProfileData
+                                                            }
+                                                        />
+                                                        Pesan menggunakan data profil
+                                                        saya
+                                                    </label>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    {/if}
                                 </div>
-                                {/if}
-                            </div>
                             {/if}
 
                             <!-- Step 2: Ride Preferences -->
                             {#if currentStep === 2}
-                            <div class="step-content" style="animation: fadeInRight 0.4s ease;">
-                                <div class="step-header">
-                                    <h4>Ride Details</h4>
-                                    <p>Where and when do you need the ride?</p>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6" style="margin-bottom: 25px;">
-                                        <label class="form-label">Pickup Location *</label>
-                                        <LocationSearchInput id="pickup_address" bind:value={form.pickup_address} placeholder="Hotel Name / Airport / Area" variant="premium" />
+                                <div
+                                    class="step-content"
+                                    style="animation: fadeInRight 0.4s ease;"
+                                >
+                                    <div class="step-header">
+                                        <h4>Ride Details</h4>
+                                        <p>
+                                            Where and when do you need the ride?
+                                        </p>
                                     </div>
-                                    <div class="col-md-6" style="margin-bottom: 25px;">
-                                        <label class="form-label">Destination *</label>
-                                        <LocationSearchInput id="dropoff_address" bind:value={form.dropoff_address} placeholder="Beach / Temple / Area" variant="premium" />
-                                    </div>
-                                </div>
 
-                                <div class="row">
-                                    <div class="col-md-6" style="margin-bottom: 25px;">
-                                        <label class="form-label">Pickup Date *</label>
-                                        <div class="custom-input-wrapper">
-                                            <input type="text" use:datePicker class="premium-input date-input" placeholder="Select Date" />
-                                            <i class="fas fa-calendar-alt input-icon"></i>
+                                    <div class="row">
+                                        <div
+                                            class="col-md-6"
+                                            style="margin-bottom: 25px;"
+                                        >
+                                            <label class="form-label"
+                                                >Pickup Location *</label
+                                            >
+                                            <LocationSearchInput
+                                                id="pickup_address"
+                                                bind:value={form.pickup_address}
+                                                placeholder="Hotel Name / Airport / Area"
+                                                variant="premium"
+                                            />
+                                        </div>
+                                        <div
+                                            class="col-md-6"
+                                            style="margin-bottom: 25px;"
+                                        >
+                                            <label class="form-label"
+                                                >Destination *</label
+                                            >
+                                            <LocationSearchInput
+                                                id="dropoff_address"
+                                                bind:value={
+                                                    form.dropoff_address
+                                                }
+                                                placeholder="Beach / Temple / Area"
+                                                variant="premium"
+                                            />
                                         </div>
                                     </div>
-                                    <div class="col-md-6" style="margin-bottom: 25px;">
-                                        <label class="form-label">Pickup Time *</label>
-                                        <div class="custom-input-wrapper">
-                                            <input type="text" use:timePicker={minTime()} class="premium-input date-input" placeholder="Select Time" />
-                                            <i class="fas fa-clock input-icon"></i>
+
+                                    <div class="row">
+                                        <div
+                                            class="col-md-6"
+                                            style="margin-bottom: 25px;"
+                                        >
+                                            <label class="form-label"
+                                                >Pickup Date *</label
+                                            >
+                                            <div class="custom-input-wrapper">
+                                                <input
+                                                    type="text"
+                                                    use:datePicker
+                                                    class="premium-input date-input"
+                                                    placeholder="Select Date"
+                                                />
+                                                <i
+                                                    class="fas fa-calendar-alt input-icon"
+                                                ></i>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="col-md-6"
+                                            style="margin-bottom: 25px;"
+                                        >
+                                            <label class="form-label"
+                                                >Pickup Time *</label
+                                            >
+                                            <div class="custom-input-wrapper">
+                                                <input
+                                                    type="text"
+                                                    use:timePicker={minTime()}
+                                                    class="premium-input date-input"
+                                                    placeholder="Select Time"
+                                                />
+                                                <i
+                                                    class="fas fa-clock input-icon"
+                                                ></i>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="row">
-                                    <div class="col-12" style="margin-bottom: 25px;">
-                                        <label class="form-label">Select Vehicle Type *</label>
-                                        <div class="custom-select-wrapper">
-                                            <div class="custom-select-trigger {isVehicleDropdownOpen ? 'open' : ''}" onclick={toggleVehicleDropdown}>
-                                                {#if selectedVehicle}
-                                                    <div class="selected-value">
-                                                        <i class="fas {selectedVehicle.icon}"></i>
-                                                        <span>{selectedVehicle.label}</span>
-                                                    </div>
-                                                {:else}
-                                                    <div class="select-placeholder" style="color: #64748b; font-weight: 500;">
-                                                        <i class="fas fa-car" style="margin-right: 10px; opacity: 0.5;"></i>
-                                                        <span>Choose your vehicle...</span>
+                                    <div class="row">
+                                        <div
+                                            class="col-12"
+                                            style="margin-bottom: 25px;"
+                                        >
+                                            <label class="form-label"
+                                                >Select Vehicle Type *</label
+                                            >
+                                            <div class="custom-select-wrapper">
+                                                <div
+                                                    class="custom-select-trigger {isVehicleDropdownOpen
+                                                        ? 'open'
+                                                        : ''}"
+                                                    onclick={toggleVehicleDropdown}
+                                                >
+                                                    {#if selectedVehicle}
+                                                        <div
+                                                            class="selected-value"
+                                                        >
+                                                            <i
+                                                                class="fas {selectedVehicle.icon}"
+                                                            ></i>
+                                                            <span
+                                                                >{selectedVehicle.label}</span
+                                                            >
+                                                        </div>
+                                                    {:else}
+                                                        <div
+                                                            class="select-placeholder"
+                                                            style="color: #64748b; font-weight: 500;"
+                                                        >
+                                                            <i
+                                                                class="fas fa-car"
+                                                                style="margin-right: 10px; opacity: 0.5;"
+                                                            ></i>
+                                                            <span
+                                                                >Choose your
+                                                                vehicle...</span
+                                                            >
+                                                        </div>
+                                                    {/if}
+                                                    <i
+                                                        class="fas fa-chevron-down arrow"
+                                                    ></i>
+                                                </div>
+
+                                                {#if isVehicleDropdownOpen}
+                                                    <div
+                                                        class="custom-select-dropdown"
+                                                        style="animation: dropdownFade 0.2s ease;"
+                                                    >
+                                                        {#each vehiclesList as vehicle}
+                                                            <div
+                                                                class="custom-option {form.vehicle_type ===
+                                                                vehicle.value
+                                                                    ? 'selected'
+                                                                    : ''}"
+                                                                onclick={() =>
+                                                                    selectVehicle(
+                                                                        vehicle.value,
+                                                                    )}
+                                                            >
+                                                                <i
+                                                                    class="fas {vehicle.icon}"
+                                                                ></i>
+                                                                <span
+                                                                    >{vehicle.label}</span
+                                                                >
+                                                                {#if form.vehicle_type === vehicle.value}
+                                                                    <i
+                                                                        class="fas fa-check check-icon"
+                                                                    ></i>
+                                                                {/if}
+                                                            </div>
+                                                        {/each}
                                                     </div>
                                                 {/if}
-                                                <i class="fas fa-chevron-down arrow"></i>
                                             </div>
-                                            
-                                            {#if isVehicleDropdownOpen}
-                                            <div class="custom-select-dropdown" style="animation: dropdownFade 0.2s ease;">
-                                                {#each vehiclesList as vehicle}
-                                                    <div class="custom-option {form.vehicle_type === vehicle.value ? 'selected' : ''}" onclick={() => selectVehicle(vehicle.value)}>
-                                                        <i class="fas {vehicle.icon}"></i>
-                                                        <span>{vehicle.label}</span>
-                                                        {#if form.vehicle_type === vehicle.value}
-                                                            <i class="fas fa-check check-icon"></i>
-                                                        {/if}
-                                                    </div>
-                                                {/each}
-                                            </div>
-                                            {/if}
+                                            <small
+                                                class="form-text text-muted"
+                                                style="font-size: 12px; margin-top: 8px; display: block;"
+                                                >Luggage limits apply. Consider
+                                                upgrading if traveling heavy.</small
+                                            >
                                         </div>
-                                        <small class="form-text text-muted" style="font-size: 12px; margin-top: 8px; display: block;">Luggage limits apply. Consider upgrading if traveling heavy.</small>
                                     </div>
-                                </div>
 
-                                <div class="row">
-                                    <div class="col-12">
-                                        <label class="form-label">Additional Notes (Optional)</label>
-                                        <textarea bind:value={form.notes} rows="3" maxlength="500" class="premium-input" placeholder="Add flight number, child seat requests, etc." style="resize: vertical;"></textarea>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <label class="form-label"
+                                                >Additional Notes (Optional)</label
+                                            >
+                                            <textarea
+                                                bind:value={form.notes}
+                                                rows="3"
+                                                maxlength="500"
+                                                class="premium-input"
+                                                placeholder="Add flight number, child seat requests, etc."
+                                                style="resize: vertical;"
+                                            ></textarea>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                             {/if}
 
                             <!-- Step 3: Payment Method -->
                             {#if currentStep === 3}
-                            <div class="step-content" style="animation: fadeInRight 0.4s ease;">
-                                <div class="step-header">
-                                    <h4>Payment Method</h4>
-                                    <p>Choose how you want to pay for this trip.</p>
-                                </div>
+                                <div
+                                    class="step-content"
+                                    style="animation: fadeInRight 0.4s ease;"
+                                >
+                                    <div class="step-header">
+                                        <h4>Payment Method</h4>
+                                        <p>
+                                            Choose how you want to pay for this
+                                            trip.
+                                        </p>
+                                    </div>
 
-                                <div class="payment-options-container">
-                                    <label class="payment-card {form.payment_method === 'cash' ? 'active' : ''}">
-                                        <input type="radio" bind:group={form.payment_method} value="cash" class="d-none" style="display: none;">
-                                        <div class="pay-icon"><i class="fas fa-money-bill-wave"></i></div>
-                                        <div class="pay-details">
-                                            <h5>Cash to Driver</h5>
-                                            <p>Pay directly when you arrive</p>
-                                        </div>
-                                        <div class="pay-check">
-                                            <div class="circle"></div>
-                                        </div>
-                                    </label>
+                                    <div class="payment-options-container">
+                                        <label
+                                            class="payment-card {form.payment_method ===
+                                            'cash'
+                                                ? 'active'
+                                                : ''}"
+                                        >
+                                            <input
+                                                type="radio"
+                                                bind:group={form.payment_method}
+                                                value="cash"
+                                                class="d-none"
+                                                style="display: none;"
+                                            />
+                                            <div class="pay-icon">
+                                                <i
+                                                    class="fas fa-money-bill-wave"
+                                                ></i>
+                                            </div>
+                                            <div class="pay-details">
+                                                <h5>Cash to Driver</h5>
+                                                <p>
+                                                    Pay directly when you arrive
+                                                </p>
+                                            </div>
+                                            <div class="pay-check">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </label>
 
-                                    <label class="payment-card {form.payment_method === 'transfer' ? 'active' : ''}">
-                                        <input type="radio" bind:group={form.payment_method} value="transfer" class="d-none" style="display: none;">
-                                        <div class="pay-icon"><i class="fas fa-university"></i></div>
-                                        <div class="pay-details">
-                                            <h5>Bank Transfer</h5>
-                                            <p>Transfer via ATM / Mobile Banking</p>
-                                        </div>
-                                        <div class="pay-check">
-                                            <div class="circle"></div>
-                                        </div>
-                                    </label>
+                                        <label
+                                            class="payment-card {form.payment_method ===
+                                            'transfer'
+                                                ? 'active'
+                                                : ''}"
+                                        >
+                                            <input
+                                                type="radio"
+                                                bind:group={form.payment_method}
+                                                value="transfer"
+                                                class="d-none"
+                                                style="display: none;"
+                                            />
+                                            <div class="pay-icon">
+                                                <i class="fas fa-university"
+                                                ></i>
+                                            </div>
+                                            <div class="pay-details">
+                                                <h5>Bank Transfer</h5>
+                                                <p>
+                                                    Transfer via ATM / Mobile
+                                                    Banking
+                                                </p>
+                                            </div>
+                                            <div class="pay-check">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
                             {/if}
 
                             <!-- Wizard Footer Actions -->
                             <div class="wizard-footer mt-5">
                                 {#if currentStep > 1}
-                                    <button type="button" class="btn-back" onclick={prevStep}>
-                                        <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back
+                                    <button
+                                        type="button"
+                                        class="btn-back"
+                                        onclick={prevStep}
+                                    >
+                                        <i
+                                            class="fas fa-arrow-left"
+                                            style="margin-right: 8px;"
+                                        ></i> Back
                                     </button>
                                 {:else}
-                                    <div></div> <!-- Spacer for flexbox -->
+                                    <div></div>
+                                    <!-- Spacer for flexbox -->
                                 {/if}
 
                                 {#if currentStep < 3}
-                                    <button type="button" class="btn-next" onclick={nextStep} disabled={isValidatingStep}>
+                                    <button
+                                        type="button"
+                                        class="btn-next"
+                                        onclick={nextStep}
+                                        disabled={isValidatingStep}
+                                    >
                                         {#if isValidatingStep}
-                                            Validating... <i class="fas fa-spinner fa-spin" style="margin-left: 8px;"></i>
+                                            Validating... <i
+                                                class="fas fa-spinner fa-spin"
+                                                style="margin-left: 8px;"
+                                            ></i>
                                         {:else}
-                                            Next Step <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+                                            Next Step <i
+                                                class="fas fa-arrow-right"
+                                                style="margin-left: 8px;"
+                                            ></i>
                                         {/if}
                                     </button>
                                 {:else}
-                                    <button type="submit" class="btn-submit" disabled={form.processing}>
-                                        {form.processing ? 'Processing...' : 'Confirm Booking'}
-                                        {#if !form.processing}<i class="fas fa-check-circle" style="margin-left: 8px;"></i>{/if}
+                                    <button
+                                        type="submit"
+                                        class="btn-submit"
+                                        disabled={form.processing}
+                                    >
+                                        {form.processing
+                                            ? 'Processing...'
+                                            : 'Confirm Booking'}
+                                        {#if !form.processing}<i
+                                                class="fas fa-check-circle"
+                                                style="margin-left: 8px;"
+                                            ></i>{/if}
                                     </button>
                                 {/if}
                             </div>
                             {#if currentStep === 3}
-                                <p class="text-center mt-3" style="color: #888; font-size: 13px;">By confirming, you agree to our Terms of Service & Privacy Policy.</p>
+                                <p
+                                    class="text-center mt-3"
+                                    style="color: #888; font-size: 13px;"
+                                >
+                                    By confirming, you agree to our Terms of
+                                    Service & Privacy Policy.
+                                </p>
                             {/if}
-
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    
+
     <Footer />
 </div>
 
@@ -654,7 +1120,7 @@
         border: 1px solid #eaeef2;
         border-radius: 20px;
         padding: 40px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.03);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.03);
     }
 
     @media (max-width: 768px) {
@@ -787,12 +1253,12 @@
     }
 
     .premium-input {
-        width: 100%; 
-        padding: 14px 18px; 
-        border: 2px solid #e2e8f0; 
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #e2e8f0;
         background-color: #f8fafc;
-        border-radius: 10px; 
-        font-size: 15px; 
+        border-radius: 10px;
+        font-size: 15px;
         font-weight: 500;
         color: #1e293b;
         transition: all 0.2s ease;
@@ -814,7 +1280,7 @@
         border-color: var(--travhub-base) !important;
         box-shadow: 0 0 0 4px rgba(229, 32, 41, 0.1);
     }
-    
+
     .date-input {
         cursor: pointer;
     }
@@ -879,7 +1345,7 @@
         gap: 10px;
         transition: all 0.3s ease;
     }
-    
+
     .account-creation-box:hover {
         border-color: #94a3b8;
         background: #f1f5f9;
@@ -1025,7 +1491,8 @@
         border-top: 1px solid #f0f3f6;
     }
 
-    .btn-next, .btn-submit {
+    .btn-next,
+    .btn-submit {
         background: var(--travhub-base);
         color: white;
         padding: 14px 35px;
@@ -1041,10 +1508,11 @@
         justify-content: center;
     }
 
-    .btn-next:hover, .btn-submit:hover:not(:disabled) {
+    .btn-next:hover,
+    .btn-submit:hover:not(:disabled) {
         background: #111;
         transform: translateY(-2px);
-        box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
     }
 
     .btn-submit:disabled {
@@ -1075,13 +1543,25 @@
 
     /* Animations */
     @keyframes fadeInRight {
-        from { opacity: 0; transform: translateX(20px); }
-        to { opacity: 1; transform: translateX(0); }
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
-    
+
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* Custom Input and Select Styles */
@@ -1098,7 +1578,7 @@
         pointer-events: none;
         font-size: 16px;
     }
-    
+
     .password-wrapper {
         position: relative;
         width: 100%;
@@ -1122,7 +1602,7 @@
     /* Flatpickr Custom Theme */
     :global(.flatpickr-calendar) {
         border-radius: 12px !important;
-        box-shadow: 0 10px 35px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.1) !important;
         border: 1px solid #e2e8f0 !important;
         padding: 10px !important;
     }
@@ -1239,7 +1719,7 @@
         width: 100%;
         background: white;
         border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         border: 1px solid #e2e8f0;
         z-index: 100;
         max-height: 250px;
@@ -1279,7 +1759,13 @@
     }
 
     @keyframes dropdownFade {
-        from { opacity: 0; transform: translateY(-5px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 </style>

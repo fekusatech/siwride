@@ -163,6 +163,7 @@ class CustomerOrderController extends Controller
             'price' => 0, // Price will be set by admin later
             'parking_gas_fee' => 0,
             'status' => 'pending',
+            'is_shared' => true,
         ]);
 
         // Auto-login customer if they just created an account

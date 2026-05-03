@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    
+
     onMount(() => {
         // Auto-hide preloader after page loads
         setTimeout(() => {
@@ -43,6 +43,8 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        transition: opacity 0.3s ease, visibility 0.3s ease !important;
+        transition:
+            opacity 0.3s ease,
+            visibility 0.3s ease !important;
     }
 </style>

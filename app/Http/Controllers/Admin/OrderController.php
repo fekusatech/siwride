@@ -9,6 +9,7 @@ use App\Models\Driver;
 use App\Models\Order;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -28,39 +29,54 @@ class OrderController extends Controller
      */
     public function index(Request $request): Response
     {
-        return Inertia::render('Admin/Orders/Index', [
-            'orders' => Order::with(['driver', 'vehicle', 'claimedDriver', 'customer'])
-                ->when($request->search, function ($query, $search) {
-                    $query->where(function ($q) use ($search) {
-                        $q->where('booking_code', 'like', "%{$search}%")
-                            ->orWhere('order_number', 'like', "%{$search}%")
-                            ->orWhere('customer_name', 'like', "%{$search}%")
-                            ->orWhereHas('customer', function ($cq) use ($search) {
-                                $cq->where('name', 'like', "%{$search}%");
-                            })
-                            ->orWhereHas('driver', function ($dq) use ($search) {
-                                $dq->where('name', 'like', "%{$search}%");
-                            });
+        $user = $request->user();
+
+        $query = Order::with(['driver', 'vehicle', 'claimedDriver', 'customer']);
+
+        if ($user->role === 'driver') {
+            $driver = Driver::where('email', $user->email)->first();
+            $driverId = $driver ? $driver->id : 0;
+
+            $query->where(function ($q) use ($driverId) {
+                $q->where('driver_id', $driverId)
+                    ->orWhere(function ($sq) {
+                        $sq->whereNull('driver_id')
+                            ->where('status', 'pending');
                     });
-                })
-                ->when($request->status, function ($query, $status) {
-                    $query->where('status', $status);
-                })
-                ->when($request->driver_id, function ($query, $driverId) {
-                    $query->where('driver_id', $driverId);
-                })
-                ->when($request->from_date, function ($query, $fromDate) {
-                    $query->whereDate('date', '>=', $fromDate);
-                })
-                ->when($request->to_date, function ($query, $toDate) {
-                    $query->whereDate('date', '<=', $toDate);
-                })
-                ->latest()
+            });
+        }
+
+        $query->when($request->search, function ($q, $search) {
+            $q->where(function ($query) use ($search) {
+                $query->where('booking_code', 'like', "%{$search}%")
+                    ->orWhere('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhereHas('driver', function ($dq) use ($search) {
+                        $dq->where('name', 'like', "%{$search}%");
+                    });
+            });
+        })
+            ->when($request->status, function ($q, $status) {
+                $q->where('status', $status);
+            })
+            ->when($request->driver_id, function ($q, $driverId) {
+                $q->where('driver_id', $driverId);
+            })
+            ->when($request->from_date, function ($q, $fromDate) {
+                $q->whereDate('date', '>=', $fromDate);
+            })
+            ->when($request->to_date, function ($q, $toDate) {
+                $q->whereDate('date', '<=', $toDate);
+            });
+
+        return Inertia::render('Admin/Orders/Index', [
+            'orders' => $query->with(['driver', 'vehicle', 'currentClaim.driver'])->latest()
                 ->paginate(10)
                 ->withQueryString(),
             'filters' => $request->only(['search', 'status', 'driver_id', 'from_date', 'to_date']),
-            'drivers' => Driver::with('vehicles')->get(),
+            'drivers' => $user->role === 'admin' ? Driver::with('vehicles')->get() : collect(),
             'google_maps_api_key' => config('services.google.maps_api_key'),
+            'user_role' => $user->role,
         ]);
     }
 
@@ -74,6 +90,35 @@ class OrderController extends Controller
             'drivers' => Driver::with('vehicles')->get(),
             'google_maps_api_key' => config('services.google.maps_api_key'),
         ]);
+    }
+
+    /**
+     * Driver takes/claims an order (for web interface).
+     */
+    public function take(Order $order)
+    {
+        $user = request()->user();
+
+        // Find the corresponding driver record by email since users and drivers tables are separate
+        $driver = Driver::where('email', $user->email)->first();
+
+        if (! $driver) {
+            return back()->with('error', 'Akun driver tidak ditemukan.');
+        }
+
+        if ($order->driver_id) {
+            return back()->with('error', 'Order sudah diambil driver lain.');
+        }
+
+        if ($order->claimed_driver_id) {
+            return back()->with('error', 'Order sedang menunggu konfirmasi admin untuk driver lain.');
+        }
+
+        $order->update([
+            'claimed_driver_id' => $driver->id,
+        ]);
+
+        return back()->with('success', 'Berhasil melakukan klaim! Menunggu konfirmasi admin.');
     }
 
     /**
@@ -123,8 +168,11 @@ class OrderController extends Controller
         );
 
         Order::create(array_merge(
-            $validated,
-            ['customer_id' => $customer->id]
+            collect($validated)->except(['customer_name', 'customer_phone', 'customer_email'])->toArray(),
+            [
+                'customer_id' => $customer->id,
+                'is_shared' => empty($validated['driver_id']),
+            ]
         ));
 
         return redirect()->route('admin.orders.index')
@@ -184,16 +232,24 @@ class OrderController extends Controller
                 ]
             );
 
+            $customer->update([
+                'name' => $validated['customer_name'],
+                'phone' => $validated['customer_phone'] ?? $customer->phone,
+            ]);
+
             $order->update(array_merge(
-                $validated,
-                ['customer_id' => $customer->id]
+                collect($validated)->except(['customer_name', 'customer_phone', 'customer_email'])->toArray(),
+                [
+                    'customer_id' => $customer->id,
+                    'is_shared' => empty($validated['driver_id']),
+                ]
             ));
 
             return redirect()->back()
                 ->with('success', 'Order updated successfully.');
         } catch (ValidationException $e) {
             Log::error('Validation error on order update: '.json_encode($e->errors()));
-            throw $e; // Re-throw to let Inertia handle it and display errors in form
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Error updating order: '.$e->getMessage());
 
@@ -203,8 +259,18 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
+        $user = $request->user();
+
+        // If driver, can only update their own orders
+        if ($user->role === 'driver') {
+            $driver = Driver::where('email', $user->email)->first();
+            if (! $driver || $order->driver_id != $driver->id) {
+                return redirect()->back()->with('error', 'Unauthorized.');
+            }
+        }
+
         $validated = $request->validate([
-            'status' => ['required', 'string', 'in:pending,completed,cancelled'],
+            'status' => ['required', 'string', 'in:pending,otw,tiba,completed,cancelled'],
         ]);
 
         $order->update(['status' => $validated['status']]);
@@ -253,19 +319,32 @@ class OrderController extends Controller
      */
     public function acceptClaim(Order $order, WhatsAppService $waService)
     {
-        if (! $order->claimed_driver_id) {
+        $claim = $order->claims()->where('status', 'pending')->latest()->first();
+
+        if (! $claim) {
             return redirect()->back()->with('error', 'Tidak ada claim yang perlu dikonfirmasi.');
         }
 
-        $driver = Driver::find($order->claimed_driver_id);
-        if (! $driver) {
+        $user = $claim->driver; // Driver here is a User model from job_claims.driver_id
+        if (! $user) {
             return redirect()->back()->with('error', 'Driver tidak ditemukan.');
         }
 
-        $order->update([
-            'driver_id' => $order->claimed_driver_id,
-            'claimed_driver_id' => null,
-        ]);
+        // Get Driver model (to get phone, vehicles, etc)
+        $driver = Driver::where('email', $user->email)->first();
+        if (! $driver) {
+            return redirect()->back()->with('error', 'Profil Driver tidak ditemukan.');
+        }
+
+        DB::transaction(function () use ($order, $user, $claim) {
+            $order->update([
+                'driver_id' => $user->id,
+            ]);
+
+            // Update all claims for this order
+            $order->claims()->update(['status' => 'rejected']);
+            $claim->update(['status' => 'approved']);
+        });
 
         $d = new \DateTime($order->date);
         $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -306,13 +385,17 @@ class OrderController extends Controller
      */
     public function rejectClaim(Order $order)
     {
-        if (! $order->claimed_driver_id) {
+        $claims = $order->claims()->where('status', 'pending')->get();
+
+        if ($claims->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada claim yang perlu ditolak.');
         }
 
-        $order->update([
-            'claimed_driver_id' => null,
+        $order->claims()->where('status', 'pending')->update([
+            'status' => 'rejected',
         ]);
+
+        $order->update(['claimed_driver_id' => null]);
 
         return redirect()->back()->with('success', 'Claim driver ditolak.');
     }

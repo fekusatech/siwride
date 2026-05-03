@@ -1,35 +1,32 @@
 <?php
 
-namespace App\Models\Mobile;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class DriverLocation extends Model
+class OrderEvidence extends Model
 {
     use HasFactory;
 
-    protected $table = 'mobile_driver_locations';
-
-    protected $primaryKey = 'driver_id';
-
-    public $incrementing = false;
-
     protected $fillable = [
-        'driver_id',
+        'order_id',
+        'type',
+        'photo_url',
         'latitude',
         'longitude',
+        'captured_at',
     ];
 
     protected $casts = [
+        'captured_at' => 'datetime',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
-        'updated_at' => 'datetime',
     ];
 
-    public function driver(): BelongsTo
+    public function order(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'driver_id');
+        return $this->belongsTo(Order::class);
     }
 }

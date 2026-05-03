@@ -39,6 +39,22 @@
 
     // Reactive drivers list from paginated object
     let driverList = $derived(drivers.data);
+
+    function syncUserAccount(driver: any) {
+        if (
+            confirm(
+                `Create user account for ${driver.name}? Default password will be their email address.`,
+            )
+        ) {
+            router.post(
+                `/admin/drivers/${driver.id}/sync-user`,
+                {},
+                {
+                    preserveScroll: true,
+                },
+            );
+        }
+    }
 </script>
 
 <AppHead title="Drivers" />
@@ -91,6 +107,7 @@
                                 <th>Email</th>
                                 <th>Phone</th>
                                 <th>Vehicles</th>
+                                <th>Account</th>
                                 <th>Status</th>
                                 <th class="text-center">Action</th>
                             </tr>
@@ -136,6 +153,30 @@
                                             class="badge bg-info-subtle text-info"
                                             >{driver.vehicles_count} Vehicles</span
                                         >
+                                    </td>
+                                    <td>
+                                        {#if driver.has_user_account}
+                                            <span
+                                                class="badge bg-success-subtle text-success"
+                                            >
+                                                <i class="ti ti-check me-1"></i> Linked
+                                            </span>
+                                        {:else if driver.status === 'active'}
+                                            <button
+                                                class="btn btn-xs btn-outline-warning d-flex align-items-center gap-1"
+                                                onclick={() =>
+                                                    syncUserAccount(driver)}
+                                                title="Create Login Account"
+                                            >
+                                                <i class="ti ti-user-plus fs-14"
+                                                ></i> Create User
+                                            </button>
+                                        {:else}
+                                            <span
+                                                class="text-muted small italic"
+                                                >Requires active status</span
+                                            >
+                                        {/if}
                                     </td>
                                     <td>
                                         <span

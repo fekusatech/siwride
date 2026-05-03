@@ -9,6 +9,10 @@ Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
+Route::get('/dokumentasi', function () {
+    return view('api-docs');
+})->name('api.docs');
+
 Route::get('/driver/register', [RegisteredDriverController::class, 'create'])->name('driver.register');
 Route::post('/driver/register', [RegisteredDriverController::class, 'store']);
 
@@ -54,6 +58,7 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/customer/register', [CustomerAuthController::class, 'register']);
 });
 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CustomerProfileController;
 
 Route::middleware('auth:customer')->group(function () {
@@ -87,8 +92,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('admin/orders/{order}/accept-claim', [OrderController::class, 'acceptClaim'])->name('admin.orders.accept-claim');
     Route::post('admin/orders/{order}/reject-claim', [OrderController::class, 'rejectClaim'])->name('admin.orders.reject-claim');
     Route::post('admin/orders/{order}/resend-wa', [OrderController::class, 'resendWaToDriver'])->name('admin.orders.resend-wa');
+    Route::post('admin/orders/{order}/take', [OrderController::class, 'take'])->name('admin.orders.take');
     Route::resource('admin/orders', OrderController::class)->names('admin.orders');
 
+    Route::post('admin/drivers/{driver}/sync-user', [DriverController::class, 'syncUser'])->name('admin.drivers.sync-user');
     Route::resource('admin/drivers', DriverController::class)->names('admin.drivers');
 
     Route::resource('admin/vehicles', VehicleController::class)->names('admin.vehicles');
@@ -98,6 +105,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('admin/settings/general', [SettingController::class, 'general'])->name('admin.settings.general');
     Route::post('admin/settings/general', [SettingController::class, 'updateGeneral'])->name('admin.settings.update-general');
+
+    Route::resource('admin/users', UserController::class)->names('admin.users');
 });
 
 require __DIR__.'/settings.php';

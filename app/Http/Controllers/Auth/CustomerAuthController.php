@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Services\RecaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -24,8 +25,10 @@ class CustomerAuthController extends Controller
     /**
      * Handle an incoming authentication request for customers.
      */
-    public function login(Request $request)
+    public function login(Request $request, RecaptchaService $recaptchaService)
     {
+        $recaptchaService->validate($request);
+
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],

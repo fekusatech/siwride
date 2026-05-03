@@ -4,6 +4,7 @@
 
     let currentTheme = $state('light');
     let isHydrated = $state(false);
+    let bookingSearch = $state('');
 
     let user = $derived(page.props.auth?.user);
 
@@ -87,6 +88,22 @@
         document.documentElement.classList.remove('sidebar-enable');
     }
 
+    function submitBookingSearch(e: Event) {
+        e.preventDefault();
+
+        if (!bookingSearch.trim()) {
+            return;
+        }
+
+        router.visit('/admin/orders', {
+            method: 'get',
+            data: {
+                search: bookingSearch.trim(),
+            },
+            preserveScroll: true,
+        });
+    }
+
     function logout(e: Event) {
         e.preventDefault();
         router.post(
@@ -133,18 +150,26 @@
             {/if}
 
             <!-- Search Bar -->
-            <button
-                type="button"
+            <form
                 class="topbar-search text-muted d-none d-xl-flex gap-2 align-items-center bg-transparent border-0 text-start"
-                data-bs-toggle="modal"
-                data-bs-target="#searchModal"
+                onsubmit={submitBookingSearch}
             >
                 <i class="ti ti-search fs-18"></i>
-                <span class="me-2">Search something..</span>
-                <span class="ms-auto btn btn-sm btn-primary shadow-none"
-                    >⌘K</span
+                <input
+                    type="search"
+                    class="border-0 bg-transparent outline-0"
+                    placeholder="Search booking..."
+                    bind:value={bookingSearch}
+                    aria-label="Search booking"
+                    style="min-width: 180px; outline: none;"
+                />
+                <button
+                    type="submit"
+                    class="ms-auto btn btn-sm btn-primary shadow-none"
                 >
-            </button>
+                    Search
+                </button>
+            </form>
         </div>
 
         <div class="d-flex align-items-center gap-2">

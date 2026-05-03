@@ -4,9 +4,13 @@
     import Pagination from '@/components/Pagination.svelte';
     import OrderForm from '@/components/Orders/OrderForm.svelte';
     import Flatpickr from '@/components/Flatpickr.svelte';
-    import { Link, router } from '@inertiajs/svelte';
+    import { Link, router, usePage } from '@inertiajs/svelte';
     import { onMount } from 'svelte';
     import { fade, fly } from 'svelte/transition';
+
+    let page = usePage();
+    let authUser = page.props.auth?.user as any;
+    let userRole = authUser?.role || 'admin';
 
     let { orders, filters, drivers, google_maps_api_key } = $props();
     // svelte-ignore state_referenced_locally
@@ -73,12 +77,12 @@
         }
     }
 
-    function acceptClaim(orderId: number) {
-        processingClaimId = orderId;
+    function acceptClaim(order: any) {
+        processingClaimId = order.id;
         processingClaimAction = 'accept';
         router.post(
-            `/admin/orders/${orderId}/accept-claim`,
-            {},
+            `/admin/orders/${order.id}/accept-claim`,
+            { driver_id: order.current_claim.driver_id },
             {
                 preserveScroll: true,
                 onFinish: () => {
@@ -89,12 +93,12 @@
         );
     }
 
-    function rejectClaim(orderId: number) {
-        processingClaimId = orderId;
+    function rejectClaim(order: any) {
+        processingClaimId = order.id;
         processingClaimAction = 'reject';
         router.post(
-            `/admin/orders/${orderId}/reject-claim`,
-            {},
+            `/admin/orders/${order.id}/reject-claim`,
+            { driver_id: order.current_claim.driver_id },
             {
                 preserveScroll: true,
                 onFinish: () => {
@@ -124,7 +128,27 @@
             { status },
             {
                 onFinish: () => (updatingOrderId = null),
-                preserveScroll: true,
+            },
+        );
+    }
+
+    function takeOrder(orderId: number) {
+        updatingOrderId = orderId;
+        router.post(
+            `/admin/orders/${orderId}/take`,
+            {},
+            {
+                onSuccess: () => {
+                    showToast('Order berhasil diambil!', 'success');
+                    router.reload({ only: ['orders'] });
+                },
+                onError: (errors: any) => {
+                    showToast(
+                        errors.message || 'Gagal mengambil order',
+                        'error',
+                    );
+                },
+                onFinish: () => (updatingOrderId = null),
             },
         );
     }
@@ -166,7 +190,9 @@
         ) {
             try {
                 const csrfToken =
-                    document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                    document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content') || '';
                 const resp = await fetch('/admin/orders/distance', {
                     method: 'POST',
                     headers: {
@@ -488,57 +514,61 @@
                             <option value="cancelled">Cancelled</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label
-                            for="filter-driver"
-                            class="form-label small fw-bold text-muted"
-                            >Driver</label
-                        >
-                        <select
-                            id="filter-driver"
-                            class="form-select"
-                            bind:value={driverId}
-                        >
-                            <option value="">All Drivers</option>
-                            {#each drivers as driver}
-                                <option value={driver.id}>{driver.name}</option>
-                            {/each}
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label
-                            for="filter-from-date"
-                            class="form-label small fw-bold text-muted"
-                            >Date Range</label
-                        >
-                        <div class="input-group">
-                            <Flatpickr
-                                id="filter-from-date"
-                                bind:value={fromDate}
-                                placeholder="From"
-                                options={{
-                                    altInput: true,
-                                    altFormat: 'd/m/Y',
-                                    dateFormat: 'Y-m-d',
-                                }}
-                                class="border-end-0"
-                            />
-                            <span
-                                class="input-group-text bg-white px-1 text-muted"
-                                >to</span
+                    {#if userRole === 'admin'}
+                        <div class="col-md-2">
+                            <label
+                                for="filter-driver"
+                                class="form-label small fw-bold text-muted"
+                                >Driver</label
                             >
-                            <Flatpickr
-                                id="filter-to-date"
-                                bind:value={toDate}
-                                placeholder="To"
-                                options={{
-                                    altInput: true,
-                                    altFormat: 'd/m/Y',
-                                    dateFormat: 'Y-m-d',
-                                }}
-                            />
+                            <select
+                                id="filter-driver"
+                                class="form-select"
+                                bind:value={driverId}
+                            >
+                                <option value="">All Drivers</option>
+                                {#each drivers as driver}
+                                    <option value={driver.id}
+                                        >{driver.name}</option
+                                    >
+                                {/each}
+                            </select>
                         </div>
-                    </div>
+                        <div class="col-md-3">
+                            <label
+                                for="filter-from-date"
+                                class="form-label small fw-bold text-muted"
+                                >Date Range</label
+                            >
+                            <div class="input-group">
+                                <Flatpickr
+                                    id="filter-from-date"
+                                    bind:value={fromDate}
+                                    placeholder="From"
+                                    options={{
+                                        altInput: true,
+                                        altFormat: 'd/m/Y',
+                                        dateFormat: 'Y-m-d',
+                                    }}
+                                    class="border-end-0"
+                                />
+                                <span
+                                    class="input-group-text bg-white px-1 text-muted"
+                                    >to</span
+                                >
+                                <Flatpickr
+                                    id="filter-to-date"
+                                    bind:value={toDate}
+                                    placeholder="To"
+                                    options={{
+                                        altInput: true,
+                                        altFormat: 'd/m/Y',
+                                        dateFormat: 'Y-m-d',
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    {/if}
                     <div class="col-md-2">
                         <div class="d-none d-md-block" style="height: 24px;">
                             &nbsp;
@@ -614,7 +644,8 @@
                                             {order.customer_name || '-'}
                                         </div>
                                         <small class="text-muted"
-                                            >{order.customer_phone || '-'}</small
+                                            >{order.customer_phone ||
+                                                '-'}</small
                                         >
                                     </td>
                                     <td>{order.flight_number || '-'}</td>
@@ -632,7 +663,7 @@
                                                         .registration_number}
                                                 </small>
                                             {/if}
-                                        {:else if order.claimed_driver}
+                                        {:else if order.current_claim}
                                             <div
                                                 class="d-flex flex-column align-items-start gap-1"
                                             >
@@ -642,60 +673,72 @@
                                                     <i
                                                         class="ti ti-user-clock me-1"
                                                     ></i>
-                                                    {order.claimed_driver.name}
+                                                    {order.current_claim.driver
+                                                        .name}
                                                 </div>
                                                 <small class="text-muted">
-                                                    NID: {order.claimed_driver
-                                                        .nid || '-'}
+                                                    NID: {order.current_claim
+                                                        .driver.nid || '-'}
                                                 </small>
-                                                <div class="d-flex gap-1 mt-1">
-                                                    <button
-                                                        class="btn btn-xs btn-success d-flex align-items-center gap-1"
-                                                        style="font-size: 11px; padding: 2px 8px;"
-                                                        disabled={processingClaimId ===
-                                                            order.id}
-                                                        onclick={() =>
-                                                            acceptClaim(
-                                                                order.id,
-                                                            )}
-                                                        title="Accept Claim"
+
+                                                {#if userRole === 'admin'}
+                                                    <div
+                                                        class="d-flex gap-1 mt-1"
                                                     >
-                                                        {#if processingClaimId === order.id && processingClaimAction === 'accept'}
-                                                            <span
-                                                                class="spinner-border spinner-border-sm"
-                                                                style="width: 12px; height: 12px;"
-                                                            ></span>
-                                                        {:else}
-                                                            <i
-                                                                class="ti ti-check fs-12"
-                                                            ></i>
-                                                        {/if}
-                                                        Accept
-                                                    </button>
-                                                    <button
-                                                        class="btn btn-xs btn-outline-danger d-flex align-items-center gap-1"
-                                                        style="font-size: 11px; padding: 2px 8px;"
-                                                        disabled={processingClaimId ===
-                                                            order.id}
-                                                        onclick={() =>
-                                                            rejectClaim(
-                                                                order.id,
-                                                            )}
-                                                        title="Reject Claim"
+                                                        <button
+                                                            class="btn btn-xs btn-success d-flex align-items-center gap-1"
+                                                            style="font-size: 11px; padding: 2px 8px;"
+                                                            disabled={processingClaimId ===
+                                                                order.id}
+                                                            onclick={() =>
+                                                                acceptClaim(
+                                                                    order,
+                                                                )}
+                                                            title="Accept Claim"
+                                                        >
+                                                            {#if processingClaimId === order.id && processingClaimAction === 'accept'}
+                                                                <span
+                                                                    class="spinner-border spinner-border-sm"
+                                                                    style="width: 12px; height: 12px;"
+                                                                ></span>
+                                                            {:else}
+                                                                <i
+                                                                    class="ti ti-check fs-12"
+                                                                ></i>
+                                                            {/if}
+                                                            Accept
+                                                        </button>
+                                                        <button
+                                                            class="btn btn-xs btn-outline-danger d-flex align-items-center gap-1"
+                                                            style="font-size: 11px; padding: 2px 8px;"
+                                                            disabled={processingClaimId ===
+                                                                order.id}
+                                                            onclick={() =>
+                                                                rejectClaim(
+                                                                    order,
+                                                                )}
+                                                            title="Reject Claim"
+                                                        >
+                                                            {#if processingClaimId === order.id && processingClaimAction === 'reject'}
+                                                                <span
+                                                                    class="spinner-border spinner-border-sm"
+                                                                    style="width: 12px; height: 12px;"
+                                                                ></span>
+                                                            {:else}
+                                                                <i
+                                                                    class="ti ti-x fs-12"
+                                                                ></i>
+                                                            {/if}
+                                                            Reject
+                                                        </button>
+                                                    </div>
+                                                {:else}
+                                                    <small
+                                                        class="text-info italic"
+                                                        >Waiting for admin
+                                                        approval</small
                                                     >
-                                                        {#if processingClaimId === order.id && processingClaimAction === 'reject'}
-                                                            <span
-                                                                class="spinner-border spinner-border-sm"
-                                                                style="width: 12px; height: 12px;"
-                                                            ></span>
-                                                        {:else}
-                                                            <i
-                                                                class="ti ti-x fs-12"
-                                                            ></i>
-                                                        {/if}
-                                                        Reject
-                                                    </button>
-                                                </div>
+                                                {/if}
                                             </div>
                                         {:else}
                                             <div
@@ -750,10 +793,67 @@
                                         >
                                     </td>
                                     <td class="text-center">
-                                        <div
-                                            class="d-flex align-items-center justify-content-center gap-3"
-                                        >
-                                            <!-- Interactive Status Toggle -->
+                                        {#if userRole === 'driver'}
+                                            <!-- Driver View: Request Order Button -->
+                                            {#if !order.driver_id}
+                                                <button
+                                                    class="btn btn-sm btn-primary d-flex align-items-center gap-1"
+                                                    onclick={() =>
+                                                        takeOrder(order.id)}
+                                                >
+                                                    <i class="ti ti-hand-grab"
+                                                    ></i>
+                                                    Ambil Order
+                                                </button>
+                                            {:else if order.driver_id === authUser?.id}
+                                                <div
+                                                    class="d-flex align-items-center gap-1"
+                                                >
+                                                    <button
+                                                        class="btn btn-sm {order.status ===
+                                                        'pending'
+                                                            ? 'btn-warning'
+                                                            : order.status ===
+                                                                'completed'
+                                                              ? 'btn-success'
+                                                              : 'btn-outline-secondary'} d-flex align-items-center gap-1"
+                                                        onclick={() =>
+                                                            updateStatus(
+                                                                order.id,
+                                                                order.status ===
+                                                                    'pending'
+                                                                    ? 'otw'
+                                                                    : order.status ===
+                                                                        'otw'
+                                                                      ? 'tiba'
+                                                                      : 'completed',
+                                                            )}
+                                                    >
+                                                        <i
+                                                            class="ti ti-{order.status ===
+                                                            'pending'
+                                                                ? 'car'
+                                                                : order.status ===
+                                                                    'otw'
+                                                                  ? 'map-pin'
+                                                                  : 'check'}"
+                                                        ></i>
+                                                        {order.status ===
+                                                        'pending'
+                                                            ? 'OTW'
+                                                            : order.status ===
+                                                                'otw'
+                                                              ? 'TIBA'
+                                                              : 'SELESAI'}
+                                                    </button>
+                                                </div>
+                                            {:else}
+                                                <span class="badge bg-secondary"
+                                                    >Taken</span
+                                                >
+                                            {/if}
+                                        {:else}
+                                            <!-- Admin View: Full Status Toggle -->
                                             <div
                                                 class="status-segmented-control shadow-sm"
                                             >
@@ -861,10 +961,8 @@
                                                     title="Share to WA Group"
                                                     disabled={sharingOrderId ===
                                                         order.id}
-                                                    onclick={(e) => {
-                                                        e.preventDefault();
-                                                        shareToWhatsApp(order);
-                                                    }}
+                                                    onclick={() =>
+                                                        shareToWhatsApp(order)}
                                                 >
                                                     {#if sharingOrderId === order.id}
                                                         <span
@@ -879,14 +977,10 @@
                                                 <button
                                                     type="button"
                                                     class="btn btn-sm btn-outline-secondary btn-icon"
-                                                    title={order.driver
-                                                        ? 'Copy WA to Driver'
-                                                        : 'Copy WA to Group'}
+                                                    title="Copy WA to Driver"
+                                                    onclick={() =>
+                                                        copyToClipboard(order)}
                                                     data-copy-btn={order.id}
-                                                    onclick={(e) => {
-                                                        e.preventDefault();
-                                                        copyToClipboard(order);
-                                                    }}
                                                 >
                                                     <i
                                                         class="ti ti-clipboard fs-16"
@@ -914,7 +1008,7 @@
                                                     ></i>
                                                 </button>
                                             </div>
-                                        </div>
+                                        {/if}
                                     </td>
                                 </tr>
                             {:else}
@@ -987,10 +1081,12 @@
                                         </div>
                                         <div>
                                             <h5 class="mb-0">
-                                                {selectedOrder.customer_name || '-'}
+                                                {selectedOrder.customer_name ||
+                                                    '-'}
                                             </h5>
                                             <p class="mb-0 text-muted">
-                                                {selectedOrder.customer_phone || '-'}
+                                                {selectedOrder.customer_phone ||
+                                                    '-'}
                                             </p>
                                         </div>
                                     </div>

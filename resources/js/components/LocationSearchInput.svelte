@@ -64,7 +64,10 @@
         try {
             const url = search.url({ query: { q } });
             const res = await fetch(url, {
-                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
             });
             if (res.ok) {
                 const data = await res.json();
@@ -117,7 +120,11 @@
     }
 </script>
 
-<div class="location-search-wrapper" class:is-premium={variant === 'premium'} bind:this={containerEl}>
+<div
+    class="location-search-wrapper"
+    class:is-premium={variant === 'premium'}
+    bind:this={containerEl}
+>
     <div class="location-search-field">
         <input
             bind:this={inputEl}
@@ -137,7 +144,11 @@
     </div>
 
     {#if isOpen && suggestions.length > 0}
-        <ul class="location-search-dropdown" role="listbox" aria-label="Location suggestions">
+        <ul
+            class="location-search-dropdown"
+            role="listbox"
+            aria-label="Location suggestions"
+        >
             {#each suggestions as suggestion, i}
                 <li
                     role="option"
@@ -181,7 +192,10 @@
         font-size: 15px;
         font-weight: 500;
         color: #333;
-        transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        transition:
+            border-color 0.3s ease,
+            background-color 0.3s ease,
+            box-shadow 0.3s ease;
         outline: none;
         line-height: 1.5;
     }
@@ -217,7 +231,9 @@
     }
 
     @keyframes spin {
-        to { transform: translateY(-50%) rotate(360deg); }
+        to {
+            transform: translateY(-50%) rotate(360deg);
+        }
     }
 
     .location-search-dropdown {

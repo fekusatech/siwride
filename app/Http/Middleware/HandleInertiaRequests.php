@@ -37,6 +37,15 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $settings = Setting::values([
+            'business_name' => config('app.name'),
+            'logo' => null,
+            'favicon' => null,
+            'recaptcha_enabled' => '0',
+            'recaptcha_site_key' => null,
+            'recaptcha_secret_key' => null,
+        ]);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -44,7 +53,10 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'customer' => Auth::guard('customer')->user(),
             ],
-            'settings' => Setting::first() ?? new Setting(['business_name' => config('app.name')]),
+            'settings' => [
+                ...$settings,
+                'updated_at' => Setting::query()->max('updated_at'),
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [
                 'success' => $request->session()->get('success'),

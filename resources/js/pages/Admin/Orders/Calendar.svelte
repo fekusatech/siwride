@@ -193,10 +193,12 @@
                                         </div>
                                         <div>
                                             <h5 class="mb-0">
-                                                {selectedOrder.customer_name || '-'}
+                                                {selectedOrder.customer_name ||
+                                                    '-'}
                                             </h5>
                                             <p class="mb-0 text-muted">
-                                                {selectedOrder.customer_phone || '-'}
+                                                {selectedOrder.customer_phone ||
+                                                    '-'}
                                             </p>
                                         </div>
                                     </div>

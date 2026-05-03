@@ -3,7 +3,15 @@
     import AppHead from '@/components/AppHead.svelte';
     import { useForm, router } from '@inertiajs/svelte';
     import { onMount } from 'svelte';
-    import { MapPin, Trash2, Edit2, Plus, Check, X, Layers } from 'lucide-svelte';
+    import {
+        MapPin,
+        Trash2,
+        Edit2,
+        Plus,
+        Check,
+        X,
+        Layers,
+    } from 'lucide-svelte';
 
     declare const google: any;
 
@@ -25,8 +33,10 @@
 
     function initMap() {
         if (!google_maps_api_key) return;
-        
-        const scriptExists = document.querySelector('script[src*="maps.googleapis.com"]');
+
+        const scriptExists = document.querySelector(
+            'script[src*="maps.googleapis.com"]',
+        );
         if (!scriptExists) {
             const script = document.createElement('script');
             script.src = `https://maps.googleapis.com/maps/api/js?key=${google_maps_api_key}&libraries=drawing,places`;
@@ -67,16 +77,20 @@
 
         drawingManager.setMap(map);
 
-        google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon: any) => {
-            // If we're already editing or creating, remove the previous one if it wasn't saved
-            if (selectedPolygon && !isEditing) {
-                selectedPolygon.setMap(null);
-            }
-            
-            selectedPolygon = polygon;
-            updateCoordinatesFromPolygon(polygon);
-            drawingManager.setDrawingMode(null);
-        });
+        google.maps.event.addListener(
+            drawingManager,
+            'polygoncomplete',
+            (polygon: any) => {
+                // If we're already editing or creating, remove the previous one if it wasn't saved
+                if (selectedPolygon && !isEditing) {
+                    selectedPolygon.setMap(null);
+                }
+
+                selectedPolygon = polygon;
+                updateCoordinatesFromPolygon(polygon);
+                drawingManager.setDrawingMode(null);
+            },
+        );
 
         // Load existing zones
         renderZones();
@@ -84,7 +98,7 @@
 
     function renderZones() {
         // Clear existing polygons from map
-        currentPolygons.forEach(p => p.setMap(null));
+        currentPolygons.forEach((p) => p.setMap(null));
         currentPolygons = [];
 
         const bounds = new google.maps.LatLngBounds();
@@ -155,8 +169,14 @@
         map.setCenter(zone.coordinates[0]);
         map.setZoom(12);
 
-        google.maps.event.addListener(selectedPolygon.getPath(), 'set_at', () => updateCoordinatesFromPolygon(selectedPolygon));
-        google.maps.event.addListener(selectedPolygon.getPath(), 'insert_at', () => updateCoordinatesFromPolygon(selectedPolygon));
+        google.maps.event.addListener(selectedPolygon.getPath(), 'set_at', () =>
+            updateCoordinatesFromPolygon(selectedPolygon),
+        );
+        google.maps.event.addListener(
+            selectedPolygon.getPath(),
+            'insert_at',
+            () => updateCoordinatesFromPolygon(selectedPolygon),
+        );
     }
 
     function cancelEdit() {
@@ -182,7 +202,7 @@
                     form.reset();
                     selectedPolygon.setMap(null);
                     selectedPolygon = null;
-                }
+                },
             });
         } else {
             form.post('/admin/zones', {
@@ -190,7 +210,7 @@
                     form.reset();
                     selectedPolygon.setMap(null);
                     selectedPolygon = null;
-                }
+                },
             });
         }
     }
@@ -217,13 +237,19 @@
 
 <AdminLayout>
     <div class="py-6 px-4">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4"
+        >
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <h1
+                    class="text-2xl font-bold text-gray-900 flex items-center gap-2"
+                >
                     <Layers class="size-6 text-blue-600" />
                     Service Zones
                 </h1>
-                <p class="text-gray-500">Define operational areas by drawing polygons on the map.</p>
+                <p class="text-gray-500">
+                    Define operational areas by drawing polygons on the map.
+                </p>
             </div>
         </div>
 
@@ -231,60 +257,88 @@
             <!-- Sidebar / List -->
             <div class="lg:col-span-1 flex flex-col gap-6">
                 <!-- Zone Form -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                >
                     <div class="p-4 border-b border-gray-200 bg-gray-50">
-                        <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+                        <h3
+                            class="font-semibold text-gray-800 flex items-center gap-2"
+                        >
                             {isEditing ? 'Edit Zone' : 'Create New Zone'}
                         </h3>
                     </div>
-                    <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="p-4 space-y-4">
+                    <form
+                        onsubmit={(e) => {
+                            e.preventDefault();
+                            handleSubmit();
+                        }}
+                        class="p-4 space-y-4"
+                    >
                         <div>
-                            <label for="zone-name" class="block text-sm font-medium text-gray-700 mb-1">Zone Name</label>
-                            <input 
-                                type="text" 
-                                id="zone-name" 
+                            <label
+                                for="zone-name"
+                                class="block text-sm font-medium text-gray-700 mb-1"
+                                >Zone Name</label
+                            >
+                            <input
+                                type="text"
+                                id="zone-name"
                                 bind:value={form.name}
                                 placeholder="e.g. Bali South"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                 required
                             />
                             {#if form.errors.name}
-                                <p class="text-red-500 text-xs mt-1">{form.errors.name}</p>
+                                <p class="text-red-500 text-xs mt-1">
+                                    {form.errors.name}
+                                </p>
                             {/if}
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <input 
-                                type="checkbox" 
-                                id="is-active" 
+                            <input
+                                type="checkbox"
+                                id="is-active"
                                 bind:checked={form.is_active}
                                 class="size-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                             />
-                            <label for="is-active" class="text-sm text-gray-700">Active Zone</label>
+                            <label for="is-active" class="text-sm text-gray-700"
+                                >Active Zone</label
+                            >
                         </div>
 
-                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                            <p class="text-xs text-blue-700 flex items-start gap-2">
+                        <div
+                            class="bg-blue-50 p-3 rounded-lg border border-blue-100"
+                        >
+                            <p
+                                class="text-xs text-blue-700 flex items-start gap-2"
+                            >
                                 <MapPin class="size-4 shrink-0 mt-0.5" />
                                 {#if form.coordinates.length === 0}
-                                    Use the polygon tool on the map to draw the zone area.
+                                    Use the polygon tool on the map to draw the
+                                    zone area.
                                 {:else}
-                                    {form.coordinates.length} points defined for this zone.
+                                    {form.coordinates.length} points defined for this
+                                    zone.
                                 {/if}
                             </p>
                         </div>
 
                         <div class="flex gap-2 pt-2">
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                 disabled={form.processing}
                             >
-                                {form.processing ? 'Saving...' : (isEditing ? 'Update Zone' : 'Save Zone')}
+                                {form.processing
+                                    ? 'Saving...'
+                                    : isEditing
+                                      ? 'Update Zone'
+                                      : 'Save Zone'}
                             </button>
                             {#if isEditing}
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onclick={cancelEdit}
                                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
                                 >
@@ -296,41 +350,70 @@
                 </div>
 
                 <!-- Zone List -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                        <h3 class="font-semibold text-gray-800">Existing Zones</h3>
-                        <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{zones.length}</span>
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                >
+                    <div
+                        class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center"
+                    >
+                        <h3 class="font-semibold text-gray-800">
+                            Existing Zones
+                        </h3>
+                        <span
+                            class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full"
+                            >{zones.length}</span
+                        >
                     </div>
                     <div class="max-h-[400px] overflow-y-auto">
                         {#if zones.length === 0}
                             <div class="p-8 text-center text-gray-500">
-                                <Layers class="size-8 mx-auto mb-2 opacity-20" />
+                                <Layers
+                                    class="size-8 mx-auto mb-2 opacity-20"
+                                />
                                 <p class="text-sm">No zones created yet.</p>
                             </div>
                         {:else}
                             <ul class="divide-y divide-gray-100">
                                 {#each zones as zone (zone.id)}
-                                    <li class="p-4 hover:bg-gray-50 transition-colors group">
-                                        <div class="flex justify-between items-center">
+                                    <li
+                                        class="p-4 hover:bg-gray-50 transition-colors group"
+                                    >
+                                        <div
+                                            class="flex justify-between items-center"
+                                        >
                                             <div>
-                                                <h4 class="font-medium text-gray-900 flex items-center gap-2">
+                                                <h4
+                                                    class="font-medium text-gray-900 flex items-center gap-2"
+                                                >
                                                     {zone.name}
                                                     {#if !zone.is_active}
-                                                        <span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded uppercase">Inactive</span>
+                                                        <span
+                                                            class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded uppercase"
+                                                            >Inactive</span
+                                                        >
                                                     {/if}
                                                 </h4>
-                                                <p class="text-xs text-gray-500 mt-1">{zone.coordinates ? zone.coordinates.length : 0} points defined</p>
+                                                <p
+                                                    class="text-xs text-gray-500 mt-1"
+                                                >
+                                                    {zone.coordinates
+                                                        ? zone.coordinates
+                                                              .length
+                                                        : 0} points defined
+                                                </p>
                                             </div>
                                             <div class="flex gap-1">
-                                                <button 
-                                                    onclick={() => editZone(zone)}
+                                                <button
+                                                    onclick={() =>
+                                                        editZone(zone)}
                                                     class="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
                                                     title="Edit"
                                                 >
                                                     <Edit2 class="size-4" />
                                                 </button>
-                                                <button 
-                                                    onclick={() => deleteZone(zone.id)}
+                                                <button
+                                                    onclick={() =>
+                                                        deleteZone(zone.id)}
                                                     class="p-1.5 text-red-600 hover:bg-red-50 rounded"
                                                     title="Delete"
                                                 >
@@ -347,13 +430,17 @@
             </div>
 
             <!-- Map Area -->
-            <div class="lg:col-span-2 h-[600px] lg:h-auto min-h-[600px] relative">
-                <div 
-                    bind:this={mapElement} 
+            <div
+                class="lg:col-span-2 h-[600px] lg:h-auto min-h-[600px] relative"
+            >
+                <div
+                    bind:this={mapElement}
                     class="w-full h-full rounded-xl border border-gray-200 shadow-sm"
                 ></div>
-                
-                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-md border border-white/50 text-xs text-gray-700 max-w-xs">
+
+                <div
+                    class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-md border border-white/50 text-xs text-gray-700 max-w-xs"
+                >
                     <p class="font-semibold mb-1">How to draw:</p>
                     <ol class="list-decimal list-inside space-y-1">
                         <li>Select the polygon tool at the top center.</li>

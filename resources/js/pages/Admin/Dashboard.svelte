@@ -14,12 +14,31 @@
         }).format(amount);
     }
 
-    onMount(() => {
-        // Revenue Trend Chart
-        if (
-            document.getElementById('revenue-chart') &&
-            typeof ApexCharts !== 'undefined'
-        ) {
+    async function ensureApexChartsLoaded(): Promise<void> {
+        if ((window as any).ApexCharts) {
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/apexcharts';
+        script.async = true;
+
+        await new Promise<void>((resolve, reject) => {
+            script.onload = () => resolve();
+            script.onerror = () =>
+                reject(new Error('Failed to load ApexCharts'));
+            document.head.appendChild(script);
+        });
+    }
+
+    function renderCharts() {
+        const ApexCharts = (window as any).ApexCharts;
+
+        if (!ApexCharts) {
+            return;
+        }
+
+        if (document.getElementById('revenue-chart')) {
             const revenueOptions = {
                 chart: {
                     height: 320,
@@ -49,17 +68,14 @@
                 },
                 grid: { borderColor: '#f1f1f1' },
             };
+
             new ApexCharts(
                 document.getElementById('revenue-chart'),
                 revenueOptions,
             ).render();
         }
 
-        // Status Distribution Chart
-        if (
-            document.getElementById('status-chart') &&
-            typeof ApexCharts !== 'undefined'
-        ) {
+        if (document.getElementById('status-chart')) {
             const statusOptions = {
                 chart: {
                     height: 280,
@@ -78,11 +94,17 @@
                     },
                 ],
             };
+
             new ApexCharts(
                 document.getElementById('status-chart'),
                 statusOptions,
             ).render();
         }
+    }
+
+    onMount(async () => {
+        await ensureApexChartsLoaded();
+        renderCharts();
     });
 
     function getStatusBadgeClass(status: string) {
@@ -351,16 +373,23 @@
                                                         <span
                                                             class="avatar-title bg-soft-primary text-primary rounded-circle fs-12"
                                                         >
-                                                            {or.driver.name.charAt(
-                                                                0,
-                                                            )}
+                                                            {(
+                                                                or.driver
+                                                                    .firstname ||
+                                                                or.driver
+                                                                    .name ||
+                                                                '?'
+                                                            ).charAt(0)}
                                                         </span>
                                                     </div>
                                                     <div>
                                                         <span
                                                             class="d-block fw-medium"
                                                             >{or.driver
-                                                                .name}</span
+                                                                .firstname ||
+                                                                or.driver
+                                                                    .name ||
+                                                                'Unassigned'}</span
                                                         >
                                                         <small
                                                             class="text-muted"

@@ -14,52 +14,65 @@ class SettingController extends Controller
 {
     public function general(): Response
     {
-        $setting = Setting::firstOrCreate([], [
-            'business_name' => config('app.name', 'Siwride'),
-        ]);
-
         return Inertia::render('Admin/Settings/General', [
-            'setting' => $setting,
+            'setting' => Setting::values([
+                'business_name' => config('app.name', 'Siwride'),
+                'logo' => null,
+                'favicon' => null,
+                'recaptcha_enabled' => '0',
+                'recaptcha_site_key' => null,
+                'recaptcha_secret_key' => null,
+                'updated_at' => Setting::query()->max('updated_at'),
+            ]),
         ]);
     }
 
     public function updateGeneral(Request $request)
     {
-        $setting = Setting::firstOrCreate([], [
-            'business_name' => config('app.name', 'Siwride'),
-        ]);
-
         $validated = $request->validate([
             'business_name' => ['required', 'string', 'max:255'],
-            'logo' => ['nullable', 'image', 'max:2048'], // 2MB Max
-            'favicon' => ['nullable', 'image', 'mimes:ico,png,jpg,jpeg,svg', 'max:1024'], // 1MB Max
+            'logo' => ['nullable', 'image', 'max:2048'],
+            'favicon' => ['nullable', 'image', 'mimes:ico,png,jpg,jpeg,svg', 'max:1024'],
+            'recaptcha_enabled' => ['required', 'boolean'],
+            'recaptcha_site_key' => ['nullable', 'string', 'max:255'],
+            'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $data = [
-            'business_name' => $validated['business_name'],
-        ];
+        if ($validated['recaptcha_enabled']) {
+            $request->validate([
+                'recaptcha_site_key' => ['required', 'string', 'max:255'],
+                'recaptcha_secret_key' => ['required', 'string', 'max:255'],
+            ]);
+        }
 
+        Setting::setValue('business_name', $validated['business_name']);
+        Setting::setValue('recaptcha_enabled', $validated['recaptcha_enabled'] ? '1' : '0');
+        Setting::setValue('recaptcha_site_key', $validated['recaptcha_site_key'] ?? '');
+        Setting::setValue('recaptcha_secret_key', $validated['recaptcha_secret_key'] ?? '');
+
+        $currentLogo = Setting::getValue('logo');
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($setting->logo) {
-                Storage::disk('public')->delete($setting->logo);
+            if ($currentLogo) {
+                Storage::disk('public')->delete($currentLogo);
             }
-            $data['logo'] = $request->file('logo')->store('settings', 'public');
-            Log::info('New logo stored: '.$data['logo']);
+
+            $logoPath = $request->file('logo')->store('settings', 'public');
+            Setting::setValue('logo', $logoPath);
+            Log::info('New logo stored: '.$logoPath);
         }
 
+        $currentFavicon = Setting::getValue('favicon');
         if ($request->hasFile('favicon')) {
-            // Delete old favicon if exists
-            if ($setting->favicon) {
-                Storage::disk('public')->delete($setting->favicon);
+            if ($currentFavicon) {
+                Storage::disk('public')->delete($currentFavicon);
             }
-            $data['favicon'] = $request->file('favicon')->store('settings', 'public');
-            Log::info('New favicon stored: '.$data['favicon']);
+
+            $faviconPath = $request->file('favicon')->store('settings', 'public');
+            Setting::setValue('favicon', $faviconPath);
+            Log::info('New favicon stored: '.$faviconPath);
         }
 
-        $setting->update($data);
-
-        Log::info('Settings updated for business: '.$setting->business_name);
+        Log::info('Settings updated for business: '.$validated['business_name']);
 
         return redirect()->back()->with('success', 'Settings updated successfully.');
     }
