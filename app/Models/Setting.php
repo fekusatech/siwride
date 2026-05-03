@@ -38,9 +38,17 @@ class Setting extends Model
 
     public static function values(array $defaults = []): array
     {
-        return array_merge(
+        $values = array_merge(
             $defaults,
             static::query()->pluck('setting_value', 'setting_key')->toArray()
         );
+
+        foreach (['logo', 'favicon'] as $key) {
+            if (in_array($values[$key] ?? null, ['0', 0, 'false', false], true)) {
+                $values[$key] = null;
+            }
+        }
+
+        return $values;
     }
 }
