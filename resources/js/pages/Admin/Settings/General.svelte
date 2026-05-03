@@ -1,7 +1,7 @@
 <script lang="ts">
     import AdminLayout from '@/layouts/AdminLayout.svelte';
     import AppHead from '@/components/AppHead.svelte';
-    import { useForm, page } from '@inertiajs/svelte';
+    import { useForm, page, router } from '@inertiajs/svelte';
     import { fade } from 'svelte/transition';
 
     let { setting } = $props();
@@ -56,7 +56,15 @@
 
     function submit(e: Event) {
         e.preventDefault();
-        form.post('/admin/settings/general', {
+
+        const currentForm = e.currentTarget as HTMLFormElement;
+        const formData = new FormData(currentForm);
+        formData.set('business_name', form.business_name);
+        formData.set('recaptcha_enabled', form.recaptcha_enabled ? '1' : '0');
+        formData.set('recaptcha_site_key', form.recaptcha_site_key);
+        formData.set('recaptcha_secret_key', form.recaptcha_secret_key);
+
+        router.post('/admin/settings/general', formData, {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
@@ -136,6 +144,7 @@
                                     <input
                                         type="text"
                                         id="business_name"
+                                        name="business_name"
                                         class="form-control"
                                         bind:value={form.business_name}
                                         placeholder="Enter your business name"
@@ -188,6 +197,7 @@
                                     <div class="flex-grow-1">
                                         <input
                                             id="logo_input"
+                                            name="logo"
                                             type="file"
                                             class="form-control mb-2"
                                             accept="image/*"
@@ -239,6 +249,7 @@
                                     <div class="flex-grow-1">
                                         <input
                                             id="favicon_input"
+                                            name="favicon"
                                             type="file"
                                             class="form-control mb-2"
                                             accept=".ico,.png,.jpg,.jpeg,.svg"
@@ -276,6 +287,7 @@
                                     <div class="form-check form-switch m-0">
                                         <input
                                             id="recaptcha_enabled"
+                                            name="recaptcha_enabled"
                                             type="checkbox"
                                             class="form-check-input"
                                             bind:checked={
@@ -294,6 +306,7 @@
                                         >
                                         <input
                                             id="recaptcha_site_key"
+                                            name="recaptcha_site_key"
                                             type="text"
                                             class="form-control"
                                             bind:value={form.recaptcha_site_key}
@@ -313,6 +326,7 @@
                                         >
                                         <input
                                             id="recaptcha_secret_key"
+                                            name="recaptcha_secret_key"
                                             type="text"
                                             class="form-control"
                                             bind:value={
