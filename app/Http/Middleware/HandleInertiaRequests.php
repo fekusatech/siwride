@@ -58,6 +58,7 @@ class HandleInertiaRequests extends Middleware
                 'updated_at' => Setting::query()->max('updated_at'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'google_maps_api_key' => config('services.google.maps_api_key'),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

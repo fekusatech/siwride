@@ -19,7 +19,7 @@ class LocationSearchController extends Controller
      */
     private array $baliLocations = [
         // Airports
-        ['name' => 'Ngurah Rai International Airport', 'address' => 'Jl. Airport Ngurah Rai, Tuban, Badung, Bali', 'lat' => -8.7488, 'lng' => 115.1670],
+        ['name' => 'Ngurah Rai International Airport (DPS)', 'address' => 'Jl. Airport Ngurah Rai, Tuban, Badung, Bali', 'lat' => -8.7488, 'lng' => 115.1670],
         // Kuta
         ['name' => 'Kuta Beach', 'address' => 'Kuta, Badung, Bali', 'lat' => -8.7184, 'lng' => 115.1686],
         ['name' => 'Hard Rock Hotel Bali', 'address' => 'Kuta, Badung, Bali', 'lat' => -8.7186, 'lng' => 115.1706],

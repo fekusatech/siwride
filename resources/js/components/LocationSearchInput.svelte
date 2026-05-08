@@ -1,5 +1,9 @@
 <script lang="ts">
     import { search } from '@/actions/App/Http/Controllers/LocationSearchController';
+    import { page } from '@inertiajs/svelte';
+    import { onMount } from 'svelte';
+
+    declare const google: any;
 
     interface Suggestion {
         name: string;
@@ -35,6 +39,9 @@
         onchange,
     }: Props = $props();
 
+    const googleMapsApiKey = $derived((page.props as any).google_maps_api_key);
+    let autocompleteService: any = null;
+
     let suggestions = $state<Suggestion[]>([]);
     let isOpen = $state(false);
     let isLoading = $state(false);
@@ -42,6 +49,41 @@
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     let inputEl: HTMLInputElement | null = null;
     let containerEl: HTMLDivElement | null = null;
+
+    function initGoogleMaps() {
+        if (!googleMapsApiKey) return;
+
+        const scriptExists = document.querySelector(
+            'script[src*="maps.googleapis.com"]',
+        );
+
+        if (!scriptExists) {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                if (typeof google !== 'undefined') {
+                    autocompleteService =
+                        new google.maps.places.AutocompleteService();
+                }
+            };
+            document.head.appendChild(script);
+        } else {
+            if (
+                typeof google !== 'undefined' &&
+                google.maps &&
+                google.maps.places
+            ) {
+                autocompleteService =
+                    new google.maps.places.AutocompleteService();
+            }
+        }
+    }
+
+    onMount(() => {
+        initGoogleMaps();
+    });
 
     function handleInput(e: Event) {
         const target = e.target as HTMLInputElement;
@@ -61,6 +103,48 @@
 
     async function fetchSuggestions(q: string) {
         isLoading = true;
+
+        // Try Google Maps AutocompleteService first if available (same as admin)
+        if (autocompleteService) {
+            const baliBounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(-8.9472, 114.4173),
+                new google.maps.LatLng(-8.0583, 115.7118),
+            );
+
+            autocompleteService.getPlacePredictions(
+                {
+                    input: q,
+                    bounds: baliBounds,
+                    componentRestrictions: { country: 'id' },
+                },
+                (predictions: any, status: any) => {
+                    if (
+                        status === google.maps.places.PlacesServiceStatus.OK &&
+                        predictions
+                    ) {
+                        suggestions = predictions.map((p: any) => ({
+                            name:
+                                p.structured_formatting?.main_text ||
+                                p.description,
+                            address: p.description,
+                            place_id: p.place_id,
+                        }));
+                        isOpen = suggestions.length > 0;
+                        activeIndex = -1;
+                        isLoading = false;
+                    } else {
+                        // Fallback to backend proxy if Google fails
+                        fetchFromBackend(q);
+                    }
+                },
+            );
+        } else {
+            // Fallback to backend proxy if Google script not loaded yet
+            await fetchFromBackend(q);
+        }
+    }
+
+    async function fetchFromBackend(q: string) {
         try {
             const url = search.url({ query: { q } });
             const res = await fetch(url, {
