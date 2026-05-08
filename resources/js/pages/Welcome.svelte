@@ -1274,6 +1274,11 @@
         visibility: visible;
     }
 
+    /* Ensure search dropdowns are not clipped */
+    :global(.banner-form, .banner-form__wrapper, .banner-form__control) {
+        overflow: visible !important;
+    }
+
     @media (max-width: 1599px) {
         :global(.hero-one__image-two),
         :global(.hero-one__image-four) {

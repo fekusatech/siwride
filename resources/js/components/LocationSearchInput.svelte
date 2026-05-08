@@ -1,3 +1,9 @@
+<script lang="ts" module>
+    // Global shared service to avoid race conditions between multiple instances
+    let sharedAutocompleteService: any = null;
+    let isScriptLoading = false;
+</script>
+
 <script lang="ts">
     import { search } from '@/actions/App/Http/Controllers/LocationSearchController';
     import { page } from '@inertiajs/svelte';
@@ -40,7 +46,6 @@
     }: Props = $props();
 
     const googleMapsApiKey = $derived((page.props as any).google_maps_api_key);
-    let autocompleteService: any = null;
 
     let suggestions = $state<Suggestion[]>([]);
     let isOpen = $state(false);
@@ -53,31 +58,38 @@
     function initGoogleMaps() {
         if (!googleMapsApiKey) return;
 
+        // If already initialized, nothing to do
+        if (sharedAutocompleteService) return;
+
         const scriptExists = document.querySelector(
             'script[src*="maps.googleapis.com"]',
         );
 
-        if (!scriptExists) {
+        if (!scriptExists && !isScriptLoading) {
+            isScriptLoading = true;
             const script = document.createElement('script');
             script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
             script.async = true;
             script.defer = true;
             script.onload = () => {
-                if (typeof google !== 'undefined') {
-                    autocompleteService =
+                isScriptLoading = false;
+                if (
+                    typeof google !== 'undefined' &&
+                    google.maps &&
+                    google.maps.places
+                ) {
+                    sharedAutocompleteService =
                         new google.maps.places.AutocompleteService();
                 }
             };
             document.head.appendChild(script);
-        } else {
-            if (
-                typeof google !== 'undefined' &&
-                google.maps &&
-                google.maps.places
-            ) {
-                autocompleteService =
-                    new google.maps.places.AutocompleteService();
-            }
+        } else if (
+            typeof google !== 'undefined' &&
+            google.maps &&
+            google.maps.places
+        ) {
+            sharedAutocompleteService =
+                new google.maps.places.AutocompleteService();
         }
     }
 
@@ -104,14 +116,25 @@
     async function fetchSuggestions(q: string) {
         isLoading = true;
 
-        // Try Google Maps AutocompleteService first if available (same as admin)
-        if (autocompleteService) {
+        // Try to initialize if script loaded in the meantime
+        if (
+            !sharedAutocompleteService &&
+            typeof google !== 'undefined' &&
+            google.maps &&
+            google.maps.places
+        ) {
+            sharedAutocompleteService =
+                new google.maps.places.AutocompleteService();
+        }
+
+        // Try Google Maps AutocompleteService first if available
+        if (sharedAutocompleteService) {
             const baliBounds = new google.maps.LatLngBounds(
                 new google.maps.LatLng(-8.9472, 114.4173),
                 new google.maps.LatLng(-8.0583, 115.7118),
             );
 
-            autocompleteService.getPlacePredictions(
+            sharedAutocompleteService.getPlacePredictions(
                 {
                     input: q,
                     bounds: baliBounds,
@@ -132,8 +155,14 @@
                         isOpen = suggestions.length > 0;
                         activeIndex = -1;
                         isLoading = false;
+                    } else if (
+                        status ===
+                        google.maps.places.PlacesServiceStatus.ZERO_RESULTS
+                    ) {
+                        // If Google returns nothing, try backend fallback
+                        fetchFromBackend(q);
                     } else {
-                        // Fallback to backend proxy if Google fails
+                        // On other errors (over query limit, etc), also try backend
                         fetchFromBackend(q);
                     }
                 },
