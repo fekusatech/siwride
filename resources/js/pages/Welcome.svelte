@@ -1278,6 +1278,11 @@
     :global(.banner-form, .banner-form__wrapper, .banner-form__control) {
         overflow: visible !important;
     }
+    
+    /* Fix stacking context so active input's dropdown goes over subsequent columns */
+    :global(.banner-form__control:focus-within) {
+        z-index: 999 !important;
+    }
 
     @media (max-width: 1599px) {
         :global(.hero-one__image-two),
