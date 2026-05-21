@@ -368,36 +368,7 @@
         </div>
     </section>
 
-    <!-- Booking Tracker Section -->
-    <section
-        class="booking-tracker-section"
-        style="padding: 40px 0; background: linear-gradient(135deg, var(--travhub-base, #e52029) 0%, #c41820 100%);"
-    >
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-5 mb-3 mb-lg-0">
-                    <div style="color: #fff;">
-                        <h4
-                            style="font-size: 22px; font-weight: 700; margin-bottom: 5px;"
-                        >
-                            <i
-                                class="fas fa-search-location"
-                                style="margin-right: 10px;"
-                            ></i>
-                            Track Your Booking
-                        </h4>
-                        <p style="font-size: 14px; opacity: 0.9; margin: 0;">
-                            Already have a booking? Enter your code to check
-                            status
-                        </p>
-                    </div>
-                </div>
-                <div class="col-lg-7">
-                    <BookingSearch variant="compact" />
-                </div>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Booking Form Section -->
     <section
@@ -1105,6 +1076,36 @@
                             {/if}
                         </form>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Booking Tracker Section -->
+    <section
+        class="booking-tracker-section"
+        style="padding: 40px 0; background: linear-gradient(135deg, var(--travhub-base, #e52029) 0%, #c41820 100%);"
+    >
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-3 mb-lg-0">
+                    <div style="color: #fff;">
+                        <h4
+                            style="font-size: 22px; font-weight: 700; margin-bottom: 5px;"
+                        >
+                            <i
+                                class="fas fa-search-location"
+                                style="margin-right: 10px;"
+                            ></i>
+                            Track Your Booking
+                        </h4>
+                        <p style="font-size: 14px; opacity: 0.9; margin: 0;">
+                            Already have a booking? Enter your code to check
+                            status
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <BookingSearch variant="compact" />
                 </div>
             </div>
         </div>
