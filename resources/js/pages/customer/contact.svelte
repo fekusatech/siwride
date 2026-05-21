@@ -56,7 +56,7 @@
                         <i class="fa fa-map-marker-alt"></i>
                     </div>
                     <h3 class="contact-info__title">Address</h3>
-                    <p class="contact-info__text">Bali, Indonesia</p>
+                    <p class="contact-info__text">Jl. Mahendradatta selatan GG. Robby William no 99, Denpasar Barat, Bali</p>
                 </li>
                 <li class="contact-info__item">
                     <div class="contact-info__icon">
@@ -64,7 +64,7 @@
                     </div>
                     <h3 class="contact-info__title">Call</h3>
                     <p class="contact-info__text">
-                        <a href="tel:+62812345678">+62 812-3456-78</a>
+                        <a href="tel:+62812345678">+62 811-3810-5600</a>
                     </p>
                 </li>
                 <li class="contact-info__item">

@@ -4,7 +4,7 @@
             <ul class="list-unstyled topbar-one__info">
                 <li class="topbar-one__info__item">
                     <i class="flaticon-pin-1 topbar-one__info__icon"></i>
-                    Bali, Indonesia
+                    Jl. Mahendradatta selatan GG. Robby William no 99, Denpasar Barat, Bali
                 </li>
                 <li class="topbar-one__info__item">
                     <i class="flaticon-mail topbar-one__info__icon"></i>
