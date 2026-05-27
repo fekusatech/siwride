@@ -169,6 +169,13 @@
             </li>
 
             <li class="side-nav-item">
+                <Link href="/admin/vehicle-categories" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-category"></i></span>
+                    <span class="menu-text"> Vehicle Categories </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
                 <Link href="/admin/zones" class="side-nav-link">
                     <span class="menu-icon"><i class="ti ti-map-pin"></i></span>
                     <span class="menu-text"> Zones </span>

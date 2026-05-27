@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Driver;
 use App\Models\Vehicle;
+use App\Models\VehicleCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -42,6 +43,7 @@ class VehicleController extends Controller
     {
         return Inertia::render('Admin/Vehicles/Create', [
             'drivers' => Driver::all(),
+            'vehicleCategories' => VehicleCategory::all(),
         ]);
     }
 
@@ -82,6 +84,7 @@ class VehicleController extends Controller
         return Inertia::render('Admin/Vehicles/Create', [
             'vehicle' => $vehicle,
             'drivers' => Driver::all(),
+            'vehicleCategories' => VehicleCategory::all(),
         ]);
     }
 

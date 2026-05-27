@@ -3,7 +3,7 @@
     import AppHead from '@/components/AppHead.svelte';
     import { useForm, Link } from '@inertiajs/svelte';
 
-    let { vehicle = null, drivers = [] } = $props();
+    let { vehicle = null, drivers = [], vehicleCategories = [] } = $props();
 
     // svelte-ignore state_referenced_locally
     const form = useForm({
@@ -145,10 +145,9 @@
                                     disabled={form.processing}
                                 >
                                     <option value="">Select Type</option>
-                                    <option value="Sedan">Sedan</option>
-                                    <option value="SUV">SUV</option>
-                                    <option value="MPV">MPV</option>
-                                    <option value="Van">Van</option>
+                                    {#each vehicleCategories as category}
+                                        <option value={category.vehicle_type}>{category.title}</option>
+                                    {/each}
                                 </select>
                                 {#if form.errors.type}<div
                                         class="text-danger small mt-1"

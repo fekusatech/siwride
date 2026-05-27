@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Driver;
 use App\Models\User;
+use App\Models\VehicleCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -78,6 +79,7 @@ class DriverController extends Controller
     {
         return Inertia::render('Admin/Drivers/Create', [
             'default_nid' => $this->generateUniqueNid(),
+            'vehicleCategories' => VehicleCategory::all(),
         ]);
     }
 
@@ -171,6 +173,7 @@ class DriverController extends Controller
         return Inertia::render('Admin/Drivers/Create', [
             'driver' => $driver,
             'default_nid' => $this->generateUniqueNid(),
+            'vehicleCategories' => VehicleCategory::all(),
         ]);
     }
 

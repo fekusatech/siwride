@@ -3,7 +3,7 @@
     import AppHead from '@/components/AppHead.svelte';
     import { useForm, Link } from '@inertiajs/svelte';
 
-    let { driver = null, default_nid = '' } = $props();
+    let { driver = null, default_nid = '', vehicleCategories = [] } = $props();
 
     // svelte-ignore state_referenced_locally
     const form = useForm({
@@ -564,19 +564,10 @@
                                                                 form.v_type
                                                             }
                                                         >
-                                                            <option
-                                                                value="Sedan"
-                                                                >Sedan</option
-                                                            >
-                                                            <option value="SUV"
-                                                                >SUV</option
-                                                            >
-                                                            <option value="MPV"
-                                                                >MPV</option
-                                                            >
-                                                            <option value="Van"
-                                                                >Van</option
-                                                            >
+                                                            <option value="">Select Type</option>
+                                                            {#each vehicleCategories as category}
+                                                                <option value={category.vehicle_type}>{category.title}</option>
+                                                            {/each}
                                                         </select>
                                                         {#if form.errors.v_type}<div
                                                                 class="text-danger small mt-1"

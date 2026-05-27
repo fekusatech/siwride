@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\VehicleCategory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,7 +24,7 @@ class StoreCustomerOrderRequest extends FormRequest
             'date' => ['required', 'date', 'after_or_equal:today'],
             'time' => ['required', 'string', $this->validateTime()],
             'passengers' => ['required', 'integer', 'min:1', 'max:50'],
-            'vehicle_type' => ['required', 'string', Rule::in(['economy', 'premium', 'van', 'bus', 'special'])],
+            'vehicle_type' => ['required', 'string', Rule::in(VehicleCategory::pluck('vehicle_type')->unique()->toArray())],
             'notes' => ['nullable', 'string', 'max:1000'],
             'create_account' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed', 'required_if_accepted:create_account'],
