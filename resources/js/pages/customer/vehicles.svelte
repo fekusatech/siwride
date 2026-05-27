@@ -81,7 +81,7 @@
                             >
                                 {vehicle.title}
                             </h4>
-                            <p class="mb-4" style="color: #666; font-size: 15px;">
+                            <p class="mb-4 vehicle-description" style="color: #666; font-size: 15px;">
                                 {vehicle.description}
                             </p>
                             <a
@@ -120,5 +120,14 @@
         transform: translateY(-10px);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         border-color: var(--travhub-base);
+    }
+
+    .vehicle-description {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-height: 44px;
     }
 </style>

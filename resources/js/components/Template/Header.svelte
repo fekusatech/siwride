@@ -54,6 +54,8 @@
         }
         return currentPath === href || currentPath.startsWith(href + '/');
     }
+
+    const vehicleCategories = $derived((page.props.vehicleCategories as any[]) || []);
 </script>
 
 <header
@@ -111,54 +113,11 @@
                     <li class="dropdown" class:current={isActive('/vehicles')}>
                         <Link href="/vehicles">Vehicles</Link>
                         <ul>
-                            <li
-                                class:current={isActive(
-                                    '/vehicles/standard-cars',
-                                    true,
-                                )}
-                            >
-                                <Link href="/vehicles/standard-cars"
-                                    >Standard Cars</Link
-                                >
-                            </li>
-                            <li
-                                class:current={isActive(
-                                    '/vehicles/premium-cars',
-                                    true,
-                                )}
-                            >
-                                <Link href="/vehicles/premium-cars"
-                                    >Premium Cars</Link
-                                >
-                            </li>
-                            <li
-                                class:current={isActive(
-                                    '/vehicles/vans-minibuses',
-                                    true,
-                                )}
-                            >
-                                <Link href="/vehicles/vans-minibuses"
-                                    >Vans/Minibuses</Link
-                                >
-                            </li>
-                            <li
-                                class:current={isActive(
-                                    '/vehicles/buses',
-                                    true,
-                                )}
-                            >
-                                <Link href="/vehicles/buses">Buses</Link>
-                            </li>
-                            <li
-                                class:current={isActive(
-                                    '/vehicles/special-vehicles',
-                                    true,
-                                )}
-                            >
-                                <Link href="/vehicles/special-vehicles"
-                                    >Special Vehicles</Link
-                                >
-                            </li>
+                            {#each vehicleCategories as category}
+                                <li class:current={isActive(`/vehicles/${category.slug}`, true)}>
+                                    <Link href={`/vehicles/${category.slug}`}>{category.title}</Link>
+                                </li>
+                            {/each}
                         </ul>
                     </li>
                     <li
@@ -301,60 +260,15 @@
                         Vehicles <i class="fa fa-angle-down"></i>
                     </a>
                     <ul>
-                        <li
-                            class:current={isActive(
-                                '/vehicles/standard-cars',
-                                true,
-                            )}
-                        >
-                            <a
-                                href="/vehicles/standard-cars"
-                                onclick={() => (mobileNavOpen = false)}
-                                >Standard Cars</a
-                            >
-                        </li>
-                        <li
-                            class:current={isActive(
-                                '/vehicles/premium-cars',
-                                true,
-                            )}
-                        >
-                            <a
-                                href="/vehicles/premium-cars"
-                                onclick={() => (mobileNavOpen = false)}
-                                >Premium Cars</a
-                            >
-                        </li>
-                        <li
-                            class:current={isActive(
-                                '/vehicles/vans-minibuses',
-                                true,
-                            )}
-                        >
-                            <a
-                                href="/vehicles/vans-minibuses"
-                                onclick={() => (mobileNavOpen = false)}
-                                >Vans/Minibuses</a
-                            >
-                        </li>
-                        <li class:current={isActive('/vehicles/buses', true)}>
-                            <a
-                                href="/vehicles/buses"
-                                onclick={() => (mobileNavOpen = false)}>Buses</a
-                            >
-                        </li>
-                        <li
-                            class:current={isActive(
-                                '/vehicles/special-vehicles',
-                                true,
-                            )}
-                        >
-                            <a
-                                href="/vehicles/special-vehicles"
-                                onclick={() => (mobileNavOpen = false)}
-                                >Special Vehicles</a
-                            >
-                        </li>
+                        {#each vehicleCategories as category}
+                            <li class:current={isActive(`/vehicles/${category.slug}`, true)}>
+                                <a
+                                    href={`/vehicles/${category.slug}`}
+                                    onclick={() => (mobileNavOpen = false)}
+                                    >{category.title}</a
+                                >
+                            </li>
+                        {/each}
                     </ul>
                 </li>
                 <li

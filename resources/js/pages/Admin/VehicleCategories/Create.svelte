@@ -107,7 +107,7 @@
                                     class="form-control"
                                     bind:value={form.capacity}
                                     disabled={form.processing}
-                                    maxlength="100"
+                                    maxlength="50"
                                     placeholder="e.g. Up to 4 passengers"
                                 />
                                 {#if form.errors.capacity}<div
@@ -130,7 +130,7 @@
                                     class="form-control"
                                     bind:value={form.examples}
                                     disabled={form.processing}
-                                    maxlength="255"
+                                    maxlength="150"
                                     placeholder="e.g. Toyota Avanza, Suzuki Ertiga"
                                 />
                                 {#if form.errors.examples}<div
@@ -153,7 +153,7 @@
                                     rows="4"
                                     bind:value={form.description}
                                     disabled={form.processing}
-                                    maxlength="1000"
+                                    maxlength="255"
                                     placeholder="Enter description text for this vehicle category..."
                                 ></textarea>
                                 {#if form.errors.description}<div
