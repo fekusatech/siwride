@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCustomerOrderRequest;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\VehicleCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class CustomerOrderController extends Controller
                 'passengers' => $request->input('passengers', '1'),
                 'vehicle' => $request->input('vehicle', ''),
             ],
+            'vehicleCategories' => VehicleCategory::all(),
         ]);
     }
 

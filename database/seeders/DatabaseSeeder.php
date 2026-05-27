@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
+            VehicleCategorySeeder::class,
             DriverSeeder::class,
             OrderSeeder::class,
             ZoneSeeder::class,

@@ -11,8 +11,8 @@
     import flatpickr from 'flatpickr';
     import 'flatpickr/dist/flatpickr.min.css';
 
-    // Receive prefill data from controller
-    let { prefill } = $props<{
+    // Receive prefill and vehicleCategories data from controller
+    let { prefill, vehicleCategories = [] } = $props<{
         prefill: {
             pickup: string;
             dropoff: string;
@@ -20,6 +20,7 @@
             passengers: string;
             vehicle: string;
         };
+        vehicleCategories: any[];
     }>();
 
     const form = useForm({
@@ -297,29 +298,54 @@
 
     // Custom Select State
     let isVehicleDropdownOpen = $state(false);
-    const vehiclesList = [
-        {
-            value: 'economy',
-            label: 'Economy / Standard Hatchback (Up to 4 Passengers)',
-            icon: 'fa-car',
-        },
-        {
-            value: 'premium',
-            label: 'Premium SUV / Sedan (Up to 5 Passengers)',
-            icon: 'fa-car-side',
-        },
-        {
-            value: 'van',
-            label: 'Van / Minibus (Up to 14 Passengers)',
-            icon: 'fa-shuttle-van',
-        },
-        {
-            value: 'bus',
-            label: 'Mid/Large Bus (Up to 30+ Passengers)',
-            icon: 'fa-bus',
-        },
-        { value: 'special', label: 'Other / Custom Request', icon: 'fa-star' },
-    ];
+    let vehiclesList = $derived(
+        vehicleCategories.length > 0
+            ? vehicleCategories.map((category) => {
+                  let icon = 'fa-star';
+                  if (category.vehicle_type === 'economy') {
+                      icon = 'fa-car';
+                  } else if (category.vehicle_type === 'premium') {
+                      icon = 'fa-car-side';
+                  } else if (category.vehicle_type === 'van') {
+                      icon = 'fa-shuttle-van';
+                  } else if (category.vehicle_type === 'bus') {
+                      icon = 'fa-bus';
+                  }
+
+                  return {
+                      value: category.vehicle_type,
+                      label: `${category.title} (${category.capacity})`,
+                      icon: icon,
+                  };
+              })
+            : [
+                  {
+                      value: 'economy',
+                      label: 'Economy / Standard Hatchback (Up to 4 Passengers)',
+                      icon: 'fa-car',
+                  },
+                  {
+                      value: 'premium',
+                      label: 'Premium SUV / Sedan (Up to 5 Passengers)',
+                      icon: 'fa-car-side',
+                  },
+                  {
+                      value: 'van',
+                      label: 'Van / Minibus (Up to 14 Passengers)',
+                      icon: 'fa-shuttle-van',
+                  },
+                  {
+                      value: 'bus',
+                      label: 'Mid/Large Bus (Up to 30+ Passengers)',
+                      icon: 'fa-bus',
+                  },
+                  {
+                      value: 'special',
+                      label: 'Other / Custom Request',
+                      icon: 'fa-star',
+                  },
+              ]
+    );
 
     let selectedVehicle = $derived(
         vehiclesList.find((v) => v.value === form.vehicle_type),

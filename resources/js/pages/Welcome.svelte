@@ -9,38 +9,9 @@
 
     let passengerCount = $state(1);
 
-    const vehicleCategories = [
-        {
-            name: 'Standard Cars',
-            passengers: 'Up to 4 passengers',
-            img: '/assets/images/vehicles/sedan.png',
-            slug: 'standard-cars',
-        },
-        {
-            name: 'Premium Cars',
-            passengers: 'Up to 4 passengers',
-            img: '/assets/images/vehicles/business.png',
-            slug: 'premium-cars',
-        },
-        {
-            name: 'Vans & Minibuses',
-            passengers: 'Up to 15 passengers',
-            img: '/assets/images/vehicles/minibus.png',
-            slug: 'vans-minibuses',
-        },
-        {
-            name: 'Buses',
-            passengers: 'Up to 50 passengers',
-            img: '/assets/images/vehicles/bus.png',
-            slug: 'buses',
-        },
-        {
-            name: 'Special Vehicles',
-            passengers: 'Varies by vehicle type',
-            img: '/assets/images/vehicles/electric.png',
-            slug: 'special-vehicles',
-        },
-    ];
+    let { vehicleCategories = [] } = $props<{
+        vehicleCategories: any[];
+    }>();
 
     const ourServices = [
         {
@@ -789,8 +760,8 @@
                                 style="height: 220px; display: flex; align-items: center; justify-content: center; background: #f9f9f9; overflow: hidden; padding: 20px;"
                             >
                                 <img
-                                    src={vehicle.img}
-                                    alt={vehicle.name}
+                                    src={vehicle.image_url}
+                                    alt={vehicle.title}
                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; transition: transform 0.5s ease;"
                                     role="presentation"
                                     onmouseenter={(e) =>
@@ -811,7 +782,7 @@
                                     <a
                                         href={`/vehicles/${vehicle.slug}`}
                                         style="color: inherit; text-decoration: none;"
-                                        >{vehicle.name}</a
+                                        >{vehicle.title}</a
                                     >
                                 </h4>
                                 <div
@@ -824,7 +795,7 @@
                                             class="icon-traveler-with-a-suitcase-1"
                                             style="margin-right: 8px; font-size: 18px; color: var(--travhub-base, #e52029);"
                                         ></i>
-                                        {vehicle.passengers}
+                                        {vehicle.capacity}
                                     </div>
                                     <a
                                         href={`/vehicles/${vehicle.slug}`}

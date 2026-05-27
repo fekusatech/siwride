@@ -4,21 +4,16 @@
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
-    import {
-        getVehicleInfo,
-        isValidVehicleSlug,
-        type VehicleSlug,
-    } from './slugs.js';
 
-    $: slug = page.url.split('/').pop() as VehicleSlug;
-    $: vehicleInfo = getVehicleInfo(slug);
-    $: isValid = isValidVehicleSlug(slug);
+    let { vehicleCategory } = $props<{
+        vehicleCategory: any;
+    }>();
+
+    let slug = $derived(page.url.split('/').pop());
+    let isValid = $derived(!!vehicleCategory);
 
     // Determine page title based on vehicle info
-    $: pageTitle =
-        vehicleInfo?.title ||
-        slug?.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase()) ||
-        'Vehicles';
+    let pageTitle = $derived(vehicleCategory?.title || 'Vehicles');
 </script>
 
 <AppHead title="{pageTitle} - Siwride" />
@@ -37,23 +32,23 @@
         <div class="page-header__shape-two"></div>
         <div class="container">
             <h2 class="page-header__title bw-split-in-right">
-                {vehicleInfo?.title || 'Vehicles'}
+                {vehicleCategory?.title || 'Vehicles'}
             </h2>
             <ul class="travhub-breadcrumb list-unstyled">
                 <li><a href="/">Home</a></li>
                 <li><a href="/vehicles">Vehicles</a></li>
-                <li><span>{vehicleInfo?.title || 'Details'}</span></li>
+                <li><span>{vehicleCategory?.title || 'Details'}</span></li>
             </ul>
         </div>
     </section>
 
     <!-- Vehicle Category Content -->
-    {#if isValid && vehicleInfo}
+    {#if isValid && vehicleCategory}
         <section class="about-section pt-120 pb-120">
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-lg-5 wow fadeInLeft" data-wow-delay="100ms">
-                        <div class="sec-title mb-4">
+                        <div class="sec-title mb-2" style="padding-bottom: 0px !important;">
                             <div class="sec-title__tagline bw-split-in-right">
                                 Vehicle Specifications<img
                                     src="/assets/images/shapes/sec-title-shape.png"
@@ -61,11 +56,11 @@
                                 />
                             </div>
                             <h3 class="sec-title__title bw-split-in-left">
-                                {vehicleInfo.title} Details
+                                {vehicleCategory.title} Details
                             </h3>
                         </div>
-                        <p class="mb-5" style="color: #666; font-size: 18px;">
-                            {vehicleInfo.description ||
+                        <p class="mb-1" style="color: #666; font-size: 18px;">
+                            {vehicleCategory.description ||
                                 'Find the perfect vehicle for your journey'}
                         </p>
 
@@ -89,7 +84,7 @@
                                         Capacity
                                     </h5>
                                     <p class="why-choose-one__box__text">
-                                        {vehicleInfo.capacity}
+                                        {vehicleCategory.capacity}
                                     </p>
                                 </div>
                             </div>
@@ -113,7 +108,7 @@
                                         Examples
                                     </h5>
                                     <p class="why-choose-one__box__text">
-                                        {vehicleInfo.examples}
+                                        {vehicleCategory.examples}
                                     </p>
                                 </div>
                             </div>
@@ -129,8 +124,8 @@
                             style="position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.1);"
                         >
                             <img
-                                src={vehicleInfo.img}
-                                alt={vehicleInfo.title}
+                                src={vehicleCategory.image_url}
+                                alt={vehicleCategory.title}
                                 style="width: 100%; height: 500px; object-fit: cover;"
                             />
                             <div
@@ -139,12 +134,12 @@
                                 <h3
                                     style="color: white; font-size: 28px; font-weight: 700; margin-bottom: 5px;"
                                 >
-                                    {vehicleInfo.title}
+                                    {vehicleCategory.title}
                                 </h3>
                                 <p
                                     style="color: rgba(255,255,255,0.9); margin: 0;"
                                 >
-                                    Professional {vehicleInfo.title.toLowerCase()}
+                                    Professional {vehicleCategory.title.toLowerCase()}
                                     for your comfortable journey
                                 </p>
                             </div>
@@ -159,7 +154,7 @@
                         data-wow-delay="300ms"
                     >
                         <a
-                            href="/booking?vehicle={vehicleInfo.vehicleType}"
+                            href="/booking?vehicle={vehicleCategory.vehicle_type}"
                             class="travhub-btn mt-2"
                             style="margin-right: 15px;"
                         >

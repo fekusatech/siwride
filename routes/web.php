@@ -1,13 +1,18 @@
 <?php
 
 use App\Http\Controllers\Auth\RegisteredDriverController;
+use App\Http\Controllers\CustomerVehicleController;
+use App\Models\VehicleCategory;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
-Route::inertia('/', 'Welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+Route::get('/', function () {
+    return Inertia::render('Welcome', [
+        'canRegister' => Features::enabled(Features::registration()),
+        'vehicleCategories' => VehicleCategory::all(),
+    ]);
+})->name('home');
 
 Route::get('/dokumentasi', function () {
     return view('api-docs');
@@ -43,8 +48,8 @@ Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name(
 Route::inertia('/about', 'customer/about')->name('about');
 Route::inertia('/services', 'customer/services')->name('services');
 Route::inertia('/area-coverage', 'customer/area-coverage')->name('area-coverage');
-Route::inertia('/vehicles', 'customer/vehicles')->name('vehicles');
-Route::inertia('/vehicles/{slug}', 'customer/vehicles/[slug]')->name('vehicles.slug');
+Route::get('/vehicles', [CustomerVehicleController::class, 'index'])->name('vehicles');
+Route::get('/vehicles/{slug}', [CustomerVehicleController::class, 'show'])->name('vehicles.slug');
 Route::inertia('/testimonials', 'customer/testimonials')->name('testimonials');
 Route::inertia('/faq', 'customer/faq')->name('faq');
 Route::inertia('/terms', 'customer/terms')->name('terms');
