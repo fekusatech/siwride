@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class VehicleCategory extends Model
 {
+    use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -16,6 +19,10 @@ class VehicleCategory extends Model
         'title',
         'description',
         'capacity',
+        'passenger_capacity',
+        'luggage_capacity',
+        'advantages',
+        'base_price',
         'examples',
         'image',
         'vehicle_type',
@@ -29,6 +36,21 @@ class VehicleCategory extends Model
     protected $appends = [
         'image_url',
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'advantages' => 'array',
+            'base_price' => 'decimal:2',
+            'passenger_capacity' => 'integer',
+            'luggage_capacity' => 'integer',
+        ];
+    }
 
     /**
      * Get the full URL path for the vehicle category's image.

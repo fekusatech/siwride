@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\VehicleCategory;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreCustomerOrderRequest extends FormRequest
 {
@@ -24,11 +22,15 @@ class StoreCustomerOrderRequest extends FormRequest
             'date' => ['required', 'date', 'after_or_equal:today'],
             'time' => ['required', 'string', $this->validateTime()],
             'passengers' => ['required', 'integer', 'min:1', 'max:50'],
-            'vehicle_type' => ['required', 'string', Rule::in(VehicleCategory::pluck('vehicle_type')->unique()->toArray())],
+            'vehicle_type' => ['nullable', 'string', 'max:50'],
+            'vehicle_category_id' => ['nullable', 'integer', 'exists:vehicle_categories,id'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'extras' => ['nullable', 'array'],
+            'extras.*.label' => ['required_with:extras', 'string', 'max:100'],
+            'extras.*.price' => ['required_with:extras', 'numeric', 'min:0'],
             'create_account' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed', 'required_if_accepted:create_account'],
-            'payment_method' => ['nullable', 'string', 'in:cash,transfer'],
+            'payment_method' => ['nullable', 'string', 'in:cash,transfer,visa,mastercard,paypal,apple_pay,google_pay'],
         ];
     }
 
@@ -41,11 +43,10 @@ class StoreCustomerOrderRequest extends FormRequest
             $today = now()->format('Y-m-d');
             $selectedDate = $this->input('date');
 
-            // If date is today, check time is in the future
             if ($selectedDate === $today) {
                 $currentTime = now()->format('H:i');
                 if ($value <= $currentTime) {
-                    $fail('Waktu pickup harus di masa depan. Silakan pilih waktu setelah '.$currentTime.'.');
+                    $fail('Pickup time must be in the future. Please select a time after '.$currentTime.'.');
                 }
             }
         };
@@ -54,21 +55,19 @@ class StoreCustomerOrderRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'customer_name.required' => 'Nama lengkap wajib diisi.',
-            'customer_name.min' => 'Nama minimal 3 karakter.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'pickup_address.required' => 'Lokasi pickup wajib diisi.',
-            'dropoff_address.required' => 'Lokasi tujuan wajib diisi.',
-            'date.required' => 'Tanggal pickup wajib diisi.',
-            'date.after_or_equal' => 'Tanggal pickup minimal hari ini.',
-            'time.required' => 'Waktu pickup wajib diisi.',
-            'passengers.required' => 'Jumlah penumpang wajib diisi.',
-            'vehicle_type.required' => 'Tipe kendaraan wajib dipilih.',
-            'vehicle_type.in' => 'Tipe kendaraan tidak valid.',
-            'password.required_if_accepted' => 'Password wajib diisi jika Anda memilih untuk membuat akun.',
-            'password.min' => 'Password minimal 8 karakter.',
-            'password.confirmed' => 'Konfirmasi password tidak cocok. Pastikan kedua password sama.',
+            'customer_name.required' => 'Full name is required.',
+            'customer_name.min' => 'Name must be at least 3 characters.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'pickup_address.required' => 'Pickup location is required.',
+            'dropoff_address.required' => 'Destination is required.',
+            'date.required' => 'Pickup date is required.',
+            'date.after_or_equal' => 'Pickup date must be today or in the future.',
+            'time.required' => 'Pickup time is required.',
+            'passengers.required' => 'Number of passengers is required.',
+            'password.required_if_accepted' => 'Password is required when creating an account.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Passwords do not match.',
         ];
     }
 }

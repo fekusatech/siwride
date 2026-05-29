@@ -23,6 +23,8 @@ class Order extends Model
         'time',
         'flight_number',
         'notes',
+        'extras',
+        'vehicle_category_id',
         'driver_id',
         'claimed_driver_id',
         'pickup_address',
@@ -56,6 +58,7 @@ class Order extends Model
         'is_cash' => 'boolean',
         'is_shared' => 'boolean',
         'is_cancelled' => 'boolean',
+        'extras' => 'array',
     ];
 
     public function customer(): BelongsTo
@@ -86,6 +89,11 @@ class Order extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function vehicleCategory(): BelongsTo
+    {
+        return $this->belongsTo(VehicleCategory::class);
     }
 
     public function evidences(): HasMany

@@ -19,19 +19,120 @@ use Inertia\Response;
 class CustomerOrderController extends Controller
 {
     /**
-     * Display booking page with optional pre-filled data.
+     * Display booking page — shows route form + route info + vehicle categories.
      */
     public function index(Request $request): Response
     {
+        $passengers = (int) $request->input('passengers', 1);
+
+        // Filter vehicle categories by passenger capacity
+        $vehicleCategories = VehicleCategory::query()
+            ->when($passengers > 1, function ($query) use ($passengers) {
+                $query->where(function ($q) use ($passengers) {
+                    $q->whereNull('passenger_capacity')
+                        ->orWhere('passenger_capacity', '>=', $passengers);
+                });
+            })
+            ->orderBy('base_price')
+            ->get();
+
         return Inertia::render('customer/booking', [
             'prefill' => [
                 'pickup' => $request->input('pickup', ''),
                 'dropoff' => $request->input('dropoff', ''),
                 'date' => $request->input('date', ''),
+                'time' => $request->input('time', ''),
                 'passengers' => $request->input('passengers', '1'),
-                'vehicle' => $request->input('vehicle', ''),
             ],
-            'vehicleCategories' => VehicleCategory::all(),
+            'vehicleCategories' => $vehicleCategories,
+            'allVehicleCategories' => VehicleCategory::orderBy('base_price')->get(),
+        ]);
+    }
+
+    /**
+     * Display checkout page — multi-step form after vehicle selection.
+     */
+    public function checkout(Request $request): Response
+    {
+        $vehicleCategoryId = $request->input('vehicle_category_id');
+        $vehicleCategory = null;
+
+        if ($vehicleCategoryId) {
+            $vehicleCategory = VehicleCategory::find($vehicleCategoryId);
+        }
+
+        return Inertia::render('customer/checkout', [
+            'transfer' => [
+                'pickup' => $request->input('pickup', ''),
+                'dropoff' => $request->input('dropoff', ''),
+                'date' => $request->input('date', ''),
+                'time' => $request->input('time', ''),
+                'passengers' => $request->input('passengers', '1'),
+            ],
+            'vehicleCategory' => $vehicleCategory,
+        ]);
+    }
+
+    /**
+     * Display payment page — dummy payment UI.
+     */
+    public function payment(Request $request): Response
+    {
+        $bookingCode = $request->input('code', '');
+        $order = null;
+
+        if ($bookingCode) {
+            $order = Order::with(['vehicleCategory'])->where('booking_code', $bookingCode)->first();
+        }
+
+        return Inertia::render('customer/payment', [
+            'booking_code' => $bookingCode,
+            'order' => $order ? [
+                'booking_code' => $order->booking_code,
+                'customer_name' => $order->customer_name,
+                'pickup_address' => $order->pickup_address,
+                'dropoff_address' => $order->dropoff_address,
+                'date' => $order->date->format('Y-m-d'),
+                'time' => substr($order->time, 0, 5),
+                'passengers' => $order->passengers,
+                'extras' => $order->extras ?? [],
+                'price' => $order->price,
+                'vehicle_category' => $order->vehicleCategory ? [
+                    'title' => $order->vehicleCategory->title,
+                    'image_url' => $order->vehicleCategory->image_url,
+                    'base_price' => $order->vehicleCategory->base_price,
+                ] : null,
+            ] : null,
+        ]);
+    }
+
+    /**
+     * Display payment success page.
+     */
+    public function paymentSuccess(Request $request): Response
+    {
+        $bookingCode = $request->input('code', '');
+        $order = Order::with(['vehicleCategory'])->where('booking_code', $bookingCode)->first();
+
+        return Inertia::render('customer/payment-success', [
+            'booking_code' => $bookingCode,
+            'order' => $order ? [
+                'booking_code' => $order->booking_code,
+                'customer_name' => $order->customer_name,
+                'email' => $order->customer_email,
+                'pickup_address' => $order->pickup_address,
+                'dropoff_address' => $order->dropoff_address,
+                'date' => $order->date->format('Y-m-d'),
+                'time' => substr($order->time, 0, 5),
+                'passengers' => $order->passengers,
+                'extras' => $order->extras ?? [],
+                'price' => $order->price,
+                'vehicle_category' => $order->vehicleCategory ? [
+                    'title' => $order->vehicleCategory->title,
+                    'image_url' => $order->vehicleCategory->image_url,
+                    'base_price' => $order->vehicleCategory->base_price,
+                ] : null,
+            ] : null,
         ]);
     }
 
@@ -94,7 +195,7 @@ class CustomerOrderController extends Controller
     }
 
     /**
-     * Store a new customer order.
+     * Store a new customer order (from checkout page).
      */
     public function store(StoreCustomerOrderRequest $request): RedirectResponse
     {
@@ -121,23 +222,18 @@ class CustomerOrderController extends Controller
         }
 
         if ($customer) {
-            // Update customer data to latest from booking form
-            $updateData = [
-                'name' => $customerData['name'],
-            ];
+            $updateData = ['name' => $customerData['name']];
 
             if (isset($customerData['phone'])) {
                 $updateData['phone'] = $customerData['phone'];
             }
 
-            // Only set password if not exists and user wants to create account
             if (! $customer->password && isset($customerData['password'])) {
                 $updateData['password'] = $customerData['password'];
             }
 
             $customer->update($updateData);
         } else {
-            // Create new customer
             $customerData['email'] = $validated['email'];
             $customer = Customer::create($customerData);
         }
@@ -148,7 +244,21 @@ class CustomerOrderController extends Controller
         // Generate order number (ORD + timestamp + random)
         $orderNumber = 'ORD'.date('Ymd').strtoupper(Str::random(4));
 
-        // Create order linked to customer
+        // Resolve vehicle category
+        $vehicleCategory = null;
+        if (! empty($validated['vehicle_category_id'])) {
+            $vehicleCategory = VehicleCategory::find($validated['vehicle_category_id']);
+        }
+
+        // Calculate total price (base price + extras)
+        $basePrice = $vehicleCategory ? (float) $vehicleCategory->base_price : 0;
+        $extrasTotal = 0;
+        $extras = $validated['extras'] ?? [];
+        foreach ($extras as $extra) {
+            $extrasTotal += (float) ($extra['price'] ?? 0);
+        }
+        $totalPrice = $basePrice + $extrasTotal;
+
         Order::create([
             'booking_code' => $bookingCode,
             'order_number' => $orderNumber,
@@ -162,7 +272,9 @@ class CustomerOrderController extends Controller
             'dropoff_address' => $validated['dropoff_address'],
             'passengers' => $validated['passengers'],
             'notes' => $validated['notes'] ?? null,
-            'price' => 0, // Price will be set by admin later
+            'extras' => $extras ?: null,
+            'vehicle_category_id' => $vehicleCategory?->id,
+            'price' => $totalPrice,
             'parking_gas_fee' => 0,
             'status' => 'pending',
             'is_shared' => true,
@@ -173,12 +285,22 @@ class CustomerOrderController extends Controller
             Auth::guard('customer')->login($customer);
         }
 
-        return redirect()->route('booking.success', ['code' => $bookingCode, 'vehicle' => $validated['vehicle_type']])
-            ->with('success', 'Order berhasil dibuat! Booking code Anda: '.$bookingCode);
+        return redirect()->route('booking.payment', ['code' => $bookingCode]);
     }
 
     /**
-     * Display success page after booking.
+     * Process dummy payment and redirect to success.
+     */
+    public function processPayment(Request $request): RedirectResponse
+    {
+        $bookingCode = $request->input('booking_code', '');
+
+        // Dummy payment processing — just redirect to success
+        return redirect()->route('booking.payment-success', ['code' => $bookingCode]);
+    }
+
+    /**
+     * Display success page after booking (legacy route kept for compatibility).
      */
     public function success(Request $request): Response
     {
