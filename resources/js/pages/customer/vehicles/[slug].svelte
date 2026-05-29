@@ -14,6 +14,9 @@
 
     // Determine page title based on vehicle info
     let pageTitle = $derived(vehicleCategory?.title || 'Vehicles');
+
+    // Retrieve shared vehicle categories
+    const vehicleCategories = $derived((page.props.vehicleCategories as any[]) || []);
 </script>
 
 <AppHead title="{pageTitle} - Siwride" />
@@ -191,140 +194,36 @@
                 </div>
 
                 <div class="row gutter-y-30">
-                    <div
-                        class="col-lg-4 col-md-6 wow fadeInUp"
-                        data-wow-delay="100ms"
-                    >
+                    {#each vehicleCategories as category, index}
                         <div
-                            class="vehicle-feature-card why-choose-one__box text-center h-100 p-4"
-                            style="background-color: #fff;"
+                            class="col-lg-4 col-md-6 wow fadeInUp"
+                            data-wow-delay={(index + 1) * 100 + 'ms'}
                         >
                             <div
-                                class="why-choose-one__box__icon mx-auto"
-                                style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
+                                class="vehicle-feature-card why-choose-one__box text-center h-100 p-4"
+                                style="background-color: #fff;"
                             >
-                                <i class="fa fa-car" style="font-size: 32px;"
-                                ></i>
+                                <div
+                                    style="border-radius: 10px; overflow: hidden; margin-bottom: 20px; height: 180px;"
+                                >
+                                    <img
+                                        src={category.image_url}
+                                        alt={category.title}
+                                        style="width: 100%; height: 100%; object-fit: cover;"
+                                    />
+                                </div>
+                                <h5 class="why-choose-one__box__title mb-3">
+                                    {category.title}
+                                </h5>
+                                <a
+                                    href={`/vehicles/${category.slug}`}
+                                    class="travhub-btn"
+                                    style="font-size: 14px; padding: 12px 25px;"
+                                    ><span>View Details</span></a
+                                >
                             </div>
-                            <h5 class="why-choose-one__box__title mb-3">
-                                Standard Cars
-                            </h5>
-                            <a
-                                href="/vehicles/standard-cars"
-                                class="travhub-btn"
-                                style="font-size: 14px; padding: 12px 25px;"
-                                ><span>View Details</span></a
-                            >
                         </div>
-                    </div>
-                    <div
-                        class="col-lg-4 col-md-6 wow fadeInUp"
-                        data-wow-delay="200ms"
-                    >
-                        <div
-                            class="vehicle-feature-card why-choose-one__box text-center h-100 p-4"
-                            style="background-color: #fff;"
-                        >
-                            <div
-                                class="why-choose-one__box__icon mx-auto"
-                                style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                            >
-                                <i class="fa fa-car" style="font-size: 32px;"
-                                ></i>
-                            </div>
-                            <h5 class="why-choose-one__box__title mb-3">
-                                Premium Cars
-                            </h5>
-                            <a
-                                href="/vehicles/premium-cars"
-                                class="travhub-btn"
-                                style="font-size: 14px; padding: 12px 25px;"
-                                ><span>View Details</span></a
-                            >
-                        </div>
-                    </div>
-                    <div
-                        class="col-lg-4 col-md-6 wow fadeInUp"
-                        data-wow-delay="300ms"
-                    >
-                        <div
-                            class="vehicle-feature-card why-choose-one__box text-center h-100 p-4"
-                            style="background-color: #fff;"
-                        >
-                            <div
-                                class="why-choose-one__box__icon mx-auto"
-                                style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                            >
-                                <i
-                                    class="icon-traveler-with-a-suitcase-1"
-                                    style="font-size: 32px;"
-                                ></i>
-                            </div>
-                            <h5 class="why-choose-one__box__title mb-3">
-                                Vans & Minibuses
-                            </h5>
-                            <a
-                                href="/vehicles/vans-minibuses"
-                                class="travhub-btn"
-                                style="font-size: 14px; padding: 12px 25px;"
-                                ><span>View Details</span></a
-                            >
-                        </div>
-                    </div>
-                    <div
-                        class="col-lg-4 col-md-6 wow fadeInUp"
-                        data-wow-delay="400ms"
-                    >
-                        <div
-                            class="vehicle-feature-card why-choose-one__box text-center h-100 p-4"
-                            style="background-color: #fff;"
-                        >
-                            <div
-                                class="why-choose-one__box__icon mx-auto"
-                                style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                            >
-                                <i class="flaticon-bus" style="font-size: 32px;"
-                                ></i>
-                            </div>
-                            <h5 class="why-choose-one__box__title mb-3">
-                                Buses
-                            </h5>
-                            <a
-                                href="/vehicles/buses"
-                                class="travhub-btn"
-                                style="font-size: 14px; padding: 12px 25px;"
-                                ><span>View Details</span></a
-                            >
-                        </div>
-                    </div>
-                    <div
-                        class="col-lg-4 col-md-6 wow fadeInUp"
-                        data-wow-delay="500ms"
-                    >
-                        <div
-                            class="vehicle-feature-card why-choose-one__box text-center h-100 p-4"
-                            style="background-color: #fff;"
-                        >
-                            <div
-                                class="why-choose-one__box__icon mx-auto"
-                                style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                            >
-                                <i
-                                    class="icon-settings"
-                                    style="font-size: 32px;"
-                                ></i>
-                            </div>
-                            <h5 class="why-choose-one__box__title mb-3">
-                                Special Vehicles
-                            </h5>
-                            <a
-                                href="/vehicles/special-vehicles"
-                                class="travhub-btn"
-                                style="font-size: 14px; padding: 12px 25px;"
-                                ><span>View Details</span></a
-                            >
-                        </div>
-                    </div>
+                    {/each}
                 </div>
             </div>
         </section>
