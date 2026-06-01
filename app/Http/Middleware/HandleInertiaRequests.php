@@ -224,6 +224,10 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        if (!empty($settings['logo']) && !str_starts_with($settings['logo'], '/storage/')) {
+            $settings['logo'] = '/storage/' . $settings['logo'];
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),

@@ -18,7 +18,6 @@ class SettingController extends Controller
             'setting' => Setting::values([
                 'business_name' => config('app.name', 'Siwride'),
                 'logo' => null,
-                'favicon' => null,
                 'recaptcha_enabled' => '0',
                 'recaptcha_site_key' => null,
                 'recaptcha_secret_key' => null,
@@ -32,7 +31,6 @@ class SettingController extends Controller
         $validated = $request->validate([
             'business_name' => ['required', 'string', 'max:255'],
             'logo' => ['nullable', 'image', 'max:2048'],
-            'favicon' => ['nullable', 'image', 'mimes:ico,png,jpg,jpeg,svg', 'max:1024'],
             'recaptcha_enabled' => ['required', 'boolean'],
             'recaptcha_site_key' => ['nullable', 'string', 'max:255'],
             'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
@@ -64,22 +62,6 @@ class SettingController extends Controller
 
             Setting::setValue('logo', $logoPath);
             Log::info('New logo stored: '.$logoPath);
-        }
-
-        $currentFavicon = Setting::getValue('favicon');
-        if ($request->hasFile('favicon')) {
-            if ($currentFavicon && $currentFavicon !== '0') {
-                Storage::disk('public')->delete($currentFavicon);
-            }
-
-            $faviconPath = $request->file('favicon')->store('settings', 'public');
-
-            if ($faviconPath === false) {
-                return redirect()->back()->with('error', 'Failed to store favicon. Please check directory permissions.');
-            }
-
-            Setting::setValue('favicon', $faviconPath);
-            Log::info('New favicon stored: '.$faviconPath);
         }
 
         Log::info('Settings updated for business: '.$validated['business_name']);

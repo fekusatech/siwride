@@ -10,8 +10,6 @@
     // form
     // svelte-ignore state_referenced_locally
     const form = useForm({
-        business_name: settings.business_name || '',
-        logo: null as File | null,
         
         company_phone: settings.company_phone || '',
         company_email: settings.company_email || '',
@@ -51,21 +49,15 @@
     });
 
     let coveragePreview = $state<string | null>(settings.coverage_area_image || null);
-    let logoPreview = $state<string | null>(settings.logo || null);
 
     // Image previews
-    function handleImageUpload(e: Event, type: 'coverage' | 'logo') {
+    function handleImageUpload(e: Event, type: 'coverage') {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
             if (type === 'coverage') {
                 form.coverage_area_image = file;
                 const reader = new FileReader();
                 reader.onload = (e) => (coveragePreview = e.target?.result as string);
-                reader.readAsDataURL(file);
-            } else if (type === 'logo') {
-                form.logo = file;
-                const reader = new FileReader();
-                reader.onload = (e) => (logoPreview = e.target?.result as string);
                 reader.readAsDataURL(file);
             }
         }
@@ -129,9 +121,6 @@
             <div class="card-header bg-white border-bottom p-0">
                 <ul class="nav nav-tabs nav-tabs-custom border-0 px-3" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link {activeTab === 'general' ? 'active' : ''} py-3" onclick={(e) => { e.preventDefault(); activeTab = 'general'; }}>General Info</button>
-                    </li>
-                    <li class="nav-item">
                         <button class="nav-link {activeTab === 'company' ? 'active' : ''} py-3" onclick={(e) => { e.preventDefault(); activeTab = 'company'; }}>Company Info</button>
                     </li>
                     <li class="nav-item">
@@ -166,25 +155,6 @@
             
             <div class="card-body p-4">
                 <form onsubmit={submit}>
-                    <!-- GENERAL INFO -->
-                    {#if activeTab === 'general'}
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <h5 class="mb-3">Brand & Identity</h5>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Business Name</label>
-                                <input type="text" class="form-control" bind:value={form.business_name} />
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Logo</label>
-                                <input type="file" class="form-control" accept="image/*" onchange={(e) => handleImageUpload(e, 'logo')} />
-                                {#if logoPreview}
-                                    <div class="mt-2"><img src={logoPreview} alt="Logo Preview" class="img-thumbnail" style="max-height: 80px;" /></div>
-                                {/if}
-                            </div>
-                        </div>
-                    {/if}
 
                     <!-- COMPANY INFO -->
                     {#if activeTab === 'company'}

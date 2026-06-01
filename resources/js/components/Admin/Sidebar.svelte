@@ -38,22 +38,26 @@
     <!-- Brand Logo -->
     <Link href="/dashboard" class="logo">
         <span class="logo-light">
-            <span class="logo-lg">
+            <span class="logo-lg" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                 {#if settings.logo}
                     <img
-                        src="/storage/{settings.logo}?v={new Date(
+                        src="{settings.logo}?v={new Date(
                             settings.updated_at,
                         ).getTime()}"
                         alt="{settings.business_name} Logo"
+                        style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: white; padding: 2px;"
                     />
+                    <span style="font-size: 22px; font-weight: bold; color: var(--bs-heading-color); white-space: nowrap; letter-spacing: 0.5px;">
+                        {settings.business_name || 'Siwride'}
+                    </span>
                 {:else}
                     <img src="/assets-admin/images/logo.png" alt="logo" />
                 {/if}
             </span>
             <span class="logo-sm text-center">
-                {#if settings.favicon}
+                {#if settings.logo}
                     <img
-                        src="/storage/{settings.favicon}?v={new Date(
+                        src="{settings.logo}?v={new Date(
                             settings.updated_at,
                         ).getTime()}"
                         alt="sm logo"
@@ -69,14 +73,18 @@
         </span>
 
         <span class="logo-dark">
-            <span class="logo-lg">
+            <span class="logo-lg" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                 {#if settings.logo}
                     <img
-                        src="/storage/{settings.logo}?v={new Date(
+                        src="{settings.logo}?v={new Date(
                             settings.updated_at,
                         ).getTime()}"
                         alt="{settings.business_name} Logo"
+                        style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: white; padding: 2px;"
                     />
+                    <span style="font-size: 22px; font-weight: bold; color: var(--bs-heading-color); white-space: nowrap; letter-spacing: 0.5px;">
+                        {settings.business_name || 'Siwride'}
+                    </span>
                 {:else}
                     <img
                         src="/assets-admin/images/logo-dark.png"
@@ -85,9 +93,9 @@
                 {/if}
             </span>
             <span class="logo-sm text-center">
-                {#if settings.favicon}
+                {#if settings.logo}
                     <img
-                        src="/storage/{settings.favicon}?v={new Date(
+                        src="{settings.logo}?v={new Date(
                             settings.updated_at,
                         ).getTime()}"
                         alt="sm logo"
@@ -208,7 +216,7 @@
 
             <li class="side-nav-item">
                 <Link href="/admin/settings/frontend" class="side-nav-link">
-                    <span class="menu-icon"><i class="ti ti-layout-desktop"></i></span
+                    <span class="menu-icon"><i class="ti ti-layout"></i></span
                     >
                     <span class="menu-text"> Landing Page </span>
                 </Link>

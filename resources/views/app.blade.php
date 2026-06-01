@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 @php 
     $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*'); 
-    $logoUrl = \App\Models\Setting::getValue('logo');
+    $logoSetting = \App\Models\Setting::getValue('logo');
+    $logoUrl = $logoSetting ? (str_starts_with($logoSetting, '/storage/') ? $logoSetting : asset('storage/' . $logoSetting)) : null;
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
     @if($isDashboard)

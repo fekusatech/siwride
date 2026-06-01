@@ -10,14 +10,12 @@
     const form = useForm({
         business_name: setting.business_name,
         logo: null as File | null,
-        favicon: null as File | null,
         recaptcha_enabled: setting.recaptcha_enabled === '1',
         recaptcha_site_key: setting.recaptcha_site_key ?? '',
         recaptcha_secret_key: setting.recaptcha_secret_key ?? '',
     });
 
     let logoPreview = $state<string | null>(null);
-    let faviconPreview = $state<string | null>(null);
 
     function storagePreview(path: string | null) {
         if (!path || path === '0' || path === 'false') {
@@ -30,7 +28,6 @@
     // Sync previews with props when they change (after successful submission)
     $effect(() => {
         logoPreview = storagePreview(setting.logo);
-        faviconPreview = storagePreview(setting.favicon);
     });
 
     function handleLogoChange(e: Event) {
@@ -43,17 +40,6 @@
         }
     }
 
-    function handleFaviconChange(e: Event) {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) {
-            form.favicon = file;
-            const reader = new FileReader();
-            reader.onload = (e) =>
-                (faviconPreview = e.target?.result as string);
-            reader.readAsDataURL(file);
-        }
-    }
-
     function submit(e: Event) {
         e.preventDefault();
 
@@ -61,7 +47,7 @@
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
-                form.reset('logo', 'favicon');
+                form.reset('logo');
             },
         });
     }
@@ -203,59 +189,6 @@
                                         {#if form.errors.logo}
                                             <div class="text-danger small mt-1">
                                                 {form.errors.logo}
-                                            </div>
-                                        {/if}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="my-4 opacity-50" />
-
-                            <!-- Favicon Upload -->
-                            <div class="mb-4">
-                                <label
-                                    for="favicon_input"
-                                    class="form-label fw-bold d-block"
-                                    >Favicon</label
-                                >
-                                <div
-                                    class="d-flex align-items-center gap-4 flex-column flex-md-row"
-                                >
-                                    <div
-                                        class="favicon-preview-container bg-light rounded-3 d-flex align-items-center justify-content-center border overflow-hidden"
-                                        style="width: 60px; height: 60px;"
-                                    >
-                                        {#if faviconPreview}
-                                            <img
-                                                src={faviconPreview}
-                                                alt="Favicon Preview"
-                                                style="width: 32px; height: 32px;"
-                                            />
-                                        {:else}
-                                            <div class="text-center text-muted">
-                                                <i
-                                                    class="ti ti-world fs-20 d-block"
-                                                ></i>
-                                            </div>
-                                        {/if}
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <input
-                                            id="favicon_input"
-                                            name="favicon"
-                                            type="file"
-                                            class="form-control mb-2"
-                                            accept=".ico,.png,.jpg,.jpeg,.svg"
-                                            onchange={handleFaviconChange}
-                                        />
-                                        <div class="text-muted small">
-                                            <i class="ti ti-info-circle"></i> Best
-                                            format: .ico or 32x32px PNG. Max size:
-                                            1MB.
-                                        </div>
-                                        {#if form.errors.favicon}
-                                            <div class="text-danger small mt-1">
-                                                {form.errors.favicon}
                                             </div>
                                         {/if}
                                     </div>

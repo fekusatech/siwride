@@ -59,16 +59,18 @@
             <div
                 class="card overflow-hidden text-center h-100 p-xxl-4 p-3 mb-0"
             >
-                <a href="/" class="auth-brand mb-3 d-block">
+                <a href="/" class="auth-brand mb-3 d-flex justify-content-center align-items-center gap-2 text-decoration-none">
                     {#if settings.logo}
                         <img
-                            src="/storage/{settings.logo}?v={new Date(
+                            src="{settings.logo}?v={new Date(
                                 settings.updated_at,
                             ).getTime()}"
                             alt="{settings.business_name} logo"
-                            height="45"
-                            class="mx-auto"
+                            style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; background: white; padding: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
                         />
+                        <span style="font-size: 26px; font-weight: bold; color: var(--bs-heading-color); letter-spacing: 0.5px;">
+                            {settings.business_name || 'Siwride'}
+                        </span>
                     {:else}
                         <img
                             src="/assets-admin/images/logo-dark.png"
