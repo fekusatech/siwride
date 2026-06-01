@@ -1,3 +1,8 @@
+<script lang="ts">
+    import { page } from '@inertiajs/svelte';
+    const settings = $derived(page.props.settings as any);
+</script>
+
 <footer class="main-footer">
     <div
         class="main-footer__shape-one"
@@ -62,27 +67,34 @@
                         >
                     </a>
                     <p class="footer-widget__text">
-                        Your premium ride partner in Bali. <br />Safe, reliable,
-                        and comfortable<br />transportation solutions.
+                        {settings.company_description || 'Your premium ride partner in Bali. Safe, reliable, and comfortable transportation solutions.'}
                     </p>
                     <div class="main-footer__social">
-                        <a href="https://facebook.com">
+                        {#if settings.company_facebook}
+                        <a href={settings.company_facebook}>
                             <i class="fab fa-facebook-f" aria-hidden="true"></i>
                             <span class="sr-only">Facebook</span>
                         </a>
-                        <a href="https://twitter.com">
+                        {/if}
+                        {#if settings.company_twitter}
+                        <a href={settings.company_twitter}>
                             <i class="fab fa-twitter" aria-hidden="true"></i>
                             <span class="sr-only">Twitter</span>
                         </a>
-                        <a href="https://linkedin.com">
+                        {/if}
+                        {#if settings.company_linkedin}
+                        <a href={settings.company_linkedin}>
                             <i class="fab fa-linkedin-in" aria-hidden="true"
                             ></i>
                             <span class="sr-only">Linkedin</span>
                         </a>
-                        <a href="https://instagram.com">
+                        {/if}
+                        {#if settings.company_instagram}
+                        <a href={settings.company_instagram}>
                             <i class="fab fa-instagram" aria-hidden="true"></i>
                             <span class="sr-only">Instagram</span>
                         </a>
+                        {/if}
                     </div>
                 </div>
             </div>
@@ -130,9 +142,9 @@
                                     >Hotline:</span
                                 >
                                 <a
-                                    href="tel:+62812345678"
+                                    href="tel:{settings.company_phone || '+62812345678'}"
                                     style="color: RGBA(var(--travhub-white-rgb), 0.5);"
-                                    >+62 812-3456-78</a
+                                    >{settings.company_phone || '+62 812-3456-78'}</a
                                 >
                             </div>
                         </li>
@@ -154,9 +166,9 @@
                                     >Email:</span
                                 >
                                 <a
-                                    href="mailto:info@siwride.com"
+                                    href="mailto:{settings.company_email || 'info@siwride.com'}"
                                     style="color: RGBA(var(--travhub-white-rgb), 0.5);"
-                                    >info@siwride.com</a
+                                    >{settings.company_email || 'info@siwride.com'}</a
                                 >
                             </div>
                         </li>
@@ -179,7 +191,7 @@
                                 >
                                 <span
                                     style="color: RGBA(var(--travhub-white-rgb), 0.5);"
-                                    >Bali, Indonesia</span
+                                    >{settings.company_address || 'Bali, Indonesia'}</span
                                 >
                             </div>
                         </li>
@@ -219,30 +231,38 @@
         <ul class="mobile-nav__contact list-unstyled">
             <li>
                 <i class="fa fa-envelope"></i>
-                <a href="mailto:info@siwride.com">info@siwride.com</a>
+                <a href="mailto:{settings.company_email || 'info@siwride.com'}">{settings.company_email || 'info@siwride.com'}</a>
             </li>
             <li>
                 <i class="fa fa-phone-alt"></i>
-                <a href="tel:+62812345678">+62 812-3456-78</a>
+                <a href="tel:{settings.company_phone || '+62812345678'}">{settings.company_phone || '+62 812-3456-78'}</a>
             </li>
         </ul>
         <div class="mobile-nav__social">
-            <a href="https://facebook.com">
+            {#if settings.company_facebook}
+            <a href={settings.company_facebook}>
                 <i class="fab fa-facebook-f" aria-hidden="true"></i>
                 <span class="sr-only">Facebook</span>
             </a>
-            <a href="https://twitter.com">
+            {/if}
+            {#if settings.company_twitter}
+            <a href={settings.company_twitter}>
                 <i class="fab fa-twitter" aria-hidden="true"></i>
                 <span class="sr-only">Twitter</span>
             </a>
-            <a href="https://linkedin.com">
+            {/if}
+            {#if settings.company_linkedin}
+            <a href={settings.company_linkedin}>
                 <i class="fab fa-linkedin-in" aria-hidden="true"></i>
                 <span class="sr-only">Linkedin</span>
             </a>
-            <a href="https://instagram.com">
+            {/if}
+            {#if settings.company_instagram}
+            <a href={settings.company_instagram}>
                 <i class="fab fa-instagram" aria-hidden="true"></i>
                 <span class="sr-only">Instagram</span>
             </a>
+            {/if}
         </div>
     </div>
 </div>

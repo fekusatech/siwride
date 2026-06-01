@@ -5,6 +5,9 @@
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
 
+    const settings = $derived(page.props.settings as any);
+
+
     let contactData = {
         name: '',
         email: '',
@@ -48,7 +51,7 @@
         </div>
     </section>
 
-    <section class="contact-info">
+    <section class="contact-info mb-9">
         <div class="container">
             <ul class="contact-info__list">
                 <li class="contact-info__item">
@@ -56,7 +59,7 @@
                         <i class="fa fa-map-marker-alt"></i>
                     </div>
                     <h3 class="contact-info__title">Address</h3>
-                    <p class="contact-info__text">Jl. Mahendradatta selatan GG. Robby William no 99, Denpasar Barat, Bali</p>
+                    <p class="contact-info__text">{settings.company_address || 'Jl. Mahendradatta selatan GG. Robby William no 99, Denpasar Barat, Bali'}</p>
                 </li>
                 <li class="contact-info__item">
                     <div class="contact-info__icon">
@@ -64,7 +67,7 @@
                     </div>
                     <h3 class="contact-info__title">Call</h3>
                     <p class="contact-info__text">
-                        <a href="tel:+62812345678">+62 811-3810-5600</a>
+                        <a href="tel:{settings.company_phone || '+6281138105600'}">{settings.company_phone || '+62 811-3810-5600'}</a>
                     </p>
                 </li>
                 <li class="contact-info__item">
@@ -73,14 +76,14 @@
                     </div>
                     <h3 class="contact-info__title">Email</h3>
                     <p class="contact-info__text">
-                        <a href="mailto:info@siwride.com">info@siwride.com</a>
+                        <a href="mailto:{settings.company_email || 'info@siwride.com'}">{settings.company_email || 'info@siwride.com'}</a>
                     </p>
                 </li>
             </ul>
         </div>
     </section>
 
-    <section class="contact-page">
+    <!-- <section class="contact-page">
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 wow fadeInLeft" data-wow-delay="100ms">
@@ -187,7 +190,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <Footer />
 </div>

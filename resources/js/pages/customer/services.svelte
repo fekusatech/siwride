@@ -4,6 +4,9 @@
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
+
+    const settings = $derived(page.props.settings as any);
+    const ourServices = $derived(settings.our_services || []);
 </script>
 
 <AppHead title="Services - Siwride" />
@@ -39,13 +42,18 @@
                         alt="Siwride"
                     />
                 </div>
-                <h3 class="sec-title__title bw-split-in-left">What We Offer</h3>
+                <h3 class="sec-title__title bw-split-in-left">{settings.services_title || 'What We Offer'}</h3>
+                {#if settings.services_subtitle}
+                <p class="sec-title__text bw-split-in-up-fast" style="max-width: 600px; margin: 15px auto 0;">
+                    {settings.services_subtitle}
+                </p>
+                {/if}
             </div>
             <div class="row gutter-y-30">
-                <!-- Service 1 -->
+                {#each ourServices as service, index}
                 <div
                     class="col-lg-4 col-md-6 wow fadeInUp"
-                    data-wow-delay="100ms"
+                    data-wow-delay="{index * 100}ms"
                 >
                     <div
                         class="service-card why-choose-one__box text-center h-100 p-4"
@@ -55,139 +63,17 @@
                             class="why-choose-one__box__icon mx-auto"
                             style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
                         >
-                            <i class="fa fa-plane" style="font-size: 32px;"></i>
+                            <i class={service.icon} style="font-size: 32px;"></i>
                         </div>
                         <h5 class="why-choose-one__box__title">
-                            Airport Transfer
+                            {service.title}
                         </h5>
                         <p class="why-choose-one__box__text">
-                            Reliable airport pickup and drop-off services with
-                            professional drivers and comfortable vehicles.
+                            {service.description}
                         </p>
                     </div>
                 </div>
-
-                <!-- Service 2 -->
-                <div
-                    class="col-lg-4 col-md-6 wow fadeInUp"
-                    data-wow-delay="200ms"
-                >
-                    <div
-                        class="service-card why-choose-one__box text-center h-100 p-4"
-                        style="background-color: #fff;"
-                    >
-                        <div
-                            class="why-choose-one__box__icon mx-auto"
-                            style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                        >
-                            <i class="fa fa-car" style="font-size: 32px;"></i>
-                        </div>
-                        <h5 class="why-choose-one__box__title">City Tour</h5>
-                        <p class="why-choose-one__box__text">
-                            Explore the city with our comfortable and
-                            informative city tour services.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service 3 -->
-                <div
-                    class="col-lg-4 col-md-6 wow fadeInUp"
-                    data-wow-delay="300ms"
-                >
-                    <div
-                        class="service-card why-choose-one__box text-center h-100 p-4"
-                        style="background-color: #fff;"
-                    >
-                        <div
-                            class="why-choose-one__box__icon mx-auto"
-                            style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                        >
-                            <i class="fa fa-hotel" style="font-size: 32px;"></i>
-                        </div>
-                        <h5 class="why-choose-one__box__title">
-                            Hotel Transfer
-                        </h5>
-                        <p class="why-choose-one__box__text">
-                            Convenient hotel transfer services for comfortable
-                            travel to and from your accommodation.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service 4 -->
-                <div
-                    class="col-lg-4 col-md-6 wow fadeInUp"
-                    data-wow-delay="400ms"
-                >
-                    <div
-                        class="service-card why-choose-one__box text-center h-100 p-4"
-                        style="background-color: #fff;"
-                    >
-                        <div
-                            class="why-choose-one__box__icon mx-auto"
-                            style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                        >
-                            <i class="fa fa-ring" style="font-size: 32px;"></i>
-                        </div>
-                        <h5 class="why-choose-one__box__title">Wedding Car</h5>
-                        <p class="why-choose-one__box__text">
-                            Elegant wedding transportation services with premium
-                            vehicles and professional chauffeurs.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service 5 -->
-                <div
-                    class="col-lg-4 col-md-6 wow fadeInUp"
-                    data-wow-delay="500ms"
-                >
-                    <div
-                        class="service-card why-choose-one__box text-center h-100 p-4"
-                        style="background-color: #fff;"
-                    >
-                        <div
-                            class="why-choose-one__box__icon mx-auto"
-                            style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                        >
-                            <i class="fa fa-briefcase" style="font-size: 32px;"
-                            ></i>
-                        </div>
-                        <h5 class="why-choose-one__box__title">
-                            Business Trip
-                        </h5>
-                        <p class="why-choose-one__box__text">
-                            Professional business transportation with punctual
-                            and reliable service.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service 6 -->
-                <div
-                    class="col-lg-4 col-md-6 wow fadeInUp"
-                    data-wow-delay="600ms"
-                >
-                    <div
-                        class="service-card why-choose-one__box text-center h-100 p-4"
-                        style="background-color: #fff;"
-                    >
-                        <div
-                            class="why-choose-one__box__icon mx-auto"
-                            style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                        >
-                            <i class="fa fa-clock" style="font-size: 32px;"></i>
-                        </div>
-                        <h5 class="why-choose-one__box__title">
-                            Hourly Charter
-                        </h5>
-                        <p class="why-choose-one__box__text">
-                            Flexible hourly charter services for customized
-                            travel needs.
-                        </p>
-                    </div>
-                </div>
+                {/each}
             </div>
         </div>
     </section>

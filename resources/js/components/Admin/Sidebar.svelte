@@ -205,6 +205,14 @@
                     <span class="menu-text"> Settings </span>
                 </Link>
             </li>
+
+            <li class="side-nav-item">
+                <Link href="/admin/settings/frontend" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-layout-desktop"></i></span
+                    >
+                    <span class="menu-text"> Landing Page </span>
+                </Link>
+            </li>
         </ul>
     </div>
 </div>

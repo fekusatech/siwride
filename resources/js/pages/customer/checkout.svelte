@@ -37,11 +37,12 @@
     let showPassword = $state(false);
     let showConfirmPassword = $state(false);
 
-    const EXTRAS = [
-        { id: 'english_driver', label: 'English-speaking driver', description: 'A driver with basic English communication ability.', price: 3 },
-        { id: 'water', label: 'Drinking water', description: 'A bottle of still water (0.5L).', price: 2 },
-        { id: 'pets', label: 'I am travelling with pets', description: 'Pets must be kept in a carrier. Additional charges may apply.', price: 0 },
-    ];
+    const settings = $derived(page.props.settings as any);
+    const EXTRAS = $derived(
+        Array.isArray(settings.booking_extras) 
+            ? settings.booking_extras.map(e => ({ ...e, price: Number(e.price) || 0 }))
+            : []
+    );
 
     const PAYMENT_METHODS = [
         { id: 'visa',        label: 'Visa',       icon: 'fab fa-cc-visa',       color: '#1a1f71' },

@@ -4,6 +4,8 @@
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
+
+    const settings = $derived(page.props.settings as any);
 </script>
 
 <AppHead title="About Us - Siwride" />
@@ -44,57 +46,33 @@
                                 />
                             </div>
                             <h3 class="sec-title__title bw-split-in-left">
-                                Why Choose Siwride
+                                {settings.why_choose_us_title || 'Why Choose Siwride'}
                             </h3>
                             <p class="sec-title__text bw-split-in-up-fast">
-                                Siwride was founded with a simple mission: to
-                                provide reliable, comfortable, and affordable
-                                transportation services across Bali and
-                                surrounding islands. Based in Tabanan, we are
-                                your trusted local experts.
+                                {settings.company_description || 'Siwride was founded with a simple mission: to provide reliable, comfortable, and affordable transportation services across Bali and surrounding islands. Based in Tabanan, we are your trusted local experts.'}
                             </p>
                         </div>
                         <div class="row mt-5">
+                            {#each settings.why_choose_us_features || [] as feature}
                             <div class="col-md-6 mb-4">
                                 <div class="text-center h-100 p-4">
                                     <div
                                         class="why-choose-one__box__icon mx-auto"
                                         style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
                                     >
-                                        <i class="flaticon-suitcase"></i>
+                                        <i class="{feature.icon || 'flaticon-suitcase'}"></i>
                                     </div>
                                     <h5
                                         style="font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);"
                                     >
-                                        Professional Drivers
+                                        {feature.title}
                                     </h5>
                                     <p style="color: #666; margin-bottom: 0;">
-                                        Enjoy a safe and comfortable trip with
-                                        our highly trained, experienced, and
-                                        licensed local drivers.
+                                        {feature.text}
                                     </p>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <div class="text-center h-100 p-4">
-                                    <div
-                                        class="why-choose-one__box__icon mx-auto"
-                                        style="position: relative; left: auto; top: auto; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 20px;"
-                                    >
-                                        <i class="flaticon-signpost"></i>
-                                    </div>
-                                    <h5
-                                        style="font-weight: 700; margin-bottom: 15px; color: var(--travhub-black);"
-                                    >
-                                        Tailored Destinations
-                                    </h5>
-                                    <p style="color: #666; margin-bottom: 0;">
-                                        Whether it's a popular tourist spot or a
-                                        hidden gem in Bali, we will take you
-                                        there with ease.
-                                    </p>
-                                </div>
-                            </div>
+                            {/each}
                         </div>
                         <div
                             class="why-choose-one__btn justify-content-center text-center mt-4"

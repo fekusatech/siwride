@@ -5,30 +5,10 @@
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
 
-    const faqs = [
-        {
-            question: 'How do I book a ride with Siwride?',
-            answer: 'Booking is extremely simple! You can easily book a ride by navigating to our Booking page, entering your pickup and drop-off locations, selecting your vehicle, and confirming. Alternatively, you can contact us directly for custom arrangements.',
-        },
-        {
-            question: 'Are your drivers fluent in English?',
-            answer: 'Yes, all Siwride drivers undergo strict vetting processes and are fluent in English. They are not only professional drivers but can also serve as knowledgeable local guides to enhance your Bali experience.',
-        },
-        {
-            question: 'What items can I bring? Is there a luggage limit?',
-            answer: 'Luggage limits rely entirely on the capacity of the vehicle you selected. If you are traveling with lots of luggages, we recommend choosing a Van or Minibus to ensure everyone and everything fits comfortably.',
-        },
-        {
-            question: 'Can I adjust my route or destination mid-trip?',
-            answer: 'Yes! If you booked a custom charter trip or daily rental, you have full flexibility over your route. If you booked a point-to-point transfer, standard adjustments can be discussed directly with your driver or our support team.',
-        },
-        {
-            question: 'Do you provide car seats for children?',
-            answer: 'Absolutely. Safety is our top priority. We offer child car seats upon request at no extra charge. Please make sure to leave a note during your booking so we can prepare it for your trip.',
-        },
-    ];
+    const settings = $derived(page.props.settings as any);
+    const faqs = $derived(settings.faq_items || []);
 
-    let activeIndex = 0;
+    let activeIndex = $state(0);
 </script>
 
 <AppHead title="FAQ - Siwride" />
@@ -102,7 +82,7 @@
                                         class="accrodion-title"
                                         role="button"
                                         tabindex="0"
-                                        on:click={() =>
+                                        onclick={() =>
                                             (activeIndex =
                                                 activeIndex === i ? -1 : i)}
                                     >

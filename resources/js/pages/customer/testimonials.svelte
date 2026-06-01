@@ -5,56 +5,8 @@
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
 
-    const testimonials = [
-        {
-            name: 'Sarah Jenkins',
-            country: 'Australia',
-            rating: 5,
-            comment:
-                'Siwride made our family trip to Bali incredibly smooth. The driver arrived precisely on time, the car was pristine, and he knew all the quickest routes. Highly recommended!',
-            img: '/assets/images/resources/why-choose-one-author-1.jpg',
-        },
-        {
-            name: 'David Chen',
-            country: 'Singapore',
-            rating: 5,
-            comment:
-                'We booked a premium car for a business trip. Outstanding professionalism from the driver and the whole booking process was seamless. Will definitely use Siwride again.',
-            img: '/assets/images/resources/why-choose-one-author-2.jpg',
-        },
-        {
-            name: 'Emma & Lucas',
-            country: 'United Kingdom',
-            rating: 5,
-            comment:
-                "Our driver was essentially an amazing local guide! He showed us hidden gems we wouldn't have found otherwise. True VIP service from start to finish.",
-            img: '/assets/images/resources/why-choose-one-author-3.jpg',
-        },
-        {
-            name: 'Takeshi Sato',
-            country: 'Japan',
-            rating: 5,
-            comment:
-                'Very clean vehicle and polite driver. We felt very safe traveling with Siwride, even in heavy Bali traffic. Excellent value for money.',
-            img: '/assets/images/resources/why-choose-one-author-1.jpg',
-        },
-        {
-            name: 'Maria Fernandez',
-            country: 'Spain',
-            rating: 5,
-            comment:
-                'Booking was so easy and the communication was top tier. The minibus we rented for our group of 8 was spacious and the AC worked perfectly. Huge plus!',
-            img: '/assets/images/resources/why-choose-one-author-2.jpg',
-        },
-        {
-            name: 'James Wilson',
-            country: 'USA',
-            rating: 5,
-            comment:
-                'A flawless experience. From the airport pickup to our hotel transfers over the week, Siwride handled everything perfectly. We never had to worry about a thing.',
-            img: '/assets/images/resources/why-choose-one-author-3.jpg',
-        },
-    ];
+    const settings = $derived(page.props.settings as any);
+    const testimonials = $derived(settings.customer_testimonials || []);
 </script>
 
 <AppHead title="Testimonials - Siwride" />

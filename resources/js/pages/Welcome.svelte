@@ -21,120 +21,11 @@
         vehicleCategories: any[];
     }>();
 
-    const ourServices = [
-        {
-            title: 'Airport Transfer',
-            description:
-                'Punctual pick-up and drop-off to and from Ngurah Rai Airport. Start or end your journey stress-free.',
-            icon: 'flaticon-signpost',
-            img: '/assets/images/services/airport-transfer.jpg',
-        },
-        {
-            title: 'Point-to-Point Ride',
-            description:
-                'Quick and reliable everyday rides to take you from your hotel to the beach, restaurant, or anywhere in between.',
-            icon: 'icon-pin-2',
-            img: '/assets/images/services/point-to-point-ride.jpg',
-        },
-        // { title: 'Hourly & Daily Rental', description: 'Explore Bali at your own pace with our flexible hourly and full-day vehicle rental complete with a professional driver.', icon: 'flaticon-camera-1', img: '/assets/images/gallery/gallery-1-3.jpg' },
-        {
-            title: 'Intercity Travel',
-            description:
-                'Comfortable long-distance travel across Bali for those planning to move between distant regions like Ubud to Uluwatu.',
-            icon: 'flaticon-distance',
-            img: '/assets/images/services/intercity-travel.webp',
-        },
-        {
-            title: 'Corporate Travel',
-            description:
-                'Premium transportation solutions for business delegates, meetings, and corporate events with top-tier services.',
-            icon: 'icon-traveler-with-a-suitcase-1',
-            img: '/assets/images/services/corporate-travel.jpg',
-        },
-        {
-            title: 'Hotel Transfer',
-            description:
-                'Convenient hotel transfer services for comfortable travel to and from your accommodation.',
-            icon: 'fa fa-hotel',
-            img: '/assets/images/services/hotel-transfer.jpg',
-        },
-    ];
+    const settings = $derived(page.props.settings as any);
 
-    const popularDestinations = [
-        {
-            name: 'Tanah Lot Temple',
-            location: 'Tabanan, Bali',
-            img: '/assets/images/destination/tanahlot-temple.jpg',
-        },
-        {
-            name: 'Uluwatu Temple',
-            location: 'South Kuta, Bali',
-            img: '/assets/images/destination/uluwatu-temple.webp',
-        },
-        {
-            name: 'Tegallalang Rice Terrace',
-            location: 'Ubud, Bali',
-            img: '/assets/images/destination/tegallalang.webp',
-        },
-        {
-            name: 'Lempuyang Temple',
-            location: 'Karangasem, Bali',
-            img: '/assets/images/destination/lempuyang.jpg',
-        },
-        {
-            name: 'Seminyak Beach',
-            location: 'Kuta, Bali',
-            img: '/assets/images/destination/seminyak.webp',
-        },
-        {
-            name: 'Mount Batur',
-            location: 'Kintamani, Bali',
-            img: '/assets/images/destination/mount-batur.jpg',
-        },
-    ];
-
-    const customerTestimonials = [
-        {
-            name: 'Sarah Miller',
-            country: 'Australia',
-            comment:
-                'Booking my airport transfer via Siwride was the best decision. The driver was already there with a sign, and the car was incredibly clean and fresh!',
-            rating: 5,
-            img: '/assets/images/resources/why-choose-one-author-1.png',
-        },
-        {
-            name: 'James Chen',
-            country: 'Hong Kong',
-            comment:
-                'We used the SUV for a full day trip to Ubud. Our driver knew exactly where to go and was very patient with our children. Highly recommended!',
-            rating: 5,
-            img: '/assets/images/resources/why-choose-one-author-5.png',
-        },
-        {
-            name: 'Linda Wagner',
-            country: 'Germany',
-            comment:
-                'Safe driving and easy booking. I felt very secure as a solo traveler. The transparent pricing is a huge plus compared to other local options.',
-            rating: 5,
-            img: '/assets/images/resources/why-choose-one-author-4.png',
-        },
-        {
-            name: 'David Singh',
-            country: 'India',
-            comment:
-                'Excellent service! The app was easy to use and the pickup was on time. The driver was professional and the car was very comfortable.',
-            rating: 5,
-            img: '/assets/images/resources/why-choose-one-author-3.png',
-        },
-        {
-            name: 'Emilia Clarke',
-            country: 'UK',
-            comment:
-                'Siwride is my go-to for Bali travel. Reliable, transparent, and superior fleet quality compared to others. Worth every penny!',
-            rating: 5,
-            img: '/assets/images/resources/why-choose-one-author-2.png',
-        },
-    ];
+    const ourServices = $derived(settings.our_services || []);
+    const popularDestinations = $derived(settings.popular_destinations || []);
+    const customerTestimonials = $derived(settings.customer_testimonials || []);
 
     onMount(() => {
         document.body.classList.add('custom-cursor');
@@ -206,15 +97,13 @@
         <div class="container">
             <div class="hero-one__content">
                 <h5 class="hero-one__sub-title sub-title bw-split-in-left">
-                    Welcome to Siwride
+                    {settings.hero_welcome_text || 'Welcome to Siwride'}
                 </h5>
                 <h2 class="hero-one__title title bw-split-in-down">
-                    Hassle-Free Bali Travels with Siwride
+                    {settings.hero_title || 'Hassle-Free Bali Travels'}
                 </h2>
                 <p class="hero-one__text sub-title bw-split-in-left">
-                    Book your professional driver in advance and enjoy a
-                    comfortable, safe, and reliable journey across the beautiful
-                    island of Bali.
+                    {settings.hero_subtitle || 'Book your professional driver in advance.'}
                 </p>
             </div>
         </div>
@@ -612,48 +501,31 @@
                     <div class="why-choose-one__content">
                         <div class="sec-title">
                             <div class="sec-title__tagline bw-split-in-right">
-                                Why Siwride?<img
+                                {settings.why_choose_us_title || 'Why Siwride?'}<img
                                     src="/assets/images/shapes/sec-title-shape.png"
                                     alt="Siwride"
                                 />
                             </div>
                             <h3 class="sec-title__title bw-split-in-left">
-                                Your Premium Ride Partner
+                                {settings.why_choose_us_subtitle || 'Your Premium Ride Partner'}
                             </h3>
                             <p class="sec-title__text bw-split-in-up-fast">
-                                Experience hassle-free, comfortable, and safe
-                                transportation across Bali with our highly-rated
-                                drivers and diverse fleet. We prioritize your
-                                comfort above all else.
+                                {settings.why_choose_us_text || 'Experience hassle-free, comfortable, and safe transportation across Bali with our highly-rated drivers and diverse fleet. We prioritize your comfort above all else.'}
                             </p>
                         </div>
-                        <div class="why-choose-one__box">
-                            <div class="why-choose-one__box__icon">
-                                <i class="icon-traveler-with-a-suitcase-1"></i>
+                        {#each settings.why_choose_us_features || [] as feature}
+                            <div class="why-choose-one__box">
+                                <div class="why-choose-one__box__icon">
+                                    <i class="{feature.icon || 'flaticon-check'}"></i>
+                                </div>
+                                <h5 class="why-choose-one__box__title">
+                                    {feature.title}
+                                </h5>
+                                <p class="why-choose-one__box__text">
+                                    {feature.text}
+                                </p>
                             </div>
-                            <h5 class="why-choose-one__box__title">
-                                Professional Drivers
-                            </h5>
-                            <p class="why-choose-one__box__text">
-                                All our drivers are highly trained, vetted,<br
-                                />
-                                and dedicated to ensuring your smooth<br /> and safe
-                                journey everywhere you go.
-                            </p>
-                        </div>
-                        <div class="why-choose-one__box">
-                            <div class="why-choose-one__box__icon">
-                                <i class="flaticon-check"></i>
-                            </div>
-                            <h5 class="why-choose-one__box__title">
-                                Transparent Pricing
-                            </h5>
-                            <p class="why-choose-one__box__text">
-                                No hidden fees or unexpected surges!<br /> Enjoy
-                                high-quality service at fair,<br /> fixed rates every
-                                time you ride.
-                            </p>
-                        </div>
+                        {/each}
                         <div class="why-choose-one__btn">
                             <a href="/booking" class="travhub-btn">
                                 <span>Book a Ride</span>
@@ -684,7 +556,7 @@
                                 </div>
                             </div>
                             <h5 class="why-choose-one__count ms-1">
-                                10k+<span>Happy Passengers</span>
+                                {settings.why_choose_us_passenger_count || '10k+'}<span>Happy Passengers</span>
                             </h5>
                         </div>
                     </div>
@@ -827,15 +699,13 @@
                     />
                 </div>
                 <h3 class="sec-title__title bw-split-in-left">
-                    Our Premium Services
+                    {settings.services_title || 'Our Premium Services'}
                 </h3>
                 <p
                     class="sec-title__text bw-split-in-up-fast"
                     style="max-width: 600px; margin: 15px auto 0;"
                 >
-                    From quick trips to full-day explorations, we provide a
-                    variety of reliable transportation solutions tailored for
-                    your needs.
+                    {settings.services_subtitle || 'From quick trips to full-day explorations, we provide a variety of reliable transportation solutions tailored for your needs.'}
                 </p>
             </div>
 
@@ -918,16 +788,8 @@
                     />
                 </div>
                 <h3 class="sec-title__title bw-split-in-left">
-                    Our Coverage in Bali
+                    {settings.coverage_area_title || 'Our Coverage in Bali'}
                 </h3>
-                <p
-                    class="sec-title__text bw-split-in-up-fast"
-                    style="max-width: 600px; margin: 15px auto 0;"
-                >
-                    Currently, Siwride operates across all major tourist and
-                    business hubs in Bali. Zoom in on the map to see exactly
-                    where our drivers are ready to pick you up.
-                </p>
             </div>
 
             <div class="row" style="margin-top: 40px;">
@@ -935,25 +797,27 @@
                     <div
                         style="border-radius: 15px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.1); height: 500px; position: relative; border: 1px solid #f1f1f1; background-color: #eef2f5;"
                     >
-                        <div
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1;"
-                        >
-                            <i
-                                class="flaticon-pin-1"
-                                style="font-size: 60px; color: var(--travhub-base, #e52029); margin-bottom: 20px; opacity: 0.8;"
-                            ></i>
-                            <h4
-                                style="color: #444; font-weight: 700; font-size: 24px; margin-bottom: 10px;"
+                        {#if !settings.coverage_area_image}
+                            <div
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1;"
                             >
-                                Illustration Map of Bali
-                            </h4>
-                            <p style="color: #888; font-size: 15px; margin: 0;">
-                                (This area is reserved for a static map image of
-                                Bali)
-                            </p>
-                        </div>
+                                <i
+                                    class="flaticon-pin-1"
+                                    style="font-size: 60px; color: var(--travhub-base, #e52029); margin-bottom: 20px; opacity: 0.8;"
+                                ></i>
+                                <h4
+                                    style="color: #444; font-weight: 700; font-size: 24px; margin-bottom: 10px;"
+                                >
+                                    Illustration Map of Bali
+                                </h4>
+                                <p style="color: #888; font-size: 15px; margin: 0;">
+                                    (This area is reserved for a static map image of
+                                    Bali)
+                                </p>
+                            </div>
+                        {/if}
                         <img
-                            src="https://placehold.co/1200x500/e9ecef/e9ecef"
+                            src={settings.coverage_area_image || 'https://placehold.co/1200x500/e9ecef/e9ecef'}
                             alt="Bali Map Placeholder"
                             style="width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 0;"
                         />
@@ -976,15 +840,13 @@
                     />
                 </div>
                 <h3 class="sec-title__title bw-split-in-left">
-                    Popular Destinations
+                    {settings.destinations_title || 'Popular Destinations'}
                 </h3>
                 <p
                     class="sec-title__text bw-split-in-up-fast"
                     style="max-width: 600px; margin: 15px auto 0;"
                 >
-                    Discover the most frequently visited and breathtaking
-                    locations in Bali. Book a ride with us and travel there in
-                    comfort.
+                    {settings.destinations_subtitle || 'Discover the most frequently visited and breathtaking locations in Bali. Book a ride with us and travel there in comfort.'}
                 </p>
             </div>
 
