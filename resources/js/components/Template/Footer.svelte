@@ -56,14 +56,14 @@
                         style="display: flex; align-items: center; gap: 12px;"
                     >
                         <img
-                            src="/assets/images/siwride_logo.png"
+                            src={settings?.logo || "/assets/images/siwride_logo.png"}
                             width="50"
-                            style="border: 2px solid white; border-radius: 50%; padding: 2px; background-color: white;"
-                            alt="Siwride"
+                            alt={settings?.business_name || "Siwride"}
+                            style="border-radius: 50%; background: white; padding: 2px;"
                         />
                         <span
-                            style="color: white; font-size: 24px; font-weight: 700; letter-spacing: 1px;"
-                            >SIWRIDE</span
+                            style="color: white; font-size: 24px; font-weight: 700;"
+                            >{settings?.business_name || "SIWRIDE"}</span
                         >
                     </a>
                     <p class="footer-widget__text">
@@ -203,8 +203,9 @@
     <div class="main-footer__bottom wow fadeInUp" data-wow-delay="00ms">
         <div class="container">
             <div class="main-footer__bottom__inner">
-                <p class="main-footer__copyright">
-                    &copy; Copyright <span class="dynamic-year"></span> by Siwride.
+                <p class="main-footer__copyright__text">
+                    &copy; Copyright <span class="dynamic-year"></span>
+                    <a href="/">{settings?.business_name || "Siwride"}</a>.
                 </p>
             </div>
         </div>

@@ -71,14 +71,14 @@
                     style="display: flex; align-items: center; gap: 12px;"
                 >
                     <img
-                        src="/assets/images/siwride_logo.png"
-                        alt="Siwride"
+                        src={page.props.settings?.logo || "/assets/images/siwride_logo.png"}
+                        alt={page.props.settings?.business_name || "Siwride"}
                         width="70"
                         style="border: 2px solid white; border-radius: 50%; padding: 2px; background-color: white;"
                     />
                     <span
                         style="color: white; font-size: 30px; font-weight: 700; letter-spacing: 1px;"
-                        >SIWRIDE</span
+                        >{page.props.settings?.business_name || "SIWRIDE"}</span
                     >
                 </Link>
             </div>
@@ -205,12 +205,12 @@
         <div class="logo-box">
             <a href="/" style="display: flex; align-items: center; gap: 10px;">
                 <img
-                    src="/assets/images/siwride_logo.png"
+                    src={page.props.settings?.logo || "/assets/images/siwride_logo.png"}
                     width="48"
-                    alt="Siwride"
+                    alt={page.props.settings?.business_name || "Siwride"}
                     style="border-radius: 50%; background: white; padding: 2px;"
                 />
-                <span style="font-size: 22px; font-weight: 700;">SIWRIDE</span>
+                <span style="font-size: 22px; font-weight: 700;">{page.props.settings?.business_name || "SIWRIDE"}</span>
             </a>
         </div>
 

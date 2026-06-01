@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 @php 
     $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*'); 
-    $favicon = \App\Models\Setting::getValue('favicon');
-    $faviconUrl = $favicon ? asset('storage/' . $favicon) : null;
+    $logoUrl = \App\Models\Setting::getValue('logo');
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
     @if($isDashboard)
@@ -19,8 +18,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="icon" href="{{ $faviconUrl ?? '/favicon.ico' }}" sizes="any">
-        @if(!$faviconUrl)
+        <link rel="icon" href="{{ $logoUrl ?? '/favicon.ico' }}" sizes="any">
+        @if(!$logoUrl)
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         @endif
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -62,7 +61,7 @@
             </script>
         @else
             <!-- Boron Admin Assets -->
-            <link rel="shortcut icon" href="{{ $faviconUrl ?? '/assets-admin/images/favicon.ico' }}">
+            <link rel="shortcut icon" href="{{ $logoUrl ?? '/assets-admin/images/favicon.ico' }}">
             <link href="/assets-admin/css/vendor.min.css" rel="stylesheet" type="text/css" />
             <link href="/assets-admin/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
             <link href="/assets-admin/css/icons.min.css" rel="stylesheet" type="text/css" />
@@ -89,8 +88,8 @@
         
         <x-inertia::head>
             <title>{{ $page['props']['settings']['business_name'] ?? config('app.name', 'Laravel') }}</title>
-            @if(isset($page['props']['settings']['favicon']))
-                <link rel="icon" type="image/x-icon" href="/storage/{{ $page['props']['settings']['favicon'] }}">
+            @if(isset($page['props']['settings']['logo']))
+                <link rel="icon" type="image/x-icon" href="{{ $page['props']['settings']['logo'] }}">
             @endif
         </x-inertia::head>
     </head>

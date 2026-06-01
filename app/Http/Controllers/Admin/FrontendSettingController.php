@@ -18,6 +18,9 @@ class FrontendSettingController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
+            'business_name' => 'nullable|string',
+            'logo' => 'nullable',
+
             'company_phone' => 'nullable|string',
             'company_email' => 'nullable|email',
             'company_address' => 'nullable|string',
@@ -84,6 +87,11 @@ class FrontendSettingController extends Controller
             $path = $request->file('coverage_area_image')->store('frontend', 'public');
             Setting::setValue('coverage_area_image', '/storage/' . $path);
         }
+        
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('frontend', 'public');
+            Setting::setValue('logo', '/storage/' . $path);
+        }
 
         $this->saveArraySetting('our_services', $validated['our_services'] ?? [], 'img');
         $this->saveArraySetting('popular_destinations', $validated['popular_destinations'] ?? [], 'img');
@@ -98,6 +106,7 @@ class FrontendSettingController extends Controller
     private function saveSimpleSettings(array $data)
     {
         $keys = [
+            'business_name',
             'company_phone', 'company_email', 'company_address', 
             'company_facebook', 'company_twitter', 'company_instagram', 'company_linkedin',
             'hero_welcome_text', 'hero_title', 'hero_subtitle',

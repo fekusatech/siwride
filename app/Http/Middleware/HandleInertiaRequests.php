@@ -41,7 +41,6 @@ class HandleInertiaRequests extends Middleware
         $defaults = [
             'business_name' => config('app.name'),
             'logo' => null,
-            'favicon' => null,
             'recaptcha_enabled' => '0',
             'recaptcha_site_key' => null,
             'recaptcha_secret_key' => null,

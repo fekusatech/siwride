@@ -17,7 +17,7 @@ class Setting extends Model
             ->where('setting_key', $key)
             ->value('setting_value');
 
-        if (in_array($value, ['0', 0, 'false', false], true) && in_array($key, ['logo', 'favicon'], true)) {
+        if (in_array($value, ['0', 0, 'false', false], true) && in_array($key, ['logo'], true)) {
             return $default;
         }
 
@@ -26,7 +26,7 @@ class Setting extends Model
 
     public static function setValue(string $key, mixed $value): void
     {
-        if (in_array($key, ['logo', 'favicon'], true) && (blank($value) || $value === false)) {
+        if (in_array($key, ['logo'], true) && (blank($value) || $value === false)) {
             $value = null;
         }
 
@@ -43,7 +43,7 @@ class Setting extends Model
             static::query()->pluck('setting_value', 'setting_key')->toArray()
         );
 
-        foreach (['logo', 'favicon'] as $key) {
+        foreach (['logo'] as $key) {
             if (in_array($values[$key] ?? null, ['0', 0, 'false', false], true)) {
                 $values[$key] = null;
             }
