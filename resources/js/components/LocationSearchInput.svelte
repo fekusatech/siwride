@@ -18,8 +18,10 @@
     }
 
     interface Props {
-        /** Current value bound from the parent */
+        /** Current value bound from the parent (usually place name) */
         value: string;
+        /** Full address bound from the parent */
+        fullAddress?: string;
         /** Input ID for label association */
         id?: string;
         /** Placeholder text */
@@ -38,6 +40,7 @@
 
     let {
         value = $bindable(''),
+        fullAddress = $bindable(''),
         id = '',
         placeholder = 'Hotel name, area, or landmark...',
         required = false,
@@ -137,7 +140,7 @@
             sharedAutocompleteService.getPlacePredictions(
                 {
                     input: q,
-                    bounds: baliBounds,
+                    locationRestriction: baliBounds,
                     componentRestrictions: { country: 'id' },
                 },
                 (predictions: any, status: any) => {
@@ -159,8 +162,9 @@
                         status ===
                         google.maps.places.PlacesServiceStatus.ZERO_RESULTS
                     ) {
-                        // If Google returns nothing, try backend fallback
-                        fetchFromBackend(q);
+                        suggestions = [];
+                        isOpen = false;
+                        isLoading = false;
                     } else {
                         // On other errors (over query limit, etc), also try backend
                         fetchFromBackend(q);
@@ -198,6 +202,7 @@
 
     function selectSuggestion(suggestion: Suggestion) {
         value = suggestion.name;
+        fullAddress = suggestion.address;
         onchange?.(value);
         suggestions = [];
         isOpen = false;

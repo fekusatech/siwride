@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Zone;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ZoneSeeder extends Seeder
 {
@@ -14,6 +15,10 @@ class ZoneSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Zone::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $zones = [
             // ─────────────────────────────────────────────────────────
             // BADUNG REGENCY — Southern Tourist Corridor

@@ -14,6 +14,7 @@ class ZonePricingRule extends Model
         'base_price',
         'price_per_km',
         'minimum_price',
+        'distance_km',
         'is_active',
     ];
 
@@ -23,6 +24,7 @@ class ZonePricingRule extends Model
             'base_price' => 'decimal:2',
             'price_per_km' => 'decimal:2',
             'minimum_price' => 'decimal:2',
+            'distance_km' => 'decimal:2',
             'is_active' => 'boolean',
         ];
     }
@@ -42,9 +44,24 @@ class ZonePricingRule extends Model
         return $query->where('is_active', true);
     }
 
-    public function calculate(float $distanceKm): float
+    /**
+     * Calculate the booking price for this zone pair.
+     *
+     * Formula: max(minimum_price, base_price + distance_km × vehicle.price_per_km)
+     *
+     * If a VehicleCategory is supplied its price_per_km is used as the per-km
+     * rate; otherwise the zone's own price_per_km is used as a fallback so that
+     * the method stays backward-compatible.
+     */
+    public function calculate(?VehicleCategory $vehicle = null, ?float $exactDistanceKm = null): float
     {
-        $price = (float) $this->base_price + ($distanceKm * (float) $this->price_per_km);
+        $perKm = $vehicle
+            ? (float) $vehicle->price_per_km
+            : (float) $this->price_per_km;
+
+        $dist = $exactDistanceKm !== null ? $exactDistanceKm : (float) $this->distance_km;
+
+        $price = (float) $this->base_price + ($dist * $perKm);
 
         return max($price, (float) $this->minimum_price);
     }

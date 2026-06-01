@@ -83,6 +83,7 @@ Route::get('/booking/payment-success', [CustomerOrderController::class, 'payment
 Route::post('/booking/validate-email', [CustomerOrderController::class, 'validateEmail'])->name('booking.validate-email');
 Route::get('/booking/search', [CustomerOrderController::class, 'searchBookings'])->name('booking.search');
 Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
+Route::get('/booking/estimate-price', [CustomerOrderController::class, 'estimatePrice'])->name('booking.estimate-price');
 Route::get('/booking/success', [CustomerOrderController::class, 'success'])->name('booking.success');
 Route::get('/booking/{booking_code}', [CustomerOrderController::class, 'show'])->name('booking.show');
 

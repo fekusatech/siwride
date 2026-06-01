@@ -4,6 +4,7 @@
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
     import { Link } from '@inertiajs/svelte';
+    import { formatRupiah } from '@/lib/utils';
 
     interface OrderData {
         booking_code: string;
@@ -101,7 +102,7 @@
                         {#each order.extras as extra}
                             <div class="detail-row">
                                 <span class="detail-label"><i class="fas fa-check-circle text-success"></i> {extra.label}</span>
-                                <span class="detail-value">{extra.price > 0 ? '+$' + extra.price : 'Free'}</span>
+                                <span class="detail-value">{extra.price > 0 ? '+' + formatRupiah(extra.price) : 'Free'}</span>
                             </div>
                         {/each}
                     </div>
@@ -109,7 +110,7 @@
 
                     <div class="success-card__total">
                         <span>Total Paid</span>
-                        <span class="total-amount">${totalPrice.toFixed(0)}</span>
+                        <span class="total-amount">{formatRupiah(totalPrice)}</span>
                     </div>
                 </div>
                 {/if}

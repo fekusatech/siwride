@@ -4,6 +4,7 @@
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
+    import { formatRupiah } from '@/lib/utils';
 
     interface OrderData {
         booking_code: string;
@@ -124,7 +125,7 @@
                                         <i class="fas fa-spinner fa-spin"></i> Processing...
                                     {:else}
                                         <i class="fas fa-lock"></i>
-                                        Pay ${totalPrice.toFixed(0)} Securely
+                                        Pay {formatRupiah(totalPrice)} Securely
                                     {/if}
                                 </button>
 
@@ -177,7 +178,7 @@
                                 {#each order.extras as extra}
                                     <div class="summary-row">
                                         <span>{extra.label}</span>
-                                        <span>{extra.price > 0 ? '+$' + extra.price : 'Free'}</span>
+                                        <span>{extra.price > 0 ? '+' + formatRupiah(extra.price) : 'Free'}</span>
                                     </div>
                                 {/each}
                             {/if}
@@ -186,7 +187,7 @@
                         <div class="summary-divider"></div>
                         <div class="summary-total-row">
                             <span>Total Amount</span>
-                            <span class="total-price">${totalPrice.toFixed(0)}</span>
+                            <span class="total-price">{formatRupiah(totalPrice)}</span>
                         </div>
 
                         <div class="booking-ref">

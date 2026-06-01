@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             DriverSeeder::class,
             OrderSeeder::class,
             ZoneSeeder::class,
+            ZonePricingSeeder::class,
         ]);
 
         Schema::enableForeignKeyConstraints();

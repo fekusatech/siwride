@@ -6,6 +6,8 @@ use App\Http\Requests\StoreCustomerOrderRequest;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\VehicleCategory;
+use App\Models\Zone;
+use App\Models\ZonePricingRule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,7 +47,7 @@ class CustomerOrderController extends Controller
                 'passengers' => $request->input('passengers', '1'),
             ],
             'vehicleCategories' => $vehicleCategories,
-            'allVehicleCategories' => VehicleCategory::orderBy('base_price')->get(),
+            'allVehicleCategories' => VehicleCategory::orderBy('price_per_km')->get(),
         ]);
     }
 
@@ -133,6 +135,63 @@ class CustomerOrderController extends Controller
                     'base_price' => $order->vehicleCategory->base_price,
                 ] : null,
             ] : null,
+        ]);
+    }
+
+    /**
+     * Estimate the booking price for a given route (pickup/dropoff lat-lng).
+     *
+     * Returns the computed price per vehicle category so the booking page
+     * can display live prices before the customer submits the form.
+     */
+    public function estimatePrice(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'pickup_latitude' => ['required', 'numeric'],
+            'pickup_longitude' => ['required', 'numeric'],
+            'dropoff_latitude' => ['required', 'numeric'],
+            'dropoff_longitude' => ['required', 'numeric'],
+            'exact_distance_km' => ['nullable', 'numeric'],
+        ]);
+
+        $pickupZone = Zone::findContainingPoint((float) $validated['pickup_latitude'], (float) $validated['pickup_longitude']);
+        $dropoffZone = Zone::findContainingPoint((float) $validated['dropoff_latitude'], (float) $validated['dropoff_longitude']);
+
+        if (!$pickupZone) {
+            return response()->json(['error' => 'Alamat penjemputan (Pickup) berada di luar zona layanan kami.'], 422);
+        }
+        if (!$dropoffZone) {
+            return response()->json(['error' => 'Alamat tujuan (Dropoff) berada di luar zona layanan kami.'], 422);
+        }
+
+        $pricingRule = ZonePricingRule::active()
+            ->where('pickup_zone_id', $pickupZone->id)
+            ->where('dropoff_zone_id', $dropoffZone->id)
+            ->first();
+
+        if (!$pricingRule) {
+            return response()->json(['error' => "Maaf, rute dari {$pickupZone->name} ke {$dropoffZone->name} saat ini belum tersedia."], 422);
+        }
+
+        $categories = VehicleCategory::all();
+
+        $exactDistance = isset($validated['exact_distance_km']) ? (float) $validated['exact_distance_km'] : null;
+
+        $prices = $categories->map(function (VehicleCategory $category) use ($pricingRule, $exactDistance): array {
+            $estPrice = (int) round($pricingRule->calculate($category, $exactDistance));
+
+            return [
+                'id' => $category->id,
+                'estimated_price' => $estPrice,
+                'price_per_km' => (float) $category->price_per_km,
+            ];
+        });
+
+        return response()->json([
+            'pickup_zone' => $pickupZone?->name,
+            'dropoff_zone' => $dropoffZone?->name,
+            'distance_km' => $exactDistance ?? $pricingRule?->distance_km,
+            'prices' => $prices,
         ]);
     }
 
@@ -250,9 +309,48 @@ class CustomerOrderController extends Controller
             $vehicleCategory = VehicleCategory::find($validated['vehicle_category_id']);
         }
 
-        // Calculate total price (base price + extras)
-        $basePrice = $vehicleCategory ? (float) $vehicleCategory->base_price : 0;
-        $extrasTotal = 0;
+        // ── Calculate total price ─────────────────────────────────────────────
+        //
+        // Primary path: look up the zone pair from the order's lat/lng, then
+        // use ZonePricingRule::calculate($vehicle) which applies the formula:
+        //   price = max(minimum_price, base_price + distance_km × vehicle.price_per_km)
+        //
+        // Fallback: if no zone rule exists for this route, use the vehicle's
+        // base_price directly so the booking still goes through.
+        $basePrice = 0.0;
+
+        if ($vehicleCategory) {
+            $pickupLat = isset($validated['pickup_latitude']) ? (float) $validated['pickup_latitude'] : null;
+            $pickupLng = isset($validated['pickup_longitude']) ? (float) $validated['pickup_longitude'] : null;
+            $dropoffLat = isset($validated['dropoff_latitude']) ? (float) $validated['dropoff_latitude'] : null;
+            $dropoffLng = isset($validated['dropoff_longitude']) ? (float) $validated['dropoff_longitude'] : null;
+
+            if ($pickupLat && $pickupLng && $dropoffLat && $dropoffLng) {
+                $pickupZone = Zone::findContainingPoint($pickupLat, $pickupLng);
+                $dropoffZone = Zone::findContainingPoint($dropoffLat, $dropoffLng);
+
+                if (!$pickupZone) {
+                    throw ValidationException::withMessages(['pickup_address' => 'Alamat penjemputan berada di luar zona layanan.']);
+                }
+                if (!$dropoffZone) {
+                    throw ValidationException::withMessages(['dropoff_address' => 'Alamat tujuan berada di luar zona layanan.']);
+                }
+
+                $pricingRule = ZonePricingRule::active()
+                    ->where('pickup_zone_id', $pickupZone->id)
+                    ->where('dropoff_zone_id', $dropoffZone->id)
+                    ->first();
+
+                if (!$pricingRule) {
+                    throw ValidationException::withMessages(['pickup_address' => "Rute dari {$pickupZone->name} ke {$dropoffZone->name} belum tersedia."]);
+                }
+
+                $exactDistance = isset($validated['exact_distance_km']) ? (float) $validated['exact_distance_km'] : null;
+                $basePrice = $pricingRule->calculate($vehicleCategory, $exactDistance);
+            }
+        }
+
+        $extrasTotal = 0.0;
         $extras = $validated['extras'] ?? [];
         foreach ($extras as $extra) {
             $extrasTotal += (float) ($extra['price'] ?? 0);

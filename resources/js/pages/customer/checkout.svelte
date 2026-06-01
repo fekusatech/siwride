@@ -1,13 +1,15 @@
 <script lang="ts">
     import { page, useForm, router } from '@inertiajs/svelte';
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
     import LocationSearchInput from '@/components/LocationSearchInput.svelte';
-    import flatpickr from 'flatpickr';
-    import 'flatpickr/dist/flatpickr.min.css';
+    import DatePicker from '@/components/DatePicker.svelte';
+    import TimePicker from '@/components/TimePicker.svelte';
+    import { getMinPickupTime, formatEarliestTime, isPickupTimeValid } from '@/lib/pickupTime';
+    import { formatRupiah } from '@/lib/utils';
 
     interface VehicleCategory {
         id: number;
@@ -17,6 +19,7 @@
         luggage_capacity: number | null;
         advantages: string[] | null;
         base_price: string;
+        price_per_km: string;
         image_url: string;
         vehicle_type: string;
     }
@@ -26,7 +29,7 @@
         vehicleCategory: VehicleCategory | null;
     }>();
 
-    // Steps: 1=Transfer Details, 2=Passenger Info, 3=Extras, 4=Summary
+    // Steps: 1=Transfer Details, 2=Passenger Info, 3=Extras, 4=Summary, 5=Payment
     let currentStep = $state(1);
     let stepError = $state('');
     let isValidatingEmail = $state(false);
@@ -40,7 +43,17 @@
         { id: 'pets', label: 'I am travelling with pets', description: 'Pets must be kept in a carrier. Additional charges may apply.', price: 0 },
     ];
 
+    const PAYMENT_METHODS = [
+        { id: 'visa',        label: 'Visa',       icon: 'fab fa-cc-visa',       color: '#1a1f71' },
+        { id: 'mastercard',  label: 'Mastercard', icon: 'fab fa-cc-mastercard', color: '#eb001b' },
+        { id: 'paypal',      label: 'PayPal',     icon: 'fab fa-cc-paypal',     color: '#003087' },
+        { id: 'apple_pay',   label: 'Apple Pay',  icon: 'fab fa-apple-pay',     color: '#000'    },
+        { id: 'google_pay',  label: 'Google Pay', icon: 'fab fa-google-pay',    color: '#4285f4' },
+        { id: 'cash',        label: 'Cash',       icon: 'fas fa-money-bill-wave', color: '#16a34a' },
+    ];
+
     let selectedExtras = $state<string[]>([]);
+    let agreedToTerms = $state(false);
 
     const form = useForm({
         customer_name: '',
@@ -48,6 +61,11 @@
         customer_phone: '',
         pickup_address: transfer?.pickup || '',
         dropoff_address: transfer?.dropoff || '',
+        pickup_latitude: '' as string | number,
+        pickup_longitude: '' as string | number,
+        dropoff_latitude: '' as string | number,
+        dropoff_longitude: '' as string | number,
+        exact_distance_km: null as number | null,
         date: transfer?.date || '',
         time: transfer?.time || '',
         passengers: transfer?.passengers || '1',
@@ -80,6 +98,142 @@
         }
     });
 
+    /** Estimated zone-based price returned by /booking/estimate-price (null = no zone match). */
+    let estimatedBasePrice = $state<number | null>(null);
+    let priceZoneInfo = $state<{ pickup_zone: string | null; dropoff_zone: string | null; distance_km: number | null }>({
+        pickup_zone: null,
+        dropoff_zone: null,
+        distance_km: null,
+    });
+    let exactDistanceStr = $state<string | null>(null);
+    let exactDurationStr = $state<string | null>(null);
+    let isPricingLoaded = $state(false);
+    let zoneError = $state<string | null>(null);
+
+    let fullPickupAddress = $state<string | null>(null);
+    let fullDropoffAddress = $state<string | null>(null);
+    let flightNumber = $state('');
+
+    /** Geocodes an address string and returns {lat, lng, formatted} or null. */
+    async function geocodeAddress(address: string): Promise<{ lat: number; lng: number, formatted: string } | null> {
+        return new Promise((resolve) => {
+            try {
+                const geocoder = new (window as any).google.maps.Geocoder();
+                geocoder.geocode(
+                    { address, region: 'id', bounds: { south: -8.95, west: 114.4, north: -8.06, east: 115.72 } },
+                    (results: any, status: string) => {
+                        if (status === 'OK' && results && results[0]) {
+                            const loc = results[0].geometry.location;
+                            resolve({ lat: loc.lat(), lng: loc.lng(), formatted: results[0].formatted_address });
+                        } else {
+                            resolve(null);
+                        }
+                    }
+                );
+            } catch {
+                resolve(null);
+            }
+        });
+    }
+
+    /** Calls the estimate-price API and stores the result. */
+    async function fetchPriceEstimate(pLat: number, pLng: number, dLat: number, dLng: number, exactDistanceKm: number | null = null) {
+        try {
+            let url = `/booking/estimate-price?pickup_latitude=${pLat}&pickup_longitude=${pLng}&dropoff_latitude=${dLat}&dropoff_longitude=${dLng}`;
+            if (exactDistanceKm !== null) {
+                url += `&exact_distance_km=${exactDistanceKm}`;
+            }
+            const res = await fetch(url, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!res.ok) {
+                if (res.status === 422) {
+                    const errData = await res.json();
+                    zoneError = errData.error;
+                }
+                return;
+            }
+            zoneError = null;
+            const data = await res.json();
+            priceZoneInfo = { pickup_zone: data.pickup_zone, dropoff_zone: data.dropoff_zone, distance_km: data.distance_km };
+            // Find price for the current vehicle category
+            const match = data.prices?.find((p: any) => p.id === vehicleCategory?.id);
+            if (match?.estimated_price != null) {
+                estimatedBasePrice = match.estimated_price;
+            }
+        } catch {
+            // silently ignore — will fall back to price_per_km × avg distance
+        } finally {
+            isPricingLoaded = true;
+        }
+    }
+
+    /** Geocodes both addresses then fetches the price estimate. */
+    async function geocodeAndEstimate() {
+        const pickupAddr = transfer?.pickup;
+        const dropoffAddr = transfer?.dropoff;
+        if (!pickupAddr || !dropoffAddr) { isPricingLoaded = true; return; }
+
+        // Wait for google maps to be available (it's loaded async)
+        let waited = 0;
+        while (typeof (window as any).google === 'undefined' && waited < 5000) {
+            await new Promise((r) => setTimeout(r, 300));
+            waited += 300;
+        }
+        if (typeof (window as any).google === 'undefined') { isPricingLoaded = true; return; }
+
+        const [pickupCoords, dropoffCoords] = await Promise.all([
+            geocodeAddress(pickupAddr),
+            geocodeAddress(dropoffAddr),
+        ]);
+
+        let fullPickupAddr: string | null = null;
+        let fullDropoffAddr: string | null = null;
+
+        if (pickupCoords) {
+            form.pickup_latitude  = pickupCoords.lat;
+            form.pickup_longitude = pickupCoords.lng;
+            fullPickupAddr = pickupCoords.formatted;
+            fullPickupAddress = fullPickupAddr;
+        }
+        if (dropoffCoords) {
+            form.dropoff_latitude  = dropoffCoords.lat;
+            form.dropoff_longitude = dropoffCoords.lng;
+            fullDropoffAddr = dropoffCoords.formatted;
+            fullDropoffAddress = fullDropoffAddr;
+        }
+
+        if (pickupCoords && dropoffCoords) {
+            let exactDistanceKm: number | null = null;
+            try {
+                const service = new (window as any).google.maps.DistanceMatrixService();
+                const dmResponse = await new Promise<any>((resolve, reject) => {
+                    service.getDistanceMatrix(
+                        {
+                            origins: [pickupCoords],
+                            destinations: [dropoffCoords],
+                            travelMode: 'DRIVING',
+                        },
+                        (response: any, status: string) => {
+                            if (status === 'OK') resolve(response);
+                            else reject(status);
+                        }
+                    );
+                });
+                const element = dmResponse.rows[0].elements[0];
+                if (element.status === 'OK') {
+                    exactDistanceKm = element.distance.value / 1000;
+                    exactDistanceStr = element.distance.text;
+                    exactDurationStr = element.duration.text;
+                    form.exact_distance_km = exactDistanceKm;
+                }
+            } catch (err) {
+                // ignore
+            }
+            await fetchPriceEstimate(pickupCoords.lat, pickupCoords.lng, dropoffCoords.lat, dropoffCoords.lng, exactDistanceKm);
+        } else {
+            isPricingLoaded = true;
+        }
+    }
+
     // Computed totals
     let extrasTotal = $derived(
         selectedExtras.reduce((sum, id) => {
@@ -87,8 +241,36 @@
             return sum + (extra?.price ?? 0);
         }, 0)
     );
-    let basePrice = $derived(vehicleCategory ? parseFloat(vehicleCategory.base_price) : 0);
+    /**
+     * Base price: prefer zone-estimated price; fall back to price_per_km × 40 km average;
+     * final fallback is 0 (shows 'Calculating...' until resolved).
+     */
+    let basePrice = $derived(
+        estimatedBasePrice !== null
+            ? estimatedBasePrice
+            : vehicleCategory
+                ? parseFloat(vehicleCategory.price_per_km) * 40   // rough avg until API responds
+                : 0
+    );
     let totalPrice = $derived(basePrice + extrasTotal);
+
+    /** Reactive clock — ticks every minute so the earliest-time notice stays fresh. */
+    let now = $state(new Date());
+
+    let clockInterval: ReturnType<typeof setInterval>;
+
+    /** Minimum pickup time — recalculates every minute via the `now` clock. */
+    const minTime = $derived(getMinPickupTime(form.date, now));
+
+    // Default route info
+    const routeInfo = { distance: '0 km', travelTime: '0 min' };
+
+    function formatDisplayDate(isoDate: string): string {
+        if (!isoDate) return '';
+        const [y, m, d] = isoDate.split('-').map(Number);
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return `${d} ${months[m - 1]} ${y}`;
+    }
 
     const validateName = (e: Event) => {
         const t = e.target as HTMLInputElement;
@@ -111,30 +293,6 @@
         }
     };
 
-    function datePicker(node: HTMLInputElement) {
-        const fp = flatpickr(node, {
-            minDate: 'today',
-            defaultDate: form.date || null,
-            disableMobile: 'true',
-            monthSelectorType: 'static',
-            onChange: (_: any, dateStr: string) => { form.date = dateStr; },
-        });
-        return { destroy() { fp.destroy(); } };
-    }
-
-    function timePicker(node: HTMLInputElement) {
-        const fp = flatpickr(node, {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: 'H:i',
-            time_24hr: true,
-            defaultDate: form.time || null,
-            disableMobile: 'true',
-            onChange: (_: any, dateStr: string) => { form.time = dateStr; },
-        });
-        return { destroy() { fp.destroy(); } };
-    }
-
     async function nextStep() {
         stepError = '';
         if (currentStep === 1) {
@@ -142,6 +300,10 @@
             if (!form.dropoff_address) { stepError = 'Please provide a destination.'; return; }
             if (!form.date) { stepError = 'Please select a transfer date.'; return; }
             if (!form.time) { stepError = 'Please select a pickup time.'; return; }
+            if (!isPickupTimeValid(form.date, form.time, now)) {
+                stepError = `Your selected time is too early. Earliest pickup for today is ${formatEarliestTime(form.date, now)}.`;
+                return;
+            }
             currentStep = 2;
         } else if (currentStep === 2) {
             if (!form.customer_name || form.customer_name.length < 3) { stepError = 'Please enter a valid full name.'; return; }
@@ -164,6 +326,8 @@
             currentStep = 3;
         } else if (currentStep === 3) {
             currentStep = 4;
+        } else if (currentStep === 4) {
+            currentStep = 5;
         }
     }
 
@@ -174,13 +338,39 @@
 
     function handleSubmit(e: Event) {
         e.preventDefault();
-        if (currentStep !== 4) return;
-        form.post('/orders', {
+        if (currentStep !== 5) return;
+        if (!form.payment_method) { stepError = 'Please select a payment method.'; return; }
+        if (!agreedToTerms) { stepError = 'Please agree to the Terms & Conditions.'; return; }
+        form.transform((data) => {
+            let combinedNotes = data.notes || '';
+            if (flightNumber) {
+                combinedNotes = `Flight Number: ${flightNumber}\n\n${combinedNotes}`;
+            }
+            return {
+                ...data,
+                notes: combinedNotes.trim(),
+            };
+        }).post('/orders', {
             onSuccess: () => { form.reset(); },
         });
     }
 
-    const stepLabels = ['Transfer Details', 'Passenger Info', 'Extras', 'Summary'];
+    const stepLabels = ['Transfer Details', 'Passenger Info', 'Extras', 'Summary', 'Payment'];
+
+    onMount(() => {
+        // Tick every 60 seconds so the "Earliest pickup" notice and validation
+        // stay accurate while the customer fills in the form — no page refresh needed.
+        clockInterval = setInterval(() => {
+            now = new Date();
+        }, 60_000);
+
+        // Geocode pickup/dropoff and fetch zone-based price estimate
+        geocodeAndEstimate();
+    });
+
+    onDestroy(() => {
+        clearInterval(clockInterval);
+    });
 </script>
 
 <AppHead title="Checkout - Siwride" />
@@ -263,17 +453,28 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">Transfer Date *</label>
-                                        <div class="input-icon-wrap">
-                                            <input type="text" use:datePicker class="premium-input" placeholder="Select date" />
-                                            <i class="fas fa-calendar-alt input-icon-r"></i>
-                                        </div>
+                                        <DatePicker
+                                            id="co_date"
+                                            bind:value={form.date}
+                                            placeholder="Select pickup date"
+                                            required
+                                        />
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Pickup Time *</label>
-                                        <div class="input-icon-wrap">
-                                            <input type="text" use:timePicker class="premium-input" placeholder="Select time" />
-                                            <i class="fas fa-clock input-icon-r"></i>
-                                        </div>
+                                        <TimePicker
+                                            id="co_time"
+                                            bind:value={form.time}
+                                            placeholder="Select pickup time"
+                                            required
+                                            minTime={minTime}
+                                        />
+                                        {#if minTime}
+                                            <p class="co-time-notice" style="font-size:13px;">
+                                                <i class="fas fa-info-circle"></i>
+                                                Earliest pickup today: <strong>{formatEarliestTime(form.date, now)}</strong>
+                                            </p>
+                                        {/if}
                                     </div>
                                 </div>
                             </div>
@@ -313,8 +514,8 @@
                                         <input type="tel" value={form.customer_phone} oninput={validatePhone} class="premium-input" placeholder="+60 12 345 6789" maxlength="20" />
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Notes / Comments</label>
-                                        <input type="text" bind:value={form.notes} class="premium-input" placeholder="Flight number, special requests..." maxlength="500" />
+                                        <label class="form-label">Flight Number</label>
+                                        <input type="text" bind:value={flightNumber} class="premium-input" placeholder="e.g. MH 123 (Optional)" maxlength="50" />
                                     </div>
                                 </div>
                                 {#if !(page.props as any).auth?.customer}
@@ -375,7 +576,7 @@
                                                 <div class="extra-card__top">
                                                     <span class="extra-label">{extra.label}</span>
                                                     {#if extra.price > 0}
-                                                        <span class="extra-price">+${extra.price}</span>
+                                                        <span class="extra-price">+{formatRupiah(extra.price)}</span>
                                                     {:else}
                                                         <span class="extra-price extra-price--free">Free</span>
                                                     {/if}
@@ -401,18 +602,28 @@
                         <div class="step-card">
                             <div class="step-card__header">
                                 <h4>Step 4. Order Summary</h4>
-                                <p>Review your booking before continuing to payment</p>
+                                <p>Review your booking before proceeding to payment</p>
                             </div>
                             <div class="step-card__body">
                                 <div class="summary-section">
                                     <h6 class="summary-section-title">Transfer Route</h6>
-                                    <div class="summary-row">
-                                        <span class="summary-label"><i class="fas fa-map-marker-alt text-danger"></i> Pickup</span>
-                                        <span class="summary-value">{form.pickup_address}</span>
+                                    <div class="summary-row" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+                                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                                            <span class="summary-label"><i class="fas fa-map-marker-alt text-danger"></i> Pickup</span>
+                                            <span class="summary-value" style="text-align: right;">{form.pickup_address}</span>
+                                        </div>
+                                        {#if fullPickupAddress && fullPickupAddress !== form.pickup_address}
+                                            <small class="text-muted" style="font-size: 0.75rem; text-align: right; width: 100%;">{fullPickupAddress}</small>
+                                        {/if}
                                     </div>
-                                    <div class="summary-row">
-                                        <span class="summary-label"><i class="fas fa-flag-checkered text-success"></i> Drop-off</span>
-                                        <span class="summary-value">{form.dropoff_address}</span>
+                                    <div class="summary-row" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+                                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                                            <span class="summary-label"><i class="fas fa-flag-checkered text-success"></i> Drop-off</span>
+                                            <span class="summary-value" style="text-align: right;">{form.dropoff_address}</span>
+                                        </div>
+                                        {#if fullDropoffAddress && fullDropoffAddress !== form.dropoff_address}
+                                            <small class="text-muted" style="font-size: 0.75rem; text-align: right; width: 100%;">{fullDropoffAddress}</small>
+                                        {/if}
                                     </div>
                                     <div class="summary-row">
                                         <span class="summary-label"><i class="fas fa-calendar-alt"></i> Date & Time</span>
@@ -432,7 +643,7 @@
                                             <strong>{vehicleCategory.title}</strong>
                                             <span>{vehicleCategory.passenger_capacity} passengers · {vehicleCategory.luggage_capacity} luggage</span>
                                         </div>
-                                        <span class="summary-vehicle-price">${basePrice.toFixed(0)}</span>
+                                        <span class="summary-vehicle-price">{formatRupiah(basePrice)}</span>
                                     </div>
                                 </div>
                                 {/if}
@@ -444,7 +655,7 @@
                                         {#if extra}
                                         <div class="summary-row">
                                             <span class="summary-label"><i class="fas fa-plus-circle text-success"></i> {extra.label}</span>
-                                            <span class="summary-value">{extra.price > 0 ? '+$' + extra.price : 'Free'}</span>
+                                            <span class="summary-value">{extra.price > 0 ? '+' + formatRupiah(extra.price) : 'Free'}</span>
                                         </div>
                                         {/if}
                                     {/each}
@@ -452,7 +663,51 @@
                                 {/if}
                                 <div class="summary-total">
                                     <span>Total</span>
-                                    <span class="total-amount">${totalPrice.toFixed(0)}</span>
+                                    <span class="total-amount">{formatRupiah(totalPrice)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {/if}
+
+                        <!-- STEP 5: Payment -->
+                        {#if currentStep === 5}
+                        <div class="step-card">
+                            <div class="step-card__header">
+                                <h4>Step 5. Payment</h4>
+                                <p>Choose how you'd like to pay for your transfer</p>
+                            </div>
+                            <div class="step-card__body">
+                                <div class="payment-methods">
+                                    {#each PAYMENT_METHODS as method}
+                                        <label class="method-card {form.payment_method === method.id ? 'method-card--selected' : ''}">
+                                            <input type="radio" name="payment_method" value={method.id} bind:group={form.payment_method} class="method-radio" />
+                                            <div class="method-icon" style="color: {method.color};">
+                                                <i class="{method.icon}"></i>
+                                            </div>
+                                            <span class="method-label">{method.label}</span>
+                                            <div class="method-check {form.payment_method === method.id ? 'visible' : ''}">
+                                                <i class="fas fa-check"></i>
+                                            </div>
+                                        </label>
+                                    {/each}
+                                </div>
+
+                                <div class="terms-box">
+                                    <label class="terms-label">
+                                        <input type="checkbox" bind:checked={agreedToTerms} class="terms-checkbox" />
+                                        <span>
+                                            I agree to the <a href="/terms" target="_blank">Terms &amp; Conditions</a>
+                                        </span>
+                                    </label>
+                                    <p class="terms-provider">
+                                        The service is provided by Siwride. By completing this booking you accept our cancellation and refund policy.
+                                    </p>
+                                </div>
+
+                                <div class="security-badges">
+                                    <span><i class="fas fa-shield-alt"></i> SSL Secured</span>
+                                    <span><i class="fas fa-lock"></i> 256-bit Encryption</span>
+                                    <span><i class="fas fa-check-circle"></i> Safe Checkout</span>
                                 </div>
                             </div>
                         </div>
@@ -465,12 +720,12 @@
                                     <i class="fas fa-arrow-left"></i> Back
                                 </button>
                             {:else}
-                                <a href="/booking?pickup={encodeURIComponent(transfer?.pickup || '')}&dropoff={encodeURIComponent(transfer?.dropoff || '')}&date={transfer?.date || ''}&passengers={transfer?.passengers || '1'}" class="btn-back">
+                                <a href="/booking?pickup={encodeURIComponent(transfer?.pickup || '')}&dropoff={encodeURIComponent(transfer?.dropoff || '')}&date={transfer?.date || ''}&time={encodeURIComponent(transfer?.time || '')}&passengers={transfer?.passengers || '1'}" class="btn-back">
                                     <i class="fas fa-arrow-left"></i> Back to Vehicles
                                 </a>
                             {/if}
 
-                            {#if currentStep < 4}
+                            {#if currentStep < 5}
                                 <button type="button" class="btn-next" onclick={nextStep} disabled={isValidatingEmail}>
                                     {#if isValidatingEmail}
                                         Validating... <i class="fas fa-spinner fa-spin"></i>
@@ -479,9 +734,12 @@
                                     {/if}
                                 </button>
                             {:else}
-                                <button type="submit" class="btn-submit" disabled={form.processing}>
-                                    {form.processing ? 'Processing...' : 'Continue to Payment'}
-                                    {#if !form.processing}<i class="fas fa-credit-card"></i>{/if}
+                                <button type="submit" class="btn-submit" disabled={form.processing || !form.payment_method || !agreedToTerms || !!zoneError}>
+                                    {#if form.processing}
+                                        <i class="fas fa-spinner fa-spin"></i> Processing...
+                                    {:else}
+                                        <i class="fas fa-lock"></i> Pay {formatRupiah(totalPrice)} Securely
+                                    {/if}
                                 </button>
                             {/if}
                         </div>
@@ -491,6 +749,8 @@
                 <!-- Right: Sticky Order Summary -->
                 <div class="checkout-sidebar">
                     <div class="sidebar-card">
+
+                        <!-- Vehicle -->
                         {#if vehicleCategory}
                             <div class="sidebar-vehicle">
                                 <img src={vehicleCategory.image_url} alt={vehicleCategory.title} />
@@ -500,25 +760,146 @@
                                 </div>
                             </div>
                         {/if}
+
                         <div class="sidebar-divider"></div>
+
+                        <div class="sidebar-box">
+                        <h4 class="sidebar-title">Order Summary</h4>
+                        
+                        {#if zoneError}
+                            <div class="alert alert-danger p-3 mb-4 rounded-3 border-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i> {zoneError}
+                            </div>
+                        {/if}
+
+                        <!-- Route -->
+                        <div class="sidebar-section-title mt-0">Route</div>
+                        <div class="sidebar-route">
+                            <div class="sidebar-route-point" style="align-items: flex-start;">
+                                <span class="sidebar-route-dot sidebar-route-dot--from" style="margin-top: 6px;"></span>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span class="sidebar-route-text">{form.pickup_address || transfer?.pickup || '—'}</span>
+                                    {#if fullPickupAddress && fullPickupAddress !== (form.pickup_address || transfer?.pickup)}
+                                        <small class="route-full-address text-muted" style="margin-top: 2px;">{fullPickupAddress}</small>
+                                    {/if}
+                                </div>
+                            </div>
+                            <div class="sidebar-route-line"></div>
+                            <div class="sidebar-route-point" style="align-items: flex-start;">
+                                <span class="sidebar-route-dot sidebar-route-dot--to" style="margin-top: 6px;"></span>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span class="sidebar-route-text">{form.dropoff_address || transfer?.dropoff || '—'}</span>
+                                    {#if fullDropoffAddress && fullDropoffAddress !== (form.dropoff_address || transfer?.dropoff)}
+                                        <small class="route-full-address text-muted" style="margin-top: 2px;">{fullDropoffAddress}</small>
+                                    {/if}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-divider"></div>
+
+                        <!-- Trip details -->
+                        <div class="sidebar-section-title">Trip Details</div>
+                        <div class="sidebar-info-grid">
+                            <div class="sidebar-info-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <div>
+                                    <span class="sidebar-info-label">Date</span>
+                                    <span class="sidebar-info-value">{form.date ? formatDisplayDate(form.date) : '—'}</span>
+                                </div>
+                            </div>
+                            <div class="sidebar-info-item">
+                                <i class="fas fa-clock"></i>
+                                <div>
+                                    <span class="sidebar-info-label">Pickup Time</span>
+                                    <span class="sidebar-info-value">{form.time || '—'}</span>
+                                </div>
+                            </div>
+                            <div class="sidebar-info-item">
+                                <i class="fas fa-users"></i>
+                                <div>
+                                    <span class="sidebar-info-label">Passengers</span>
+                                    <span class="sidebar-info-value">{form.passengers}</span>
+                                </div>
+                            </div>
+                            <div class="sidebar-info-item">
+                                <i class="fas fa-road"></i>
+                                <div>
+                                    <span class="sidebar-info-label">Distance</span>
+                                    <span class="sidebar-info-value">
+                                        {#if !isPricingLoaded}
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        {:else}
+                                            {exactDistanceStr || (priceZoneInfo.distance_km ? priceZoneInfo.distance_km + ' km' : '0 km')}
+                                        {/if}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="sidebar-info-item">
+                                <i class="fas fa-hourglass-half"></i>
+                                <div>
+                                    <span class="sidebar-info-label">Est. Duration</span>
+                                    <span class="sidebar-info-value">
+                                        {#if !isPricingLoaded}
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        {:else}
+                                            {exactDurationStr || '0 min'}
+                                        {/if}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="sidebar-info-item">
+                                <i class="fas fa-car"></i>
+                                <div>
+                                    <span class="sidebar-info-label">Transfer Type</span>
+                                    <span class="sidebar-info-value">Private</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-divider"></div>
+
+                        <!-- Pricing breakdown -->
+                        <div class="sidebar-section-title">Price Breakdown</div>
+                        {#if priceZoneInfo.pickup_zone && priceZoneInfo.dropoff_zone}
+                            <div class="sidebar-zone-info">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {priceZoneInfo.pickup_zone} → {priceZoneInfo.dropoff_zone}
+                                {#if exactDistanceStr}
+                                    &nbsp;· {exactDistanceStr}
+                                {:else if priceZoneInfo.distance_km}
+                                    &nbsp;· {priceZoneInfo.distance_km} km
+                                {/if}
+                            </div>
+                        {/if}
                         <div class="sidebar-row">
-                            <span>Vehicle</span>
-                            <span>${basePrice.toFixed(0)}</span>
+                            <span>Vehicle ({vehicleCategory?.title ?? 'Transfer'})</span>
+                            {#if !isPricingLoaded}
+                                <span class="price-calculating"><i class="fas fa-spinner fa-spin"></i> Calculating...</span>
+                            {:else}
+                                <span>{formatRupiah(basePrice)}</span>
+                            {/if}
                         </div>
                         {#each selectedExtras as id}
                             {@const extra = EXTRAS.find(e => e.id === id)}
                             {#if extra && extra.price > 0}
                             <div class="sidebar-row">
                                 <span>{extra.label}</span>
-                                <span>+${extra.price}</span>
+                                <span>+{formatRupiah(extra.price)}</span>
                             </div>
                             {/if}
                         {/each}
+
                         <div class="sidebar-divider"></div>
                         <div class="sidebar-total">
                             <span>Total</span>
-                            <span>${totalPrice.toFixed(0)}</span>
+                            {#if !isPricingLoaded}
+                                <span class="price-calculating"><i class="fas fa-spinner fa-spin"></i></span>
+                            {:else}
+                                <span>{formatRupiah(totalPrice)}</span>
+                            {/if}
                         </div>
+
                         <div class="sidebar-note">
                             <i class="fas fa-shield-alt"></i>
                             Secure booking. No hidden fees.
@@ -572,7 +953,7 @@
 
     /* Step Card */
     .step-card { background: #fff; border-radius: 16px; border: 1px solid #eaeef2; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 20px; }
-    .step-card__header { padding: 24px 28px; border-bottom: 1px solid #f0f4f8; }
+    .step-card__header { padding: 24px 28px 10px; border-bottom: 1px solid #f0f4f8; }
     .step-card__header h4 { font-size: 20px; font-weight: 800; color: #1e293b; margin: 0; }
     .step-card__header p { font-size: 14px; color: #64748b; margin: 4px 0 0; }
     .step-card__body { padding: 28px; }
@@ -681,25 +1062,121 @@
         display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
     }
 
+
     /* Sidebar */
     .checkout-sidebar { position: sticky; top: 100px; }
     .sidebar-card {
         background: #fff; border-radius: 16px; border: 1px solid #eaeef2;
         box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 24px;
     }
-    .sidebar-vehicle { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-    .sidebar-vehicle img { width: 80px; height: 60px; object-fit: contain; background: #f8fafc; border-radius: 8px; padding: 4px; }
-    .sidebar-vehicle-info h5 { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 4px; }
-    .sidebar-vehicle-info span { font-size: 13px; color: #64748b; }
+    .sidebar-vehicle { display: flex; align-items: center; gap: 14px; }
+    .sidebar-vehicle img { width: 72px; height: 54px; object-fit: contain; background: #f8fafc; border-radius: 8px; padding: 4px; flex-shrink: 0; }
+    .sidebar-vehicle-info h5 { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 3px; }
+    .sidebar-vehicle-info span { font-size: 12px; color: #64748b; }
     .sidebar-divider { height: 1px; background: #f0f4f8; margin: 14px 0; }
-    .sidebar-row { display: flex; justify-content: space-between; font-size: 14px; color: #475569; padding: 5px 0; }
+    .sidebar-section-title {
+        font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.7px; color: #94a3b8; margin-bottom: 10px;
+    }
+
+    .sidebar-zone-info {
+        font-size: 11px;
+        color: #64748b;
+        background: #f8fafc;
+        padding: 5px 8px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .sidebar-zone-info i { color: #94a3b8; font-size: 10px; }
+    .price-calculating { color: #94a3b8; font-style: italic; }
+
+    /* Route in sidebar */
+    .sidebar-route { display: flex; flex-direction: column; gap: 0; }
+    .sidebar-route-point { display: flex; align-items: flex-start; gap: 10px; }
+    .sidebar-route-dot {
+        width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+    }
+    .sidebar-route-dot--from { background: var(--travhub-base); }
+    .sidebar-route-dot--to   { background: #10b981; }
+    .sidebar-route-text { font-size: 13px; font-weight: 500; color: #1e293b; line-height: 1.4; }
+    .sidebar-route-line {
+        width: 2px; height: 14px; margin-left: 4px;
+        background: repeating-linear-gradient(to bottom, #cbd5e1 0, #cbd5e1 3px, transparent 3px, transparent 6px);
+    }
+
+    /* Trip details grid */
+    .sidebar-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .sidebar-info-item {
+        display: flex; align-items: flex-start; gap: 7px;
+        background: #f8fafc; border-radius: 8px; padding: 8px 10px;
+    }
+    .sidebar-info-item i { font-size: 12px; color: var(--travhub-base); margin-top: 2px; flex-shrink: 0; }
+    .sidebar-info-item div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .sidebar-info-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: #94a3b8; }
+    .sidebar-info-value { font-size: 12px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Price rows */
+    .sidebar-row { display: flex; justify-content: space-between; font-size: 13px; color: #475569; padding: 4px 0; }
     .sidebar-total { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 800; color: #1e293b; }
-    .sidebar-note { margin-top: 16px; font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 8px; }
+    .sidebar-note { margin-top: 14px; font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 7px; }
     .sidebar-note i { color: #10b981; }
 
-    /* Flatpickr */
-    :global(.flatpickr-calendar) { border-radius: 12px !important; box-shadow: 0 10px 35px rgba(0,0,0,0.1) !important; }
-    :global(.flatpickr-day.selected), :global(.flatpickr-day.startRange), :global(.flatpickr-day.endRange) {
-        background: var(--travhub-base) !important; border-color: var(--travhub-base) !important;
+    /* ── Step 5: Payment ── */
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    @media (max-width: 480px) { .payment-methods { grid-template-columns: repeat(2, 1fr); } }
+    .method-card {
+        display: flex; flex-direction: column; align-items: center; gap: 7px;
+        padding: 16px 12px; border: 2px solid #e2e8f0; border-radius: 12px;
+        cursor: pointer; transition: all 0.2s; background: #fff; position: relative;
+    }
+    .method-card:hover { border-color: #94a3b8; background: #f8fafc; }
+    .method-card--selected { border-color: var(--travhub-base); background: rgba(229,32,41,0.03); }
+    .method-radio { display: none; }
+    .method-icon { font-size: 30px; line-height: 1; }
+    .method-label { font-size: 12px; font-weight: 700; color: #334155; }
+    .method-check {
+        position: absolute; top: 7px; right: 7px;
+        width: 20px; height: 20px; border-radius: 50%;
+        background: #f1f5f9; color: #94a3b8;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 9px; transition: all 0.2s; opacity: 0;
+    }
+    .method-check.visible { background: var(--travhub-base); color: #fff; opacity: 1; }
+
+    .terms-box {
+        padding: 16px 18px; background: #f8fafc; border-radius: 12px;
+        border: 1px solid #e2e8f0; margin-bottom: 20px;
+    }
+    .terms-label {
+        display: flex; align-items: flex-start; gap: 10px;
+        cursor: pointer; font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 8px;
+    }
+    .terms-checkbox { width: 17px; height: 17px; accent-color: var(--travhub-base); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+    .terms-label a { color: var(--travhub-base); text-decoration: underline; }
+    .terms-provider { font-size: 12px; color: #94a3b8; margin: 0; padding-left: 27px; line-height: 1.6; }
+
+    .security-badges {
+        display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;
+        font-size: 12px; color: #94a3b8;
+    }
+    .security-badges span { display: flex; align-items: center; gap: 5px; }
+    .security-badges i { color: #10b981; }
+
+    .route-full-address {
+        font-size: 11px;
+        letter-spacing: 0.2px; 
+        line-height: 1.4; 
     }
 </style>

@@ -44,7 +44,8 @@ class VehicleCategorySeeder extends Seeder
                 'passenger_capacity' => 4,
                 'luggage_capacity' => 3,
                 'advantages' => ['Air conditioning', 'Comfortable seats', 'Affordable price'],
-                'base_price' => 35.00,
+                'base_price' => 0,          // route base fee is in zone_pricing_rules
+                'price_per_km' => 7_500,       // Rp 7.500 / km
                 'examples' => 'Toyota Avanza, Honda Mobilio, Suzuki Ertiga',
                 'image' => '/assets/images/vehicles/sedan.png',
                 'vehicle_type' => 'economy',
@@ -57,7 +58,8 @@ class VehicleCategorySeeder extends Seeder
                 'passenger_capacity' => 6,
                 'luggage_capacity' => 5,
                 'advantages' => ['Spacious interior', 'Air conditioning', 'Extra luggage space'],
-                'base_price' => 50.00,
+                'base_price' => 0,
+                'price_per_km' => 9_500,       // Rp 9.500 / km
                 'examples' => 'Toyota Innova, Honda Freed, Toyota Sienta',
                 'image' => '/assets/images/vehicles/minivan.png',
                 'vehicle_type' => 'economy',
@@ -70,7 +72,8 @@ class VehicleCategorySeeder extends Seeder
                 'passenger_capacity' => 15,
                 'luggage_capacity' => 10,
                 'advantages' => ['Large group capacity', 'Air conditioning', 'Ample luggage space', 'Ideal for tours'],
-                'base_price' => 85.00,
+                'base_price' => 0,
+                'price_per_km' => 13_000,      // Rp 13.000 / km
                 'examples' => 'Toyota Hiace, Suzuki APV, Mitsubishi L300',
                 'image' => '/assets/images/vehicles/minibus.png',
                 'vehicle_type' => 'van',
@@ -83,7 +86,8 @@ class VehicleCategorySeeder extends Seeder
                 'passenger_capacity' => 4,
                 'luggage_capacity' => 2,
                 'advantages' => ['Eco-friendly', 'Quiet ride', 'Air conditioning', 'Modern interior'],
-                'base_price' => 45.00,
+                'base_price' => 0,
+                'price_per_km' => 10_000,      // Rp 10.000 / km (EV premium offset)
                 'examples' => 'Hyundai Ioniq 5, Wuling Binguo EV, BYD Atto 3',
                 'image' => '/assets/images/vehicles/electric.png',
                 'vehicle_type' => 'special',
@@ -96,8 +100,9 @@ class VehicleCategorySeeder extends Seeder
                 'passenger_capacity' => 4,
                 'luggage_capacity' => 3,
                 'advantages' => ['Luxury interior', 'Professional driver', 'Premium amenities', 'Air conditioning'],
-                'base_price' => 75.00,
-                'examples' => 'Toyota Camry, Mercedes C-Class, Alphard',
+                'base_price' => 0,
+                'price_per_km' => 18_000,      // Rp 18.000 / km
+                'examples' => 'Toyota Alphard, Mercedes C-Class, Toyota Camry',
                 'image' => '/assets/images/vehicles/business.png',
                 'vehicle_type' => 'premium',
             ],

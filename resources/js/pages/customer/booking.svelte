@@ -1,11 +1,18 @@
 <script lang="ts">
-    import { page, router } from '@inertiajs/svelte';
+    import { router } from '@inertiajs/svelte';
     import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
     import LocationSearchInput from '@/components/LocationSearchInput.svelte';
+    import DatePicker from '@/components/DatePicker.svelte';
+    import TimePicker from '@/components/TimePicker.svelte';
+    import { getMinPickupTime, formatEarliestTime, isPickupTimeValid } from '@/lib/pickupTime';
+    import { formatRupiah } from '@/lib/utils';
+
+    /** Reactive clock — ticks every minute so earliest-time notices stay fresh. */
+    let now = $state(new Date());
 
     interface VehicleCategory {
         id: number;
@@ -17,8 +24,10 @@
         luggage_capacity: number | null;
         advantages: string[] | null;
         base_price: string;
+        price_per_km: string;
         image_url: string;
         vehicle_type: string;
+        examples: string | null;
     }
 
     let {
@@ -37,7 +46,12 @@
     let date = $state(prefill?.date || '');
     let time = $state(prefill?.time || '');
     let passengerCount = $state(parseInt(prefill?.passengers || '1'));
-    let dateDisplay = $state('');
+
+    let pickupAddress = $state<string>('');
+    let dropoffAddress = $state<string>('');
+
+    /** Minimum pickup time — recalculates every minute via the `now` clock. */
+    const minTime = $derived(getMinPickupTime(date, now));
 
     // Filtered categories (reactive to passengerCount)
     let filteredCategories = $state<VehicleCategory[]>(vehicleCategories);
@@ -51,20 +65,173 @@
 
     function formatDate(isoDate: string): string {
         if (!isoDate) return '';
-        const d = new Date(isoDate + 'T00:00:00');
-        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const [y, m, d] = isoDate.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        return `${d} ${months[m - 1]} ${y}`;
     }
 
-    // Dummy route info
+    // Dynamic Pricing state
+    let estimatedPrices = $state<Record<number, number>>({});
+    let isPricingLoaded = $state(false);
+    let priceZoneInfo = $state<{ pickup_zone: string | null; dropoff_zone: string | null; distance_km: number | null }>({
+        pickup_zone: null,
+        dropoff_zone: null,
+        distance_km: null,
+    });
+    
+    // Dynamic route info
+    let exactDistanceStr = $state<string | null>(null);
+    let exactDurationStr = $state<string | null>(null);
+
+    let zoneError = $state<string | null>(null);
+
+    /** Geocodes an address string and returns {lat, lng} or null. */
+    async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+        return new Promise((resolve) => {
+            try {
+                const geocoder = new (window as any).google.maps.Geocoder();
+                geocoder.geocode(
+                    { address, region: 'id', bounds: { south: -8.95, west: 114.4, north: -8.06, east: 115.72 } },
+                    (results: any, status: string) => {
+                        if (status === 'OK' && results && results[0]) {
+                            const loc = results[0].geometry.location;
+                            resolve({ lat: loc.lat(), lng: loc.lng() });
+                        } else {
+                            resolve(null);
+                        }
+                    }
+                );
+            } catch {
+                resolve(null);
+            }
+        });
+    }
+
+    /** Calls the estimate-price API and stores the result. */
+    async function fetchPriceEstimate(pLat: number, pLng: number, dLat: number, dLng: number, exactDistanceKm: number | null = null) {
+        try {
+            let url = `/booking/estimate-price?pickup_latitude=${pLat}&pickup_longitude=${pLng}&dropoff_latitude=${dLat}&dropoff_longitude=${dLng}`;
+            if (exactDistanceKm !== null) {
+                url += `&exact_distance_km=${exactDistanceKm}`;
+            }
+            const res = await fetch(url, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+            
+            if (!res.ok) {
+                if (res.status === 422) {
+                    const errData = await res.json();
+                    zoneError = errData.error;
+                }
+                return;
+            }
+            zoneError = null;
+            const data = await res.json();
+            priceZoneInfo = { pickup_zone: data.pickup_zone, dropoff_zone: data.dropoff_zone, distance_km: data.distance_km };
+            
+            const newPrices: Record<number, number> = {};
+            if (data.prices) {
+                data.prices.forEach((p: any) => {
+                    if (p.estimated_price != null) {
+                        newPrices[p.id] = p.estimated_price;
+                    }
+                });
+            }
+            estimatedPrices = newPrices;
+        } catch {
+            // silently ignore
+        } finally {
+            isPricingLoaded = true;
+        }
+    }
+
+    /** Geocodes both addresses then fetches the price estimate. */
+    async function geocodeAndEstimate() {
+        if (!pickup || !dropoff) { isPricingLoaded = true; return; }
+
+        isPricingLoaded = false;
+        
+        // Wait for google maps to be available
+        let waited = 0;
+        while (typeof (window as any).google === 'undefined' && waited < 5000) {
+            await new Promise((r) => setTimeout(r, 300));
+            waited += 300;
+        }
+        if (typeof (window as any).google === 'undefined') { isPricingLoaded = true; return; }
+
+        const [pickupCoords, dropoffCoords] = await Promise.all([
+            geocodeAddress(pickup),
+            geocodeAddress(dropoff),
+        ]);
+
+        if (pickupCoords && dropoffCoords) {
+            let exactDistanceKm: number | null = null;
+            try {
+                const service = new (window as any).google.maps.DistanceMatrixService();
+                const dmResponse = await new Promise<any>((resolve, reject) => {
+                    service.getDistanceMatrix(
+                        {
+                            origins: [pickupCoords],
+                            destinations: [dropoffCoords],
+                            travelMode: 'DRIVING',
+                        },
+                        (response: any, status: string) => {
+                            if (status === 'OK') resolve(response);
+                            else reject(status);
+                        }
+                    );
+                });
+                const element = dmResponse.rows[0].elements[0];
+                if (element.status === 'OK') {
+                    exactDistanceKm = element.distance.value / 1000;
+                    exactDistanceStr = element.distance.text;
+                    exactDurationStr = element.duration.text;
+                }
+            } catch (err) {
+                // ignore
+            }
+            await fetchPriceEstimate(pickupCoords.lat, pickupCoords.lng, dropoffCoords.lat, dropoffCoords.lng, exactDistanceKm);
+        } else {
+            isPricingLoaded = true;
+        }
+    }
+
+    // Call geocode whenever pickup or dropoff changes (debounced)
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    $effect(() => {
+        const p = pickup;
+        const d = dropoff;
+        if (p && d) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                geocodeAndEstimate();
+            }, 1000);
+        }
+    });
+
+    function getBasePrice(category: VehicleCategory): number {
+        if (!pickup || !dropoff) return 0;
+        if (estimatedPrices[category.id] !== undefined) {
+            return estimatedPrices[category.id];
+        }
+        return 0; // Default to 0 instead of average if not loaded
+    }
+
+
+    // Default route info
     const routeInfo = {
-        distance: '61 km',
-        travelTime: '~1 h 30 min',
-        fromPrice: 35,
+        distance: '0 km',
+        travelTime: '0 min',
+        fromPrice: 0,
     };
 
     function handleRouteSearch(e: Event) {
         e.preventDefault();
         if (!pickup || !dropoff || !date) return;
+        // Validate time when today is selected
+        if (time && !isPickupTimeValid(date, time, now)) {
+            alert(`Please select a pickup time at least 30 minutes from now. Earliest available: ${formatEarliestTime(date, now)}`);
+            return;
+        }
         // Re-fetch page with new params to filter vehicles
         router.get('/booking', {
             pickup,
@@ -86,40 +253,23 @@
         });
     }
 
+    let clockInterval: ReturnType<typeof setInterval>;
+
     onMount(() => {
         document.body.classList.add('custom-cursor');
 
-        if ((window as any).$) {
-            const jQuery = (window as any).$;
-            setTimeout(() => {
-                let dateEl = jQuery('#booking_date');
-                if (dateEl.length && dateEl.daterangepicker) {
-                    dateEl.daterangepicker({
-                        autoUpdateInput: false,
-                        singleDatePicker: true,
-                        timePicker: false,
-                        minDate: new Date(),
-                        locale: { format: 'D MMM YYYY' },
-                    });
-                    dateEl.on('apply.daterangepicker', function (this: HTMLElement, ev: any, picker: any) {
-                        jQuery(this).val(picker.startDate.format('D MMM YYYY'));
-                        jQuery('#booking_date_iso').val(picker.startDate.format('YYYY-MM-DD'));
-                        date = picker.startDate.format('YYYY-MM-DD');
-                        dateDisplay = picker.startDate.format('D MMM YYYY');
-                    });
-                }
-            }, 100);
-        }
+        // Tick every 60 seconds so the "Earliest pickup" notice stays accurate
+        // while the customer fills in the form — no page refresh needed.
+        clockInterval = setInterval(() => {
+            now = new Date();
+        }, 60_000);
+
+        geocodeAndEstimate();
     });
 
     onDestroy(() => {
         document.body.classList.remove('custom-cursor');
-        if ((window as any).$) {
-            let dateEl = (window as any).$('#booking_date');
-            if (dateEl.length && dateEl.data('daterangepicker')) {
-                dateEl.data('daterangepicker').remove();
-            }
-        }
+        clearInterval(clockInterval);
     });
 </script>
 
@@ -158,9 +308,18 @@
                         <p class="booking-card__subtitle">Enter your route and travel information</p>
                     </div>
                 </div>
+                
                 <div class="booking-card__body">
+                <!-- Error / Notice -->
+                        {#if zoneError}
+                            <div class="alert alert-danger p-3 mb-4 rounded-3 border-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i> {zoneError}
+                            </div>
+                        {/if}
                     <form onsubmit={handleRouteSearch}>
-                        <div class="route-form-grid">
+
+                        <!-- Row 1: Address fields — full width each -->
+                        <div class="route-form-row route-form-row--locations">
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-map-marker-alt text-danger"></i>
@@ -169,6 +328,7 @@
                                 <LocationSearchInput
                                     id="booking_pickup"
                                     bind:value={pickup}
+                                    bind:fullAddress={pickupAddress}
                                     placeholder="Hotel, airport, landmark..."
                                     variant="premium"
                                     required
@@ -182,46 +342,46 @@
                                 <LocationSearchInput
                                     id="booking_dropoff"
                                     bind:value={dropoff}
+                                    bind:fullAddress={dropoffAddress}
                                     placeholder="Beach, temple, area..."
                                     variant="premium"
                                     required
                                 />
                             </div>
+                        </div>
+
+                        <!-- Row 2: Date | Time | Passengers | Search -->
+                        <div class="route-form-row route-form-row--search">
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-calendar-alt" style="color: var(--travhub-base);"></i>
                                     Transfer Date *
                                 </label>
-                                <div class="input-icon-wrapper">
-                                    <input
-                                        id="booking_date"
-                                        type="text"
-                                        class="premium-input"
-                                        placeholder="Select date"
-                                        value={dateDisplay || (date ? date : '')}
-                                        autocomplete="off"
-                                        readonly
-                                        style="cursor: pointer;"
-                                        required
-                                    />
-                                    <input type="hidden" id="booking_date_iso" value={date} />
-                                    <i class="fas fa-calendar-alt input-icon-right"></i>
-                                </div>
+                                <DatePicker
+                                    id="booking_date"
+                                    bind:value={date}
+                                    placeholder="Select date"
+                                    required
+                                />
                             </div>
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-clock" style="color: var(--travhub-base);"></i>
                                     Pickup Time *
                                 </label>
-                                <div class="input-icon-wrapper">
-                                    <input
-                                        type="time"
-                                        class="premium-input"
-                                        bind:value={time}
-                                        required
-                                    />
-                                    <i class="fas fa-clock input-icon-right"></i>
-                                </div>
+                                <TimePicker
+                                    id="booking_time"
+                                    bind:value={time}
+                                    placeholder="Select time"
+                                    required
+                                    minTime={minTime}
+                                />
+                                {#if minTime}
+                                    <p class="booking-time-notice">
+                                        <i class="fas fa-info-circle"></i>
+                                        Earliest pickup today: <strong>{formatEarliestTime(date, now)}</strong>
+                                    </p>
+                                {/if}
                             </div>
                             <div class="form-group">
                                 <label class="form-label">
@@ -229,22 +389,27 @@
                                     Passengers
                                 </label>
                                 <div class="passenger-counter">
-                                    <button type="button" class="counter-btn" onclick={() => { if (passengerCount > 1) passengerCount--; }}>
+                                    <button type="button" class="counter-btn" onclick={() => { if (passengerCount > 1) passengerCount--; }} aria-label="Decrease passengers">
                                         <i class="fas fa-minus"></i>
                                     </button>
-                                    <span class="counter-value">{passengerCount} {passengerCount === 1 ? 'Passenger' : 'Passengers'}</span>
-                                    <button type="button" class="counter-btn" onclick={() => { if (passengerCount < 50) passengerCount++; }}>
+                                    <span class="counter-value">
+                                        <i class="fas fa-user counter-icon"></i>
+                                        {passengerCount}
+                                    </span>
+                                    <button type="button" class="counter-btn" onclick={() => { if (passengerCount < 50) passengerCount++; }} aria-label="Increase passengers">
                                         <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
                             <div class="form-group form-group--action">
+                                <label class="form-label form-label--hidden" id="btnlabel" aria-hidden="true">&nbsp;</label>
                                 <button type="submit" class="search-btn">
                                     <i class="fas fa-search"></i>
                                     Search Vehicles
                                 </button>
                             </div>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -261,12 +426,18 @@
                 </div>
                 <div class="booking-card__body">
                     <div class="route-info-card">
+                        
+
+                        <!-- Dynamic Pricing / Info Content -->
                         <div class="route-info-route">
                             <div class="route-point">
                                 <div class="route-dot route-dot--from"></div>
                                 <div class="route-point-text">
                                     <span class="route-label">FROM</span>
                                     <span class="route-address">{pickup}</span>
+                                    {#if pickupAddress && pickupAddress !== pickup}
+                                        <small class="route-full-address text-muted d-block mt-1">{pickupAddress}</small>
+                                    {/if}
                                 </div>
                             </div>
                             <div class="route-connector">
@@ -281,6 +452,9 @@
                                 <div class="route-point-text">
                                     <span class="route-label">TO</span>
                                     <span class="route-address">{dropoff}</span>
+                                    {#if dropoffAddress && dropoffAddress !== dropoff}
+                                        <small class="route-full-address text-muted d-block mt-1">{dropoffAddress}</small>
+                                    {/if}
                                 </div>
                             </div>
                         </div>
@@ -289,27 +463,50 @@
                                 <i class="fas fa-road"></i>
                                 <div>
                                     <span class="stat-label">Distance</span>
-                                    <span class="stat-value">{routeInfo.distance}</span>
+                                    <span class="stat-value">
+                                        {#if !isPricingLoaded}
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        {:else if exactDistanceStr}
+                                            {exactDistanceStr}
+                                        {:else if priceZoneInfo.distance_km}
+                                            {priceZoneInfo.distance_km} km
+                                        {:else}
+                                            {routeInfo.distance}
+                                        {/if}
+                                    </span>
                                 </div>
                             </div>
-                            <div class="route-stat-divider"></div>
                             <div class="route-stat">
                                 <i class="fas fa-clock"></i>
                                 <div>
                                     <span class="stat-label">Travel Time</span>
-                                    <span class="stat-value">{routeInfo.travelTime}</span>
+                                    <span class="stat-value">
+                                        {#if !isPricingLoaded}
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        {:else if exactDurationStr}
+                                            {exactDurationStr}
+                                        {:else}
+                                            {routeInfo.travelTime}
+                                        {/if}
+                                    </span>
                                 </div>
                             </div>
-                            <div class="route-stat-divider"></div>
                             <div class="route-stat">
                                 <i class="fas fa-tag"></i>
                                 <div>
                                     <span class="stat-label">Price From</span>
-                                    <span class="stat-value stat-value--price">${routeInfo.fromPrice}</span>
+                                    <span class="stat-value stat-value--price">
+                                        {#if !isPricingLoaded}
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        {:else if filteredCategories.length > 0}
+                                            {formatRupiah(getBasePrice(filteredCategories[0]))}
+                                        {:else}
+                                            {formatRupiah(routeInfo.fromPrice)}
+                                        {/if}
+                                    </span>
                                 </div>
                             </div>
                             {#if date}
-                            <div class="route-stat-divider"></div>
                             <div class="route-stat">
                                 <i class="fas fa-calendar-check"></i>
                                 <div>
@@ -352,14 +549,27 @@
                                 <div class="vehicle-card">
                                     <div class="vehicle-card__image">
                                         <img src={category.image_url} alt={category.title} />
-                                        {#if category.vehicle_type === 'premium'}
+                                        <!-- {#if category.vehicle_type === 'premium'}
                                             <div class="vehicle-badge vehicle-badge--premium">Premium</div>
                                         {:else if category.vehicle_type === 'special'}
                                             <div class="vehicle-badge vehicle-badge--eco">Eco</div>
-                                        {/if}
+                                        {/if} -->
                                     </div>
                                     <div class="vehicle-card__body">
-                                        <h5 class="vehicle-card__title">{category.title}</h5>
+                                        <div class="vehicle-card__title-row">
+                                            <h5 class="vehicle-card__title">{category.title}</h5>
+                                            {#if category.examples}
+                                                <div class="vehicle-tooltip-wrap">
+                                                    <button type="button" class="vehicle-tooltip-btn" aria-label="Example vehicles">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </button>
+                                                    <div class="vehicle-tooltip" role="tooltip">
+                                                        <span class="vehicle-tooltip__label">Example vehicles</span>
+                                                        <span class="vehicle-tooltip__value">{category.examples}</span>
+                                                    </div>
+                                                </div>
+                                            {/if}
+                                        </div>
                                         <div class="vehicle-card__specs">
                                             <span class="spec-item">
                                                 <i class="fas fa-users"></i>
@@ -381,15 +591,19 @@
                                     <div class="vehicle-card__footer">
                                         <div class="vehicle-card__price">
                                             <span class="price-from">From</span>
-                                            <span class="price-amount">${parseFloat(category.base_price).toFixed(0)}</span>
+                                            {#if !isPricingLoaded}
+                                                <span class="price-amount price-calculating"><i class="fas fa-spinner fa-spin"></i></span>
+                                            {:else}
+                                                <span class="price-amount">{formatRupiah(getBasePrice(category))}</span>
+                                            {/if}
                                         </div>
                                         <button
                                             type="button"
                                             class="select-btn"
                                             onclick={() => selectVehicle(category)}
-                                            disabled={!pickup || !dropoff || !date}
+                                            disabled={!pickup || !dropoff || !date || !!zoneError}
                                         >
-                                            Select — ${parseFloat(category.base_price).toFixed(0)}
+                                            Select
                                         </button>
                                     </div>
                                 </div>
@@ -425,16 +639,16 @@
         display: flex;
         align-items: center;
         gap: 16px;
-        padding: 24px 32px;
+        padding: 20px 28px;
         border-bottom: 1px solid #f0f4f8;
     }
     .step-badge {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         background: var(--travhub-base, #e52029);
         color: #fff;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 800;
         display: flex;
         align-items: center;
@@ -442,82 +656,107 @@
         flex-shrink: 0;
     }
     .booking-card__title {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 800;
         color: #1e293b;
         margin: 0;
     }
     .booking-card__subtitle {
-        font-size: 14px;
+        font-size: 13px;
         color: #64748b;
         margin: 2px 0 0;
     }
     .booking-card__body {
-        padding: 28px 32px;
+        padding: 24px 28px;
     }
     @media (max-width: 768px) {
-        .booking-card__header, .booking-card__body { padding: 20px; }
+        .booking-card__header, .booking-card__body { padding: 16px; }
     }
 
-    /* ── Route Form Grid ── */
-    .route-form-grid {
+    /* ── Route Form — Two rows ── */
+
+    /* Row 1: Pickup | Drop-off (equal halves, full width) */
+    .route-form-row--locations {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 20px;
+        gap: 16px;
+        margin-bottom: 16px;
     }
-    @media (max-width: 768px) {
-        .route-form-grid { grid-template-columns: 1fr; }
+
+    /* Row 2: Date | Time | Passengers | Button (compact horizontal) */
+    .route-form-row--search {
+        display: grid;
+        grid-template-columns: 1fr 1.4fr 0.7fr auto;
+        gap: 12px;
+        align-items: start;
     }
-    .form-group { display: flex; flex-direction: column; gap: 8px; }
-    .form-group--action { display: flex; flex-direction: column; justify-content: flex-end; }
+
+    /* Tablet: let row 2 wrap to 2 columns */
+    @media (max-width: 1024px) {
+        .route-form-row--search {
+            grid-template-columns: 1fr 1fr;
+        }
+       /* .form-group--action {
+            grid-column: span 2;
+        } */
+        /* Button is now on its own row — no label offset needed */
+        .search-btn {
+            margin-top: 0;
+        }
+        
+    }
+
+    /* Mobile: everything stacks */
+    @media (max-width: 640px) {
+        .route-form-row--locations {
+            grid-template-columns: 1fr;
+        }
+        .route-form-row--search {
+            grid-template-columns: 1fr;
+        }
+        .form-group--action {
+            grid-column: span 1;
+        }
+        /* Cancel the label-offset margin when stacked */
+        .search-btn {
+            margin-top: 0 !important;
+        }
+        #btnlabel {
+            display: none;
+        }
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group--action { display: flex; flex-direction: column; justify-content: flex-start; }
     .form-label {
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 700;
         color: #334155;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
+        white-space: nowrap;
+        /* Fixed label height so all controls' inputs start at the same vertical position */
+        min-height: 18px;
     }
-    .premium-input {
-        width: 100%;
-        padding: 13px 18px;
-        border: 2px solid #e2e8f0;
-        background: #f8fafc;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: 500;
-        color: #1e293b;
-        transition: all 0.2s;
-        outline: none;
-    }
-    .premium-input:focus {
-        border-color: var(--travhub-base);
-        background: #fff;
-        box-shadow: 0 0 0 4px rgba(229,32,41,0.08);
-    }
-    .input-icon-wrapper { position: relative; }
-    .input-icon-right {
-        position: absolute;
-        right: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #94a3b8;
-        pointer-events: none;
-    }
+    .form-label--hidden { visibility: hidden; }
+
+    /* ── Passenger Counter — compact ── */
     .passenger-counter {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 16px;
+        gap: 8px;
+        padding: 13px 12px;   /* same vertical padding as .dp-input / .tp-input */
         border: 2px solid #e2e8f0;
         border-radius: 10px;
         background: #f8fafc;
+        box-sizing: border-box;
     }
     .counter-btn {
-        width: 32px;
-        height: 32px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
         border: 1.5px solid #cbd5e1;
         background: #fff;
@@ -526,52 +765,92 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
+        font-size: 10px;
         transition: all 0.2s;
+        flex-shrink: 0;
     }
     .counter-btn:hover { border-color: var(--travhub-base); color: var(--travhub-base); }
-    .counter-value { font-size: 15px; font-weight: 600; color: #1e293b; flex: 1; text-align: center; }
+    .counter-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+        flex: 1;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+    .counter-icon { color: #64748b; font-size: 13px; }
+
+    /* ── Search Button ── */
     .search-btn {
         width: 100%;
-        padding: 14px;
+        padding: 13px 20px;   /* same vertical padding as .dp-input / .tp-input */
         background: var(--travhub-base);
         color: #fff;
         border: none;
         border-radius: 10px;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 700;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 7px;
         transition: all 0.3s;
-        box-shadow: 0 6px 20px rgba(229,32,41,0.25);
+        box-shadow: 0 4px 16px rgba(229,32,41,0.25);
+        white-space: nowrap;
+        box-sizing: border-box;
+        /* Offset by label height + gap so the button face aligns with the inputs */
+        /* margin-top: calc(18px + 6px); */
+        margin-top: 0;
     }
     .search-btn:hover { background: #111; transform: translateY(-1px); }
 
     /* ── Route Info Card ── */
     .route-info-card {
         display: flex;
-        gap: 32px;
+        gap: 28px;
         align-items: stretch;
         flex-wrap: wrap;
     }
     .route-info-route {
         flex: 1;
-        min-width: 260px;
+        min-width: 220px;
         display: flex;
         flex-direction: column;
         gap: 0;
     }
+    .route-full-address {
+        font-size: 11px;
+        letter-spacing: 0.2px; 
+        line-height: 1.4; 
+    }
+
+    /* ≤450px: stack route + stats vertically */
+    @media (max-width: 450px) {
+        .route-info-card {
+            flex-direction: column;
+            gap: 16px;
+        }
+        .route-info-route {
+            min-width: 0;
+            flex: none;
+        }
+        .route-info-stats {
+            flex: none;
+            width: 100%;
+        }
+    }
     .route-point {
         display: flex;
         align-items: flex-start;
-        gap: 14px;
+        gap: 12px;
     }
     .route-dot {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
         flex-shrink: 0;
         margin-top: 4px;
@@ -579,51 +858,116 @@
     .route-dot--from { background: var(--travhub-base); }
     .route-dot--to { background: #10b981; }
     .route-point-text { display: flex; flex-direction: column; gap: 2px; }
-    .route-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; }
-    .route-address { font-size: 15px; font-weight: 600; color: #1e293b; line-height: 1.4; }
+    .route-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; }
+    .route-address { font-size: 14px; font-weight: 600; color: #1e293b; line-height: 1.4; }
     .route-connector {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 6px 0 6px 6px;
+        padding: 4px 0 4px 5px;
     }
     .route-line-v {
         width: 2px;
-        height: 16px;
+        height: 14px;
         background: repeating-linear-gradient(to bottom, #cbd5e1 0, #cbd5e1 4px, transparent 4px, transparent 8px);
     }
     .route-car-badge {
         background: #f1f5f9;
         border-radius: 20px;
-        padding: 4px 12px;
-        font-size: 13px;
+        padding: 3px 10px;
+        font-size: 12px;
         color: #64748b;
     }
+
+    /* ── Route Stats ── */
     .route-info-stats {
         flex: 2;
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
         background: #f8fafc;
         border-radius: 12px;
-        padding: 20px 24px;
         border: 1px solid #eef2f5;
+        overflow: hidden;
     }
     .route-stat {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 8px 20px;
-        flex: 1;
-        min-width: 140px;
+        gap: 10px;
+        padding: 16px 20px;
     }
-    .route-stat i { font-size: 22px; color: var(--travhub-base); }
-    .route-stat div { display: flex; flex-direction: column; gap: 2px; }
-    .stat-label { font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-value { font-size: 16px; font-weight: 700; color: #1e293b; }
+    .route-stat i { font-size: 20px; color: var(--travhub-base); flex-shrink: 0; }
+    .route-stat div { display: flex; flex-direction: column; gap: 1px; }
+    .stat-label { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 15px; font-weight: 700; color: #1e293b; }
     .stat-value--price { color: var(--travhub-base); }
-    .route-stat-divider { width: 1px; height: 40px; background: #e2e8f0; }
+
+    /* Vertical dividers between cells on desktop — right border on all but last */
+    .route-stat:not(:last-child) {
+        border-right: 1px solid #e2e8f0;
+    }
+
+    /* Below 1200px: 2×2 grid */
+    @media (max-width: 1200px) {
+        .route-info-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        /* Reset right borders, use bottom borders for row separation */
+        .route-stat:not(:last-child) {
+            border-right: none;
+        }
+        /* Right border on odd cells (left column) */
+        .route-stat:nth-child(odd) {
+            border-right: 1px solid #e2e8f0;
+        }
+        /* Bottom border on top row cells */
+        .route-stat:nth-child(-n+2) {
+            border-bottom: 1px solid #e2e8f0;
+        }
+    }
+
+    /* Mobile: single column */
+    @media (max-width: 768px) {
+        .route-info-stats {
+            grid-template-columns: 1fr;
+            padding: 0;
+        }
+        .route-stat {
+            padding: 12px 14px;
+            gap: 10px;
+        }
+        .route-stat:nth-child(odd) {
+            border-right: none;
+        }
+        .route-stat:nth-child(-n+2) {
+            border-bottom: none;
+        }
+        .route-stat:not(:last-child) {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .route-stat i { font-size: 16px; }
+        .stat-label { font-size: 10px; }
+        .stat-value { font-size: 13px; }
+    }
+
+    /* ≤450px: 2×2 grid (Distance+Travel Time / Price From+Transfer Date) */
+    @media (max-width: 450px) {
+        .route-info-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        /* Reset single-column bottom borders */
+        .route-stat:not(:last-child) {
+            border-bottom: none;
+            border-right: none;
+        }
+        /* Right border on left-column cells */
+        .route-stat:nth-child(odd) {
+            border-right: 1px solid #e2e8f0;
+        }
+        /* Bottom border between the two rows */
+        .route-stat:nth-child(-n+2) {
+            border-bottom: 1px solid #e2e8f0;
+        }
+    }
 
     /* ── Vehicle Grid ── */
     .vehicle-grid {
@@ -677,6 +1021,82 @@
     .vehicle-badge--eco { background: #d1fae5; color: #065f46; }
     .vehicle-card__body { padding: 20px; flex: 1; }
     .vehicle-card__title { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 12px; }
+
+    /* ── Vehicle title row + tooltip ── */
+    .vehicle-card__title-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .vehicle-card__title-row .vehicle-card__title {
+        margin-bottom: 0;
+        flex: 1;
+    }
+    .vehicle-tooltip-wrap {
+        position: relative;
+        flex-shrink: 0;
+        margin-top: 3px; /* optical alignment with title baseline */
+    }
+    .vehicle-tooltip-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: #94a3b8;
+        font-size: 15px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s;
+    }
+    .vehicle-tooltip-btn:hover { color: var(--travhub-base); }
+    .vehicle-tooltip {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 100;
+        background: #1e293b;
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        min-width: 180px;
+        max-width: 240px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        pointer-events: none;
+        /* Arrow */
+        &::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            right: 6px;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid #1e293b;
+        }
+    }
+    .vehicle-tooltip__label {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #94a3b8;
+        margin-bottom: 4px;
+    }
+    .vehicle-tooltip__value {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #f1f5f9;
+        line-height: 1.4;
+    }
+    /* Show on hover/focus */
+    .vehicle-tooltip-wrap:hover .vehicle-tooltip,
+    .vehicle-tooltip-btn:focus + .vehicle-tooltip {
+        display: block;
+    }
     .vehicle-card__specs {
         display: flex;
         gap: 16px;
@@ -755,4 +1175,16 @@
         gap: 10px;
     }
     .fill-route-notice i { color: #f59e0b; font-size: 16px; }
+    .booking-time-notice {
+        margin-top: 1px;
+        font-size: 11px;
+        color: #92400e;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 0;
+    }
+    .booking-time-notice i { color: #d97706; font-size: 11px; }
+    .booking-time-notice strong { font-weight: 800; color: #78350f; }
 </style>

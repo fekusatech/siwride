@@ -23,6 +23,7 @@ class VehicleCategory extends Model
         'luggage_capacity',
         'advantages',
         'base_price',
+        'price_per_km',
         'examples',
         'image',
         'vehicle_type',
@@ -47,6 +48,7 @@ class VehicleCategory extends Model
         return [
             'advantages' => 'array',
             'base_price' => 'decimal:2',
+            'price_per_km' => 'decimal:2',
             'passenger_capacity' => 'integer',
             'luggage_capacity' => 'integer',
         ];

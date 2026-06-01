@@ -3,9 +3,17 @@
     import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import LocationSearchInput from '@/components/LocationSearchInput.svelte';
+    import DatePicker from '@/components/DatePicker.svelte';
+    import TimePicker from '@/components/TimePicker.svelte';
+    import { getMinPickupTime, formatEarliestTime } from '@/lib/pickupTime';
 
     let heroPickup = $state('');
     let heroDropoff = $state('');
+    let heroDate = $state('');
+    let heroTime = $state('');
+
+    /** Minimum pickup time for today (empty string = no restriction for future dates). */
+    const heroMinTime = $derived(getMinPickupTime(heroDate));
 
     let passengerCount = $state(1);
 
@@ -136,32 +144,6 @@
 
             // Wait for DOM
             setTimeout(() => {
-                // Initialize DatePicker with minDate today to disable past dates
-                let dateEl = jQuery('#pickup_date');
-                if (dateEl.length && dateEl.daterangepicker) {
-                    dateEl.daterangepicker({
-                        autoUpdateInput: false,
-                        singleDatePicker: true,
-                        timePicker: false,
-                        minDate: new Date(),
-                        locale: {
-                            format: 'D MMM YYYY',
-                        },
-                    });
-                    dateEl.on(
-                        'apply.daterangepicker',
-                        function (this: HTMLElement, ev: any, picker: any) {
-                            jQuery(this).val(
-                                picker.startDate.format('D MMM YYYY'),
-                            );
-                            // Store ISO format in hidden input
-                            jQuery('#date_iso').val(
-                                picker.startDate.format('YYYY-MM-DD'),
-                            );
-                        },
-                    );
-                }
-
                 // Initialize Vehicles Carousel
                 const vehicleCarousel = jQuery('.tours-one__carousel');
                 if (
@@ -197,13 +179,6 @@
     onDestroy(() => {
         if (typeof window !== 'undefined') {
             document.body.classList.remove('custom-cursor');
-
-            if ((window as any).$) {
-                let dateEl = (window as any).$('#pickup_date');
-                if (dateEl.length && dateEl.data('daterangepicker')) {
-                    dateEl.data('daterangepicker').remove();
-                }
-            }
         }
     });
 
@@ -290,19 +265,34 @@
                             class="banner-form__control banner-form__control--date banner-form__col--3"
                         >
                             <i class="icon icon-calendar-1"></i>
-                            <label for="pickup_date">Pick-up Date *</label>
-                            <input
-                                class="travhub-multi-datepicker"
-                                id="pickup_date"
-                                type="text"
-                                placeholder="Select Date"
-                                autocomplete="off"
-                                readonly
-                                style="cursor: pointer;"
+                            <label for="hero_date">Pick-up Date *</label>
+                            <!-- Hidden inputs carry ISO values to GET form submission -->
+                            <input type="hidden" name="date" value={heroDate} />
+                            <input type="hidden" name="time" value={heroTime} />
+                            <DatePicker
+                                id="hero_date"
+                                bind:value={heroDate}
+                                placeholder="Select pickup date"
                                 required
+                                hideIcon
+                                hideChevron
                             />
-                            <!-- Hidden input for ISO date format -->
-                            <input type="hidden" id="date_iso" name="date" />
+                            <!-- Time picker row, shown after a date is selected -->
+                            <!-- <div class="hero-time-row">
+                                <i class="fas fa-clock hero-time-icon"></i>
+                                <TimePicker
+                                    id="hero_time"
+                                    bind:value={heroTime}
+                                    placeholder="Select pickup time"
+                                    minTime={heroMinTime}
+                                />
+                            </div>
+                            {#if heroMinTime}
+                                <p class="hero-time-notice">
+                                    <i class="fas fa-info-circle"></i>
+                                    Earliest pickup today: <strong>{formatEarliestTime(heroDate)}</strong>
+                                </p>
+                            {/if} -->
                         </div>
                         <div class="banner-form__control banner-form__col--4">
                             <i class="icon icon-traveler-with-a-suitcase-1"></i>
@@ -1262,4 +1252,38 @@
             display: none !important;
         }
     }
+    /* ── Hero form: time picker row ── */
+    :global(.hero-time-row) {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+    }
+    :global(.hero-time-icon) {
+        position: absolute;
+        left: 0;
+        color: var(--travhub-base, #e52029);
+        font-size: 15px;
+        pointer-events: none;
+        z-index: 2;
+        /* Visually align with the date icon above */
+        top: 50%;
+        transform: translateY(-50%);
+        display: none; /* The TimePicker has its own badge icon */
+    }
+    :global(.hero-time-notice) {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: #92400e;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 6px;
+        padding: 5px 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+    }
+    :global(.hero-time-notice i) { color: #d97706; font-size: 11px; }
+    :global(.hero-time-notice strong) { font-weight: 800; color: #78350f; }
 </style>

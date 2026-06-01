@@ -238,3 +238,29 @@ html[data-sidenav-size='full']:not([data-layout='topnav']) .sidenav-menu {
     margin-left: calc(var(--bs-sidenav-width) * -1);
     opacity: 0;
 }
+
+/* ── Premium Input Placeholders ── */
+.premium-input::placeholder {
+    color: #9CA3AF !important;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+    letter-spacing: normal !important;
+}
+.premium-input::-webkit-input-placeholder {
+    color: #9CA3AF !important;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+    letter-spacing: normal !important;
+}
+.premium-input::-moz-placeholder {
+    color: #9CA3AF !important;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+    letter-spacing: normal !important;
+}
+.premium-input:-ms-input-placeholder {
+    color: #9CA3AF !important;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+    letter-spacing: normal !important;
+}
