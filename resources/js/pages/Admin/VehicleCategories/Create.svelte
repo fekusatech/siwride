@@ -11,10 +11,25 @@
         title: category?.title ?? '',
         vehicle_type: category?.vehicle_type ?? 'economy',
         capacity: category?.capacity ?? '',
+        passenger_capacity: category?.passenger_capacity ?? '',
+        luggage_capacity: category?.luggage_capacity ?? '',
+        base_price: category?.base_price ?? '',
+        price_per_km: category?.price_per_km ?? '',
         examples: category?.examples ?? '',
         description: category?.description ?? '',
+        advantages: category?.advantages ?? [],
         image: null as File | null,
     });
+
+    function addAdvantage() {
+        if (form.advantages.length < 3) {
+            form.advantages = [...form.advantages, ''];
+        }
+    }
+
+    function removeAdvantage(index: number) {
+        form.advantages = form.advantages.filter((_, i) => i !== index);
+    }
 
     function submit(e: Event) {
         e.preventDefault();
@@ -95,25 +110,98 @@
                             </div>
                         </div>
 
-                        <!-- Capacity -->
+                        <!-- Passenger Capacity (Number) -->
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="capacity" class="form-label text-uppercase fs-12 fw-bold text-muted"
+                                <label for="passenger_capacity" class="form-label text-uppercase fs-12 fw-bold text-muted"
                                     >Passenger Capacity</label
                                 >
                                 <input
-                                    type="text"
-                                    id="capacity"
+                                    type="number"
+                                    id="passenger_capacity"
                                     class="form-control"
-                                    bind:value={form.capacity}
+                                    bind:value={form.passenger_capacity}
                                     disabled={form.processing}
-                                    maxlength="50"
-                                    placeholder="e.g. Up to 4 passengers"
+                                    min="1"
+                                    max="100"
+                                    placeholder="e.g. 4"
                                 />
-                                {#if form.errors.capacity}<div
+                                {#if form.errors.passenger_capacity}<div
                                         class="text-danger small mt-1"
                                     >
-                                        {form.errors.capacity}
+                                        {form.errors.passenger_capacity}
+                                    </div>{/if}
+                            </div>
+                        </div>
+
+                        <!-- Luggage Capacity -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="luggage_capacity" class="form-label text-uppercase fs-12 fw-bold text-muted"
+                                    >Luggage Capacity</label
+                                >
+                                <input
+                                    type="number"
+                                    id="luggage_capacity"
+                                    class="form-control"
+                                    bind:value={form.luggage_capacity}
+                                    disabled={form.processing}
+                                    min="0"
+                                    max="100"
+                                    placeholder="e.g. 2"
+                                />
+                                {#if form.errors.luggage_capacity}<div
+                                        class="text-danger small mt-1"
+                                    >
+                                        {form.errors.luggage_capacity}
+                                    </div>{/if}
+                            </div>
+                        </div>
+
+                        <!-- Base Price -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="base_price" class="form-label text-uppercase fs-12 fw-bold text-muted"
+                                    >Base Price</label
+                                >
+                                <input
+                                    type="number"
+                                    id="base_price"
+                                    class="form-control"
+                                    bind:value={form.base_price}
+                                    disabled={form.processing}
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="e.g. 150000"
+                                />
+                                {#if form.errors.base_price}<div
+                                        class="text-danger small mt-1"
+                                    >
+                                        {form.errors.base_price}
+                                    </div>{/if}
+                            </div>
+                        </div>
+
+                        <!-- Price Per KM -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price_per_km" class="form-label text-uppercase fs-12 fw-bold text-muted"
+                                    >Price Per KM</label
+                                >
+                                <input
+                                    type="number"
+                                    id="price_per_km"
+                                    class="form-control"
+                                    bind:value={form.price_per_km}
+                                    disabled={form.processing}
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="e.g. 10000"
+                                />
+                                {#if form.errors.price_per_km}<div
+                                        class="text-danger small mt-1"
+                                    >
+                                        {form.errors.price_per_km}
                                     </div>{/if}
                             </div>
                         </div>
@@ -160,6 +248,55 @@
                                         class="text-danger small mt-1"
                                     >
                                         {form.errors.description}
+                                    </div>{/if}
+                            </div>
+                        </div>
+
+                        <!-- Advantages -->
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase fs-12 fw-bold text-muted"
+                                    >Advantages / Features</label
+                                >
+                                <div class="d-flex flex-column gap-2 mb-2">
+                                    {#each form.advantages as adv, i}
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                bind:value={form.advantages[i]}
+                                                placeholder="e.g. Air conditioning, Comfortable seats"
+                                                maxlength="100"
+                                                disabled={form.processing}
+                                            />
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-danger btn-sm"
+                                                onclick={() => removeAdvantage(i)}
+                                                disabled={form.processing}
+                                                title="Remove Feature"
+                                            >
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </div>
+                                    {/each}
+                                </div>
+                                {#if form.advantages.length < 3}
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                                        onclick={addAdvantage}
+                                        disabled={form.processing}
+                                    >
+                                        <i class="ti ti-plus fs-14"></i> Add Feature
+                                    </button>
+                                {:else}
+                                    <div class="text-muted small mt-1"><i class="ti ti-info-circle"></i> Maximum of 3 features reached.</div>
+                                {/if}
+                                {#if form.errors.advantages}<div
+                                        class="text-danger small mt-1"
+                                    >
+                                        {form.errors.advantages}
                                     </div>{/if}
                             </div>
                         </div>
