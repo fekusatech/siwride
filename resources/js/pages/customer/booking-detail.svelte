@@ -3,7 +3,8 @@
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
-    import { Link } from '@inertiajs/svelte';
+    import { Link, useForm } from '@inertiajs/svelte';
+    import { formatRupiah } from '@/lib/utils';
 
     const { order } = $props();
 
@@ -57,7 +58,24 @@
         }
     };
 
-    const statusInfo = formatStatus(order.status);
+    const statusInfo = $derived(formatStatus(order.status));
+
+    const splitAddress = (address: string) => {
+        if (!address) return { short: '—', detail: '' };
+        const parts = address.split(',');
+        if (parts.length > 1) {
+            return {
+                short: parts[0].trim(),
+                detail: address
+            };
+        }
+        return { short: address, detail: '' };
+    };
+
+    const pickupAddress = $derived(splitAddress(order.pickup_address));
+    const dropoffAddress = $derived(splitAddress(order.dropoff_address));
+
+
 </script>
 
 <AppHead title={`Booking ${order.booking_code} - Siwride`} />
@@ -89,33 +107,17 @@
         style="padding: 80px 0 100px; background-color: #f8fafc; min-height: 60vh;"
     >
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
+            <div class="checkout-layout">
+                <div class="main-content">
                     <!-- Elegant Ticket Card -->
                     <div class="ticket-card premium-shadow">
-                        <div
-                            class="ticket-header"
-                            style="background-color: {statusInfo.bg}; border-bottom: 2px dashed #e2e8f0;"
-                        >
-                            <div
-                                class="d-flex justify-content-between align-items-center"
-                            >
+                        <div class="ticket-header" style="background-color: {statusInfo.bg}; border-bottom: 2px dashed #e2e8f0;">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h4
-                                        style="margin: 0; font-weight: 800; color: #1e293b;"
-                                    >
-                                        {order.booking_code}
-                                    </h4>
-                                    <p
-                                        style="margin: 0; font-size: 14px; color: #64748b;"
-                                    >
-                                        Booking Reference
-                                    </p>
+                                    <h4 style="margin: 0; font-weight: 800; color: #1e293b;">{order.booking_code}</h4>
+                                    <p style="margin: 0; font-size: 14px; color: #64748b;">Booking Reference</p>
                                 </div>
-                                <div
-                                    class="status-badge"
-                                    style="color: {statusInfo.color}; border: 1px solid {statusInfo.color}; padding: 6px 16px; border-radius: 20px; font-weight: 700; background: rgba(255,255,255,0.5);"
-                                >
+                                <div class="status-badge" style="color: {statusInfo.color}; border: 1px solid {statusInfo.color}; padding: 6px 16px; border-radius: 20px; font-weight: 700; background: rgba(255,255,255,0.5);">
                                     <i class="fas {statusInfo.icon} mr-1"></i>
                                     {statusInfo.text}
                                 </div>
@@ -124,100 +126,64 @@
 
                         <div class="ticket-body">
                             <!-- Route Info -->
-                            <div
-                                class="route-container mb-4 pb-4 border-bottom"
-                            >
-                                <div class="route-point">
-                                    <div
-                                        class="icon-circle text-primary bg-primary-light"
-                                    >
-                                        <i class="fas fa-map-marker-alt"></i>
-                                    </div>
-                                    <div class="point-details">
-                                        <span class="label"
-                                            >Pickup Location</span
-                                        >
-                                        <h5 class="location">
-                                            {order.pickup_address}
-                                        </h5>
-                                    </div>
-                                </div>
-
-                                <div class="route-line-wrapper">
-                                    <div class="route-line"></div>
-                                    <div class="route-distance">
-                                        <i class="fas fa-car-side"></i>
-                                    </div>
-                                </div>
-
-                                <div class="route-point">
-                                    <div
-                                        class="icon-circle text-success bg-success-light"
-                                    >
-                                        <i class="fas fa-flag-checkered"></i>
-                                    </div>
-                                    <div class="point-details">
-                                        <span class="label"
-                                            >Drop-off Location</span
-                                        >
-                                        <h5 class="location">
-                                            {order.dropoff_address}
-                                        </h5>
-                                    </div>
+                          <div class="sidebar-section-title mt-0">Route</div>
+                        <div class="sidebar-route mb-4 pb-4 border-bottom">
+                            <div class="sidebar-route-point" style="align-items: flex-start;">
+                                <span class="sidebar-route-dot sidebar-route-dot--from" style="margin-top: 6px;"></span>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span class="sidebar-route-text">{pickupAddress.short}</span>
+                                    {#if pickupAddress.detail && pickupAddress.detail !== pickupAddress.short}
+                                        <small class="route-full-address text-muted" style="margin-top: 2px;">{pickupAddress.detail}</small>
+                                    {/if}
+                                    {#if order.pickup_notes}
+                                        <small class="route-full-address text-muted" style="margin-top: 2px; color:var(--travhub-base) !important;"><i class="fas fa-info-circle"></i> {order.pickup_notes}</small>
+                                    {/if}
                                 </div>
                             </div>
+                            <div class="sidebar-route-line"></div>
+                            <div class="sidebar-route-point" style="align-items: flex-start;">
+                                <span class="sidebar-route-dot sidebar-route-dot--to" style="margin-top: 6px;"></span>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span class="sidebar-route-text">{dropoffAddress.short}</span>
+                                    {#if dropoffAddress.detail && dropoffAddress.detail !== dropoffAddress.short}
+                                        <small class="route-full-address text-muted" style="margin-top: 2px;">{dropoffAddress.detail}</small>
+                                    {/if}
+                                    {#if order.dropoff_notes}
+                                        <small class="route-full-address text-muted" style="margin-top: 2px; color:var(--travhub-base) !important;"><i class="fas fa-info-circle"></i> {order.dropoff_notes}</small>
+                                    {/if}
+                                </div>
+                            </div>
+                        </div>
 
-                            <!-- Meta Info Grid -->
-                            <div class="row mb-4 pb-4 border-bottom">
-                                <div class="col-6 col-md-3 mb-3 mb-md-0">
-                                    <div class="meta-item">
-                                        <i
-                                            class="fas fa-calendar-alt text-muted"
-                                        ></i>
-                                        <span class="meta-label">Date</span>
-                                        <h6 class="meta-value">
-                                            {formatDate(order.date)}
-                                        </h6>
+                            <!-- Trip details grid -->
+                            <div class="sidebar-section-title">Trip Details</div>
+                            <div class="sidebar-info-grid mb-4 pb-4 border-bottom">
+                                <div class="sidebar-info-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <div>
+                                        <span class="sidebar-info-label">Date</span>
+                                        <span class="sidebar-info-value">{formatDate(order.date)}</span>
                                     </div>
                                 </div>
-                                <div class="col-6 col-md-3 mb-3 mb-md-0">
-                                    <div class="meta-item">
-                                        <i class="fas fa-clock text-muted"></i>
-                                        <span class="meta-label">Time</span>
-                                        <h6 class="meta-value">
-                                            {order.time.substring(0, 5)}
-                                        </h6>
+                                <div class="sidebar-info-item">
+                                    <i class="fas fa-clock"></i>
+                                    <div>
+                                        <span class="sidebar-info-label">Pickup Time</span>
+                                        <span class="sidebar-info-value">{order.time.substring(0, 5)}</span>
                                     </div>
                                 </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="meta-item">
-                                        <i class="fas fa-users text-muted"></i>
-                                        <span class="meta-label"
-                                            >Passengers</span
-                                        >
-                                        <h6 class="meta-value">
-                                            {order.passengers} Pax
-                                        </h6>
+                                <div class="sidebar-info-item">
+                                    <i class="fas fa-users"></i>
+                                    <div>
+                                        <span class="sidebar-info-label">Passengers</span>
+                                        <span class="sidebar-info-value">{order.passengers} Pax</span>
                                     </div>
                                 </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="meta-item">
-                                        <i
-                                            class="fas fa-money-bill-wave text-muted"
-                                        ></i>
-                                        <span class="meta-label">Price</span>
-                                        <h6
-                                            class="meta-value"
-                                            style="color: var(--travhub-base);"
-                                        >
-                                            {#if order.price > 0}
-                                                Rp {order.price.toLocaleString(
-                                                    'id-ID',
-                                                )}
-                                            {:else}
-                                                TBD
-                                            {/if}
-                                        </h6>
+                                <div class="sidebar-info-item">
+                                    <i class="fas fa-car"></i>
+                                    <div>
+                                        <span class="sidebar-info-label">Transfer Type</span>
+                                        <span class="sidebar-info-value">Private</span>
                                     </div>
                                 </div>
                             </div>
@@ -225,38 +191,34 @@
                             <!-- Customer & Notes -->
                             <div class="row">
                                 <div class="col-md-6 mb-3 mb-md-0">
-                                    <h6 class="section-title">
-                                        Passenger Details
-                                    </h6>
+                                    <div class="sidebar-section-title">Passenger Details</div>
                                     <p class="detail-text">
-                                        <i class="fas fa-user text-muted mr-2"
-                                        ></i>
+                                        <i class="fas fa-user text-muted mr-2"></i>
                                         {order.customer_name || 'Guest'}
+                                    </p>
+                                    <p class="detail-text">
+                                        <i class="fas fa-envelope text-muted mr-2"></i>
+                                        {order.customer_email || 'No email provided'}
                                     </p>
                                     {#if order.customer_phone}
                                         <p class="detail-text">
-                                            <i
-                                                class="fas fa-phone-alt text-muted mr-2"
-                                            ></i>
+                                            <i class="fas fa-phone-alt text-muted mr-2"></i>
                                             {order.customer_phone}
                                         </p>
                                     {/if}
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 class="section-title">
-                                        Additional Notes
-                                    </h6>
+                                    <div class="sidebar-section-title">Additional Info</div>
                                     {#if order.notes}
-                                        <p
-                                            class="detail-text"
-                                            style="background: #f1f5f9; padding: 12px; border-radius: 8px;"
-                                        >
+                                        <div class="detail-text" style="background: #f1f5f9; padding: 12px; border-radius: 8px;">
+                                            <strong>Notes:</strong><br/>
                                             {order.notes}
-                                        </p>
-                                    {:else}
-                                        <p class="detail-text text-muted">
-                                            No additional notes provided.
-                                        </p>
+                                        </div>
+                                    {/if}
+                                    {#if order.flight_number}
+                                        <div class="detail-text" style="background: #e0f2fe; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                                            <strong><i class="fas fa-plane-arrival"></i> Flight:</strong> {order.flight_number}
+                                        </div>
                                     {/if}
                                 </div>
                             </div>
@@ -302,11 +264,72 @@
                                 </div>
                             {/if}
                         </div>
-                        <div class="ticket-footer text-center">
-                            <Link href="/" class="travhub-btn"
-                                ><span>Back to Dashboard</span></Link
-                            >
+                        {#if order.payment_status === 'pending'}
+                        <div class="ticket-payment-section text-center" style="padding: 20px 40px; background: #fff3cd; border-top: 1px solid #ffeeba;">
+                            <h5 style="color: #856404; margin-bottom: 15px; font-weight: 700;">Waiting for Payment</h5>
+                            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                                {#if order.payment_reference && order.payment_reference.startsWith('http')}
+                                <a href={order.payment_reference} target="_blank" class="btn-pay-now" style="background:var(--travhub-base); color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:700;">
+                                    Pay Now / Change Method in Xendit <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                                {/if}
+                            </div>
                         </div>
+                        {/if}
+                        <div class="ticket-footer text-center" style="border-top: 1px dashed #e2e8f0;">
+                            <Link href="/customer/profile" class="travhub-btn"><span>Back to Dashboard</span></Link>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar for Order Summary -->
+                <div class="checkout-sidebar">
+                    <div class="sidebar-card">
+                        {#if order.vehicle_category}
+                            <div class="sidebar-vehicle mb-3">
+                                <img src={order.vehicle_category.image_url} alt={order.vehicle_category.title} />
+                                <div class="sidebar-vehicle-info">
+                                    <h5>{order.vehicle_category.title}</h5>
+                                    <span>{order.vehicle_category.passenger_capacity ?? '—'} pax · {order.vehicle_category.luggage_capacity ?? '—'} bags</span>
+                                </div>
+                            </div>
+                        {/if}
+
+                        <h4 class="sidebar-title mt-3 mb-3" style="font-size:18px; font-weight:800;">Order Summary</h4>
+
+                        <div class="sidebar-section-title">Price Breakdown</div>
+                        <div class="sidebar-row">
+                            <span>Vehicle</span>
+                            <span>
+                                {#if order.price > 0 && order.extras}
+                                    {formatRupiah(order.price - order.extras.reduce((sum, e) => sum + (e.price || 0), 0))}
+                                {:else}
+                                    {formatRupiah(order.price)}
+                                {/if}
+                            </span>
+                        </div>
+                        
+                        {#if order.extras && order.extras.length > 0}
+                            {#each order.extras as extra}
+                                <div class="sidebar-row">
+                                    <span>{extra.label}</span>
+                                    <span>+{formatRupiah(extra.price)}</span>
+                                </div>
+                            {/each}
+                        {/if}
+
+                        <div class="sidebar-divider"></div>
+                        <div class="sidebar-total">
+                            <span>Total</span>
+                            <span>{formatRupiah(order.price)}</span>
+                        </div>
+                        
+                        {#if order.payment_method}
+                            <div class="sidebar-note mt-3">
+                                <i class="fas fa-money-check-alt" style="color:var(--travhub-base);"></i>
+                                Payment Method: <strong>{order.payment_method}</strong>
+                            </div>
+                        {/if}
                     </div>
                 </div>
             </div>
@@ -339,123 +362,61 @@
         background: #fff;
     }
 
-    /* Route Styles */
-    .route-point {
-        display: flex;
-        align-items: flex-start;
-        gap: 15px;
+    /* Checkout Layout Styles */
+    .checkout-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 28px;
+        align-items: start;
     }
+    @media (max-width: 1024px) { .checkout-layout { grid-template-columns: 1fr; } }
 
-    .icon-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
+    .checkout-sidebar { position: sticky; top: 100px; }
+    .sidebar-card {
+        background: #fff; border-radius: 16px; border: 1px solid #eaeef2;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 24px;
     }
+    .sidebar-vehicle { display: flex; align-items: center; gap: 14px; }
+    .sidebar-vehicle img { width: 72px; height: 54px; object-fit: contain; background: #f8fafc; border-radius: 8px; padding: 4px; flex-shrink: 0; }
+    .sidebar-vehicle-info h5 { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 3px; }
+    .sidebar-vehicle-info span { font-size: 12px; color: #64748b; }
+    .sidebar-divider { height: 1px; background: #f0f4f8; margin: 14px 0; }
+    .sidebar-section-title {
+        font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.7px; color: #94a3b8; margin-bottom: 10px;
+    }
+    
+    .sidebar-route { display: flex; flex-direction: column; gap: 0; }
+    .sidebar-route-point { display: flex; align-items: flex-start; gap: 10px; }
+    .sidebar-route-dot {
+        width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+    }
+    .sidebar-route-dot--from { background: var(--travhub-base); }
+    .sidebar-route-dot--to   { background: #10b981; }
+    .sidebar-route-text { font-size: 13px; font-weight: 500; color: #1e293b; line-height: 1.4; }
+    .sidebar-route-line {
+        width: 2px; height: 14px; margin-left: 4px;
+        background: repeating-linear-gradient(to bottom, #cbd5e1 0, #cbd5e1 3px, transparent 3px, transparent 6px);
+    }
+    .route-full-address { font-size: 11px; }
 
-    .bg-primary-light {
-        background: #e0e7ff;
+    .sidebar-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
     }
-    .bg-success-light {
-        background: #dcfce7;
+    .sidebar-info-item {
+        display: flex; align-items: flex-start; gap: 7px;
+        background: #f8fafc; border-radius: 8px; padding: 8px 10px;
     }
+    .sidebar-info-item i { font-size: 12px; color: var(--travhub-base); margin-top: 2px; flex-shrink: 0; }
+    .sidebar-info-item div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .sidebar-info-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: #94a3b8; }
+    .sidebar-info-value { font-size: 12px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .point-details .label {
-        display: block;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: #94a3b8;
-        margin-bottom: 4px;
-    }
-
-    .point-details .location {
-        font-size: 16px;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-        line-height: 1.4;
-    }
-
-    .route-line-wrapper {
-        margin: 15px 0 15px 19px;
-        position: relative;
-        height: 40px;
-    }
-
-    .route-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 2px;
-        background: repeating-linear-gradient(
-            to bottom,
-            #cbd5e1 0,
-            #cbd5e1 4px,
-            transparent 4px,
-            transparent 8px
-        );
-    }
-
-    .route-distance {
-        position: absolute;
-        left: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 14px;
-        color: #94a3b8;
-        background: #fff;
-        padding: 4px 10px;
-        border-radius: 20px;
-        border: 1px solid #e2e8f0;
-    }
-
-    /* Meta Items */
-    .meta-item {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .meta-item i {
-        font-size: 18px;
-        margin-bottom: 8px;
-    }
-
-    .meta-label {
-        font-size: 12px;
-        color: #64748b;
-        text-transform: uppercase;
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
-
-    .meta-value {
-        font-size: 15px;
-        font-weight: 800;
-        color: #1e293b;
-        margin: 0;
-    }
-
-    .section-title {
-        font-size: 14px;
-        text-transform: uppercase;
-        font-weight: 700;
-        color: #94a3b8;
-        margin-bottom: 12px;
-        letter-spacing: 0.5px;
-    }
-
-    .detail-text {
-        font-size: 15px;
-        color: #334155;
-        font-weight: 500;
-        margin-bottom: 8px;
-    }
+    .sidebar-row { display: flex; justify-content: space-between; font-size: 13px; color: #475569; padding: 4px 0; }
+    .sidebar-total { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 800; color: #1e293b; }
+    .sidebar-note { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 7px; }
 
     @media (max-width: 768px) {
         .ticket-header,

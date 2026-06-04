@@ -16,8 +16,10 @@
     });
 
     onDestroy(() => {
-        window.removeEventListener('scroll', handleScroll);
-        document.body.classList.remove('locked');
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('scroll', handleScroll);
+            document.body.classList.remove('locked');
+        }
     });
 
     $effect(() => {

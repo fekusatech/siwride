@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { router } from '@inertiajs/svelte';
+    import { page, router } from '@inertiajs/svelte';
     import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
@@ -251,6 +251,46 @@
             time,
             passengers: String(passengerCount),
         });
+    }
+
+    // ── Track Booking ────────────────────────────────────────────
+    const authCustomer = $derived((page.props as any).auth?.customer ?? null);
+
+    let trackCode = $state('');
+    let trackResult = $state<null | { found: boolean; order?: any; message?: string }>(null);
+    let isTracking = $state(false);
+
+    const formatStatus = (status: string) => {
+        switch (status) {
+            case 'pending':   return { text: 'Pending',   bg: '#fff3cd', color: '#856404' };
+            case 'confirmed': return { text: 'Confirmed', bg: '#d1ecf1', color: '#0c5460' };
+            case 'completed': return { text: 'Completed', bg: '#d4edda', color: '#155724' };
+            case 'cancelled': return { text: 'Cancelled', bg: '#f8d7da', color: '#721c24' };
+            default:          return { text: status,      bg: '#e2e3e5', color: '#383d41' };
+        }
+    };
+
+    async function trackBooking(e: Event) {
+        e.preventDefault();
+        const code = trackCode.trim().toUpperCase();
+        if (!code) return;
+        isTracking = true;
+        trackResult = null;
+        try {
+            const res = await fetch(`/booking/track?code=${encodeURIComponent(code)}`, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                trackResult = { found: true, order: data.order };
+            } else {
+                trackResult = { found: false, message: 'Booking not found. Please check your booking code.' };
+            }
+        } catch {
+            trackResult = { found: false, message: 'Unable to fetch booking. Please try again.' };
+        } finally {
+            isTracking = false;
+        }
     }
 
     let clockInterval: ReturnType<typeof setInterval>;
@@ -620,6 +660,131 @@
                 </div>
             </div>
 
+        </div>
+    </section>
+
+    <!-- Track Booking + Order History Section -->
+    <section style="padding: 0 0 100px; background: #f4f7f9;">
+        <div class="container">
+            <div class="track-history-grid">
+
+                <!-- Track Booking Card -->
+                <div class="booking-card track-card">
+                    <div class="booking-card__header">
+                        <div class="track-icon-badge">
+                            <i class="fas fa-search-location"></i>
+                        </div>
+                        <div>
+                            <h4 class="booking-card__title">Track Your Booking</h4>
+                            <p class="booking-card__subtitle">Enter your booking code to check the status</p>
+                        </div>
+                    </div>
+                    <div class="booking-card__body">
+                        <form class="track-form" onsubmit={trackBooking}>
+                            <div class="track-input-row">
+                                <input
+                                    id="track_booking_code"
+                                    type="text"
+                                    class="track-input"
+                                    bind:value={trackCode}
+                                    placeholder="e.g. SWABC123"
+                                    maxlength="20"
+                                    oninput={(e) => { trackCode = e.currentTarget.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
+                                />
+                                <button type="submit" class="track-btn" disabled={isTracking || !trackCode.trim()}>
+                                    {#if isTracking}
+                                        <i class="fas fa-spinner fa-spin"></i> Tracking...
+                                    {:else}
+                                        <i class="fas fa-search"></i> Track
+                                    {/if}
+                                </button>
+                            </div>
+                        </form>
+
+                        {#if trackResult}
+                            {#if trackResult.found && trackResult.order}
+                                {@const order = trackResult.order}
+                                {@const statusInfo = formatStatus(order.status)}
+                                <div class="track-result">
+                                    <div class="track-result__header">
+                                        <span class="track-booking-code">{order.booking_code}</span>
+                                        <span class="track-status-badge" style="background-color: {statusInfo.bg}; color: {statusInfo.color};">
+                                            {statusInfo.text}
+                                        </span>
+                                    </div>
+                                    <div class="track-result__body">
+                                        <div class="track-info-row">
+                                            <i class="fas fa-user"></i>
+                                            <span>{order.customer_name}</span>
+                                        </div>
+                                        <div class="track-info-row">
+                                            <i class="fas fa-map-marker-alt text-danger"></i>
+                                            <span class="track-addr">{order.pickup_address}</span>
+                                        </div>
+                                        <div class="track-info-row">
+                                            <i class="fas fa-flag-checkered text-success"></i>
+                                            <span class="track-addr">{order.dropoff_address}</span>
+                                        </div>
+                                        <div class="track-info-row">
+                                            <i class="fas fa-calendar-alt" style="color: var(--travhub-base);"></i>
+                                            <span>{order.date} · {order.time?.substring(0,5)}</span>
+                                        </div>
+                                        {#if order.driver_name}
+                                            <div class="track-info-row">
+                                                <i class="fas fa-id-badge" style="color: var(--travhub-base);"></i>
+                                                <span>Driver: <strong>{order.driver_name}</strong></span>
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <a href="/booking/{order.booking_code}" class="track-detail-link">
+                                        View Full Details <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            {:else}
+                                <div class="track-not-found">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {trackResult.message}
+                                </div>
+                            {/if}
+                        {/if}
+                    </div>
+                </div>
+
+                <!-- Order History Shortcut -->
+                <div class="history-shortcut-card">
+                    {#if authCustomer}
+                        <div class="history-card history-card--loggedin">
+                            <div class="history-card__avatar">{authCustomer.name.charAt(0).toUpperCase()}</div>
+                            <div class="history-card__info">
+                                <p class="history-card__greeting">Hello, <strong>{authCustomer.name.split(' ')[0]}</strong> 👋</p>
+                                <p class="history-card__sub">View all your past and upcoming rides in one place.</p>
+                            </div>
+                            <a href="/customer/profile" class="history-card__btn">
+                                <i class="fas fa-history"></i> My Order History
+                            </a>
+                        </div>
+                    {:else}
+                        <div class="history-card history-card--guest">
+                            <div class="history-card__icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <div class="history-card__info">
+                                <h5 class="history-card__title">Track all your rides</h5>
+                                <p class="history-card__sub">Log in to your account to access your full order history, download receipts, and manage your bookings anytime.</p>
+                            </div>
+                            <div class="history-card__actions">
+                                <a href="/customer/login" class="history-btn history-btn--primary">
+                                    <i class="fas fa-sign-in-alt"></i> Log In
+                                </a>
+                                <a href="/customer/register" class="history-btn history-btn--secondary">
+                                    <i class="fas fa-user-plus"></i> Register
+                                </a>
+                            </div>
+                        </div>
+                    {/if}
+                </div>
+
+            </div>
         </div>
     </section>
 
@@ -1187,4 +1352,250 @@
     }
     .booking-time-notice i { color: #d97706; font-size: 11px; }
     .booking-time-notice strong { font-weight: 800; color: #78350f; }
+
+    /* ── Track + History Grid ── */
+    .track-history-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 24px;
+    }
+    @media (max-width: 900px) {
+        .track-history-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Track icon badge */
+    .track-icon-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--travhub-base);
+        color: #fff;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* Track Form */
+    .track-form { margin-bottom: 0; }
+    .track-input-row {
+        display: flex;
+        gap: 10px;
+    }
+    .track-input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        background: #f8fafc;
+        color: #1e293b;
+        transition: border-color 0.2s;
+        outline: none;
+    }
+    .track-input:focus { border-color: var(--travhub-base); background: #fff; }
+    .track-input::placeholder { font-weight: 400; letter-spacing: 0.5px; color: #94a3b8; }
+    .track-btn {
+        padding: 12px 22px;
+        background: var(--travhub-base);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 16px rgba(229,32,41,0.25);
+    }
+    .track-btn:hover:not(:disabled) { background: #111; transform: translateY(-1px); }
+    .track-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Track Result */
+    .track-result {
+        margin-top: 20px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        animation: fadeInUp 0.3s ease;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .track-result__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: #1e293b;
+        gap: 10px;
+    }
+    .track-booking-code {
+        font-size: 15px;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: 1.5px;
+    }
+    .track-status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .track-result__body {
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .track-info-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 14px;
+        color: #334155;
+    }
+    .track-info-row i { width: 16px; flex-shrink: 0; margin-top: 2px; font-size: 13px; }
+    .track-addr { line-height: 1.4; font-size: 13px; }
+    .track-detail-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 16px;
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--travhub-base);
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    .track-detail-link:hover { background: #f1f5f9; }
+    .track-not-found {
+        margin-top: 16px;
+        padding: 14px 16px;
+        background: #fef3f3;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .track-not-found i { font-size: 16px; flex-shrink: 0; }
+
+    /* ── History Shortcut ── */
+    .history-shortcut-card { display: flex; flex-direction: column; }
+
+    .history-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #eaeef2;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        height: 100%;
+    }
+
+    /* Logged-in state */
+    .history-card--loggedin {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border-color: transparent;
+    }
+    .history-card__avatar {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--travhub-base), #ff6b6b);
+        color: #fff;
+        font-size: 22px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .history-card__greeting {
+        font-size: 18px;
+        font-weight: 600;
+        color: #e2e8f0;
+        margin: 0 0 4px;
+    }
+    .history-card__greeting strong { color: #fff; }
+    .history-card--loggedin .history-card__sub {
+        color: #94a3b8;
+        font-size: 14px;
+        margin: 0;
+    }
+    .history-card__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: var(--travhub-base);
+        color: #fff;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+        box-shadow: 0 4px 16px rgba(229,32,41,0.35);
+    }
+    .history-card__btn:hover { background: #c81a22; transform: translateY(-2px); }
+
+    /* Guest state */
+    .history-card--guest { background: #fff; }
+    .history-card__icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        background: rgba(229, 32, 41, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .history-card__icon i { font-size: 24px; color: var(--travhub-base); }
+    .history-card__title { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 8px; }
+    .history-card__sub { font-size: 14px; color: #64748b; margin: 0; line-height: 1.6; }
+    .history-card__actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .history-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .history-btn--primary {
+        background: var(--travhub-base);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(229,32,41,0.25);
+    }
+    .history-btn--primary:hover { background: #c81a22; transform: translateY(-1px); }
+    .history-btn--secondary {
+        background: #f1f5f9;
+        color: #334155;
+        border: 2px solid #e2e8f0;
+    }
+    .history-btn--secondary:hover { background: #e2e8f0; }
 </style>

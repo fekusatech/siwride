@@ -20,6 +20,20 @@
     let showPassword = $state(false);
     let showConfirmPassword = $state(false);
 
+    const ORDERS_PER_PAGE = 2;
+    let currentPage = $state(1);
+
+    const totalPages = $derived(Math.ceil(orders.length / ORDERS_PER_PAGE));
+    const paginatedOrders = $derived(
+        orders.slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE),
+    );
+
+    const goToPage = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+        }
+    };
+
     const submit = () => {
         form.put('/customer/profile', {
             preserveScroll: true,
@@ -175,7 +189,7 @@
                                 </div>
                             {:else}
                                 <div class="order-list">
-                                    {#each orders as order}
+                                    {#each paginatedOrders as order}
                                         {@const statusInfo = formatStatus(
                                             order.status,
                                         )}
@@ -296,6 +310,38 @@
                                         </div>
                                     {/each}
                                 </div>
+
+                                {#if totalPages > 1}
+                                    <div class="pagination-bar">
+                                        <span class="pagination-info">
+                                            Showing {(currentPage - 1) * ORDERS_PER_PAGE + 1}–{Math.min(currentPage * ORDERS_PER_PAGE, orders.length)} of {orders.length} orders
+                                        </span>
+                                        <div class="pagination-controls">
+                                            <button
+                                                class="page-btn"
+                                                disabled={currentPage === 1}
+                                                onclick={() => goToPage(currentPage - 1)}
+                                            >
+                                                <i class="fas fa-chevron-left"></i>
+                                            </button>
+                                            {#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
+                                                <button
+                                                    class="page-btn {currentPage === page ? 'active' : ''}"
+                                                    onclick={() => goToPage(page)}
+                                                >
+                                                    {page}
+                                                </button>
+                                            {/each}
+                                            <button
+                                                class="page-btn"
+                                                disabled={currentPage === totalPages}
+                                                onclick={() => goToPage(currentPage + 1)}
+                                            >
+                                                <i class="fas fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {/if}
                             {/if}
                         </div>
                     </div>
@@ -1036,6 +1082,73 @@
 
         .text-truncate-custom {
             max-width: 200px;
+        }
+    }
+
+    /* Pagination */
+    .pagination-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 30px;
+        border-top: 1px solid #f1f5f9;
+        background: #fff;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .pagination-info {
+        font-size: 13px;
+        font-weight: 600;
+        color: #94a3b8;
+    }
+
+    .pagination-controls {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .page-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .page-btn:hover:not(:disabled) {
+        background: var(--travhub-base);
+        color: #fff;
+        border-color: var(--travhub-base);
+        box-shadow: 0 4px 10px rgba(229, 32, 41, 0.2);
+    }
+
+    .page-btn.active {
+        background: var(--travhub-base);
+        color: #fff;
+        border-color: var(--travhub-base);
+        box-shadow: 0 4px 10px rgba(229, 32, 41, 0.25);
+    }
+
+    .page-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 576px) {
+        .pagination-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 14px 20px;
         }
     }
 </style>

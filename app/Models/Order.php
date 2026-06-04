@@ -33,6 +33,7 @@ class Order extends Model
         'dropoff_address',
         'dropoff_latitude',
         'dropoff_longitude',
+        'distance_km',
         'passengers',
         'price',
         'parking_gas_fee',
@@ -41,6 +42,10 @@ class Order extends Model
         'is_shared',
         'is_cancelled',
         'vehicle_id',
+        'payment_method',
+        'payment_reference',
+        'payment_status',
+        'payment_expiry',
     ];
 
     protected $appends = [

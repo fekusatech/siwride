@@ -129,4 +129,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/settings', [SettingController::class, 'update']);
         });
     });
+
+    // Webhooks
+    Route::post('/webhooks/xendit', [\App\Http\Controllers\WebhookController::class, 'xendit'])->name('webhooks.xendit');
 });

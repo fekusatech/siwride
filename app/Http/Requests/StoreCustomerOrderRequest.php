@@ -34,7 +34,7 @@ class StoreCustomerOrderRequest extends FormRequest
             'extras.*.price'     => ['required_with:extras', 'numeric', 'min:0'],
             'create_account'     => ['nullable', 'boolean'],
             'password'           => ['nullable', 'string', 'min:8', 'confirmed', 'required_if_accepted:create_account'],
-            'payment_method'     => ['nullable', 'string', 'in:cash,transfer,visa,mastercard,paypal,apple_pay,google_pay'],
+            'payment_method'     => ['nullable', 'string', 'max:50'],
             'exact_distance_km'  => ['nullable', 'numeric'],
         ];
     }

@@ -38,20 +38,18 @@
     let showConfirmPassword = $state(false);
 
     const settings = $derived(page.props.settings as any);
+    const recaptchaEnabled = $derived(settings.recaptcha_enabled === '1');
     const EXTRAS = $derived(
         Array.isArray(settings.booking_extras) 
             ? settings.booking_extras.map(e => ({ ...e, price: Number(e.price) || 0 }))
             : []
     );
 
-    const PAYMENT_METHODS = [
-        { id: 'visa',        label: 'Visa',       icon: 'fab fa-cc-visa',       color: '#1a1f71' },
-        { id: 'mastercard',  label: 'Mastercard', icon: 'fab fa-cc-mastercard', color: '#eb001b' },
-        { id: 'paypal',      label: 'PayPal',     icon: 'fab fa-cc-paypal',     color: '#003087' },
-        { id: 'apple_pay',   label: 'Apple Pay',  icon: 'fab fa-apple-pay',     color: '#000'    },
-        { id: 'google_pay',  label: 'Google Pay', icon: 'fab fa-google-pay',    color: '#4285f4' },
-        { id: 'cash',        label: 'Cash',       icon: 'fas fa-money-bill-wave', color: '#16a34a' },
-    ];
+    // const EXTRAS = $derived(
+    //     Array.isArray(settings.booking_extras) 
+    //         ? settings.booking_extras.map(e => ({ ...e, price: Number(e.price) || 0 }))
+    //         : []
+    // );
 
     let selectedExtras = $state<string[]>([]);
     let agreedToTerms = $state(false);
@@ -75,9 +73,8 @@
         notes: '',
         extras: [] as { label: string; price: number }[],
         create_account: false,
-        password: '',
         password_confirmation: '',
-        payment_method: 'cash',
+        'g-recaptcha-response': '',
     });
 
     // Sync extras into form
@@ -337,26 +334,120 @@
         if (currentStep > 1) currentStep--;
     }
 
-    function handleSubmit(e: Event) {
-        e.preventDefault();
-        if (currentStep !== 5) return;
-        if (!form.payment_method) { stepError = 'Please select a payment method.'; return; }
-        if (!agreedToTerms) { stepError = 'Please agree to the Terms & Conditions.'; return; }
+    function submitForm() {
         form.transform((data) => {
             let combinedNotes = data.notes || '';
             if (flightNumber) {
                 combinedNotes = `Flight Number: ${flightNumber}\n\n${combinedNotes}`;
             }
+
+            let finalPickup = data.pickup_address;
+            if (fullPickupAddress && fullPickupAddress !== data.pickup_address) {
+                if (fullPickupAddress.startsWith(data.pickup_address)) {
+                    finalPickup = fullPickupAddress;
+                } else {
+                    finalPickup = `${data.pickup_address}, ${fullPickupAddress}`;
+                }
+            }
+
+            let finalDropoff = data.dropoff_address;
+            if (fullDropoffAddress && fullDropoffAddress !== data.dropoff_address) {
+                if (fullDropoffAddress.startsWith(data.dropoff_address)) {
+                    finalDropoff = fullDropoffAddress;
+                } else {
+                    finalDropoff = `${data.dropoff_address}, ${fullDropoffAddress}`;
+                }
+            }
+
             return {
                 ...data,
+                pickup_address: finalPickup,
+                dropoff_address: finalDropoff,
                 notes: combinedNotes.trim(),
             };
         }).post('/orders', {
             onSuccess: () => { form.reset(); },
+            onFinish: () => {
+                form['g-recaptcha-response'] = '';
+                if (recaptchaEnabled && window.grecaptcha && recaptchaWidgetId !== null) {
+                    try { window.grecaptcha.reset(recaptchaWidgetId); } catch { /* ignore */ }
+                    recaptchaWidgetId = null;
+                }
+            },
         });
     }
 
-    const stepLabels = ['Transfer Details', 'Passenger Info', 'Extras', 'Summary', 'Payment'];
+    function handleSubmit(e: Event) {
+        e.preventDefault();
+        if (currentStep === 4) {
+            if (!agreedToTerms) {
+                stepError = 'You must agree to the Terms & Conditions to proceed.';
+                return;
+            }
+            if (recaptchaEnabled && !form['g-recaptcha-response']) {
+                stepError = 'Please complete the reCAPTCHA verification.';
+                return;
+            }
+            submitForm();
+            return;
+        }
+        nextStep();
+    }
+
+    let recaptchaWidgetId = $state<number | null>(null);
+
+    /**
+     * Explicitly renders the reCAPTCHA widget inside #checkout-recaptcha-container.
+     * Called after the DOM element is guaranteed to exist (step 4 is active).
+     */
+    function renderRecaptchaWidget() {
+        if (!recaptchaEnabled) return;
+        const container = document.getElementById('checkout-recaptcha-container');
+        if (!container) return;
+
+        // Reset existing widget if already rendered
+        if (recaptchaWidgetId !== null && window.grecaptcha) {
+            try { window.grecaptcha.reset(recaptchaWidgetId); } catch { /* ignore */ }
+            return;
+        }
+
+        if (window.grecaptcha && window.grecaptcha.render) {
+            recaptchaWidgetId = window.grecaptcha.render(container, {
+                sitekey: settings.recaptcha_site_key,
+                callback: (token: string) => { form['g-recaptcha-response'] = token; },
+                'expired-callback': () => { form['g-recaptcha-response'] = ''; },
+            });
+        } else {
+            // Script not yet loaded — inject it with an onload callback
+            if (!document.querySelector('script[src*="recaptcha/api.js"]')) {
+                (window as any).onCheckoutRecaptchaLoad = () => {
+                    const el = document.getElementById('checkout-recaptcha-container');
+                    if (el && window.grecaptcha) {
+                        recaptchaWidgetId = window.grecaptcha.render(el, {
+                            sitekey: settings.recaptcha_site_key,
+                            callback: (token: string) => { form['g-recaptcha-response'] = token; },
+                            'expired-callback': () => { form['g-recaptcha-response'] = ''; },
+                        });
+                    }
+                };
+                const script = document.createElement('script');
+                script.src = 'https://www.google.com/recaptcha/api.js?onload=onCheckoutRecaptchaLoad&render=explicit';
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            }
+        }
+    }
+
+    // When user reaches step 4, render the reCAPTCHA widget after DOM updates
+    $effect(() => {
+        if (currentStep === 4 && recaptchaEnabled) {
+            // Use a microtask to wait for Svelte DOM update
+            setTimeout(() => renderRecaptchaWidget(), 50);
+        }
+    });
+
+    const stepLabels = ['Transfer Details', 'Passenger Info', 'Extras', 'Confirmation'];
 
     onMount(() => {
         // Tick every 60 seconds so the "Earliest pickup" notice and validation
@@ -598,117 +689,40 @@
                         </div>
                         {/if}
 
-                        <!-- STEP 4: Order Summary -->
+                        <!-- STEP 4: CONFIRMATION -->
                         {#if currentStep === 4}
-                        <div class="step-card">
+                        <div class="step-card bw-split-in-up">
                             <div class="step-card__header">
-                                <h4>Step 4. Order Summary</h4>
-                                <p>Review your booking before proceeding to payment</p>
+                                <h4>Confirmation</h4>
+                                <p>Review your booking and confirm.</p>
                             </div>
                             <div class="step-card__body">
-                                <div class="summary-section">
-                                    <h6 class="summary-section-title">Transfer Route</h6>
-                                    <div class="summary-row" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
-                                        <div style="display: flex; justify-content: space-between; width: 100%;">
-                                            <span class="summary-label"><i class="fas fa-map-marker-alt text-danger"></i> Pickup</span>
-                                            <span class="summary-value" style="text-align: right;">{form.pickup_address}</span>
-                                        </div>
-                                        {#if fullPickupAddress && fullPickupAddress !== form.pickup_address}
-                                            <small class="text-muted" style="font-size: 0.75rem; text-align: right; width: 100%;">{fullPickupAddress}</small>
-                                        {/if}
-                                    </div>
-                                    <div class="summary-row" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
-                                        <div style="display: flex; justify-content: space-between; width: 100%;">
-                                            <span class="summary-label"><i class="fas fa-flag-checkered text-success"></i> Drop-off</span>
-                                            <span class="summary-value" style="text-align: right;">{form.dropoff_address}</span>
-                                        </div>
-                                        {#if fullDropoffAddress && fullDropoffAddress !== form.dropoff_address}
-                                            <small class="text-muted" style="font-size: 0.75rem; text-align: right; width: 100%;">{fullDropoffAddress}</small>
-                                        {/if}
-                                    </div>
-                                    <div class="summary-row">
-                                        <span class="summary-label"><i class="fas fa-calendar-alt"></i> Date & Time</span>
-                                        <span class="summary-value">{form.date} · {form.time}</span>
-                                    </div>
-                                    <div class="summary-row">
-                                        <span class="summary-label"><i class="fas fa-users"></i> Passengers</span>
-                                        <span class="summary-value">{form.passengers}</span>
-                                    </div>
-                                </div>
-                                {#if vehicleCategory}
-                                <div class="summary-section">
-                                    <h6 class="summary-section-title">Vehicle</h6>
-                                    <div class="summary-vehicle">
-                                        <img src={vehicleCategory.image_url} alt={vehicleCategory.title} />
-                                        <div>
-                                            <strong>{vehicleCategory.title}</strong>
-                                            <span>{vehicleCategory.passenger_capacity} passengers · {vehicleCategory.luggage_capacity} luggage</span>
-                                        </div>
-                                        <span class="summary-vehicle-price">{formatRupiah(basePrice)}</span>
-                                    </div>
-                                </div>
-                                {/if}
-                                {#if selectedExtras.length > 0}
-                                <div class="summary-section">
-                                    <h6 class="summary-section-title">Additional Services</h6>
-                                    {#each selectedExtras as id}
-                                        {@const extra = EXTRAS.find(e => e.id === id)}
-                                        {#if extra}
-                                        <div class="summary-row">
-                                            <span class="summary-label"><i class="fas fa-plus-circle text-success"></i> {extra.label}</span>
-                                            <span class="summary-value">{extra.price > 0 ? '+' + formatRupiah(extra.price) : 'Free'}</span>
-                                        </div>
-                                        {/if}
-                                    {/each}
-                                </div>
-                                {/if}
-                                <div class="summary-total">
-                                    <span>Total</span>
-                                    <span class="total-amount">{formatRupiah(totalPrice)}</span>
-                                </div>
-                            </div>
-                        </div>
-                        {/if}
-
-                        <!-- STEP 5: Payment -->
-                        {#if currentStep === 5}
-                        <div class="step-card">
-                            <div class="step-card__header">
-                                <h4>Step 5. Payment</h4>
-                                <p>Choose how you'd like to pay for your transfer</p>
-                            </div>
-                            <div class="step-card__body">
-                                <div class="payment-methods">
-                                    {#each PAYMENT_METHODS as method}
-                                        <label class="method-card {form.payment_method === method.id ? 'method-card--selected' : ''}">
-                                            <input type="radio" name="payment_method" value={method.id} bind:group={form.payment_method} class="method-radio" />
-                                            <div class="method-icon" style="color: {method.color};">
-                                                <i class="{method.icon}"></i>
-                                            </div>
-                                            <span class="method-label">{method.label}</span>
-                                            <div class="method-check {form.payment_method === method.id ? 'visible' : ''}">
-                                                <i class="fas fa-check"></i>
-                                            </div>
-                                        </label>
-                                    {/each}
-                                </div>
-
-                                <div class="terms-box">
+                                <div class="terms-box" style="margin-top: 10px;">
                                     <label class="terms-label">
                                         <input type="checkbox" bind:checked={agreedToTerms} class="terms-checkbox" />
                                         <span>
-                                            I agree to the <a href="/terms" target="_blank">Terms &amp; Conditions</a>
+                                            I agree to the <a href="/terms" target="_blank">Terms &amp; Conditions</a> of service
                                         </span>
                                     </label>
-                                    <p class="terms-provider">
-                                        The service is provided by Siwride. By completing this booking you accept our cancellation and refund policy.
+                                    <p class="terms-provider" style="margin-top: 15px; font-size: 14px; color: #64748b;">
+                                        By clicking "Complete Booking", you will be redirected to Xendit's secure payment gateway to choose your preferred payment method and complete the transaction.
                                     </p>
                                 </div>
 
-                                <div class="security-badges">
-                                    <span><i class="fas fa-shield-alt"></i> SSL Secured</span>
-                                    <span><i class="fas fa-lock"></i> 256-bit Encryption</span>
-                                    <span><i class="fas fa-check-circle"></i> Safe Checkout</span>
+                                {#if recaptchaEnabled}
+                                    <div class="recaptcha-wrapper" style="margin-top: 20px;">
+                                        <div id="checkout-recaptcha-container"></div>
+                                        {#if form.errors['g-recaptcha-response']}
+                                            <div class="error-text" style="margin-top: 6px; color: #dc3545; font-size: 14px;">
+                                                {form.errors['g-recaptcha-response']}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                {/if}
+
+                                <div class="security-badges" style="margin-top: 24px; display: flex; gap: 15px; flex-wrap: wrap; color: #64748b; font-size: 13px;">
+                                    <span><i class="fas fa-shield-alt text-success"></i> SSL Secured</span>
+                                    <span><i class="fas fa-lock text-primary"></i> Powered by Xendit</span>
                                 </div>
                             </div>
                         </div>
@@ -726,7 +740,7 @@
                                 </a>
                             {/if}
 
-                            {#if currentStep < 5}
+                            {#if currentStep < 4}
                                 <button type="button" class="btn-next" onclick={nextStep} disabled={isValidatingEmail}>
                                     {#if isValidatingEmail}
                                         Validating... <i class="fas fa-spinner fa-spin"></i>
@@ -735,7 +749,12 @@
                                     {/if}
                                 </button>
                             {:else}
-                                <button type="submit" class="btn-submit" disabled={form.processing || !form.payment_method || !agreedToTerms || !!zoneError}>
+                                {#if form.errors.payment_method}
+                                    <div class="checkout-error-alert" style="color: #e74c3c; background: #fadbd8; padding: 10px; border-radius: 6px; margin-bottom: 15px; width: 100%; text-align: left;">
+                                        <i class="fas fa-exclamation-circle"></i> {form.errors.payment_method}
+                                    </div>
+                                {/if}
+                                <button type="submit" class="btn-submit" disabled={form.processing || !agreedToTerms || !!zoneError}>
                                     {#if form.processing}
                                         <i class="fas fa-spinner fa-spin"></i> Processing...
                                     {:else}
@@ -862,17 +881,6 @@
 
                         <!-- Pricing breakdown -->
                         <div class="sidebar-section-title">Price Breakdown</div>
-                        {#if priceZoneInfo.pickup_zone && priceZoneInfo.dropoff_zone}
-                            <div class="sidebar-zone-info">
-                                <i class="fas fa-map-marker-alt"></i>
-                                {priceZoneInfo.pickup_zone} → {priceZoneInfo.dropoff_zone}
-                                {#if exactDistanceStr}
-                                    &nbsp;· {exactDistanceStr}
-                                {:else if priceZoneInfo.distance_km}
-                                    &nbsp;· {priceZoneInfo.distance_km} km
-                                {/if}
-                            </div>
-                        {/if}
                         <div class="sidebar-row">
                             <span>Vehicle ({vehicleCategory?.title ?? 'Transfer'})</span>
                             {#if !isPricingLoaded}
@@ -1129,32 +1137,116 @@
     .sidebar-note { margin-top: 14px; font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 7px; }
     .sidebar-note i { color: #10b981; }
 
-    /* ── Step 5: Payment ── */
-    .payment-methods {
+    /* ── Step 5: Payment (flat + accordion) ── */
+
+    /* Direct method cards (Akulaku, AstraPay, Indomaret, Uangme) */
+    .pay-direct-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 12px;
-        margin-bottom: 24px;
+        margin-bottom: 14px;
     }
-    @media (max-width: 480px) { .payment-methods { grid-template-columns: repeat(2, 1fr); } }
-    .method-card {
-        display: flex; flex-direction: column; align-items: center; gap: 7px;
-        padding: 16px 12px; border: 2px solid #e2e8f0; border-radius: 12px;
-        cursor: pointer; transition: all 0.2s; background: #fff; position: relative;
+    @media (max-width: 500px) { .pay-direct-grid { grid-template-columns: 1fr; } }
+    .pay-direct-card {
+        position: relative; display: flex; flex-direction: column; gap: 10px;
+        padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 14px;
+        background: #fff; cursor: pointer; transition: all 0.2s;
     }
-    .method-card:hover { border-color: #94a3b8; background: #f8fafc; }
-    .method-card--selected { border-color: var(--travhub-base); background: rgba(229,32,41,0.03); }
+    .pay-direct-card:hover { border-color: #94a3b8; background: #f8fafc; transform: translateY(-1px); }
+    .pay-direct-card--selected {
+        border-color: var(--travhub-base);
+        background: rgba(229,32,41,0.04);
+        box-shadow: 0 0 0 3px rgba(229,32,41,0.1);
+    }
+    .pay-direct-top {
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .pay-direct-logo { height: 28px; max-width: 80px; object-fit: contain; border-radius: 4px; }
+    .pay-direct-badge {
+        font-size: 10px; font-weight: 700; padding: 3px 8px;
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;
+    }
+    .pay-direct-info { display: flex; flex-direction: column; gap: 2px; }
+    .pay-direct-info strong { font-size: 14px; font-weight: 700; color: #1e293b; }
+    .pay-direct-info span { font-size: 12px; color: #64748b; }
+
+    /* VA Accordion */
+    .va-accordion {
+        border: 2px solid #e2e8f0; border-radius: 14px;
+        overflow: hidden; margin-bottom: 14px; transition: border-color 0.2s;
+    }
+    .va-accordion--selected { border-color: var(--travhub-base); box-shadow: 0 0 0 3px rgba(229,32,41,0.1); }
+    .va-accordion-trigger {
+        width: 100%; display: flex; align-items: center;
+        justify-content: space-between; padding: 14px 18px;
+        background: #fff; border: none; cursor: pointer;
+        transition: background 0.15s; text-align: left;
+    }
+    .va-accordion-trigger:hover { background: #f8fafc; }
+    .va-trigger-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .va-trigger-icon {
+        width: 38px; height: 38px; border-radius: 10px;
+        background: #eff6ff; color: #3b82f6;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; flex-shrink: 0;
+    }
+    .va-accordion--selected .va-trigger-icon { background: rgba(229,32,41,0.08); color: var(--travhub-base); }
+    .va-trigger-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .va-trigger-text strong { font-size: 14px; font-weight: 700; color: #1e293b; }
+    .va-trigger-text span { font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+    .va-trigger-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 12px; }
+    .va-count-badge {
+        font-size: 11px; font-weight: 700; padding: 3px 10px;
+        border-radius: 20px; background: #f1f5f9; color: #475569;
+    }
+    .va-accordion--selected .va-count-badge { background: rgba(229,32,41,0.1); color: var(--travhub-base); }
+    .va-chevron { font-size: 12px; color: #94a3b8; transition: transform 0.2s; }
+    .va-accordion-body {
+        padding: 0 18px 18px;
+        background: #fafafa;
+        border-top: 1px solid #f0f4f8;
+        animation: slideDown 0.18s ease;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .va-accordion-note {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 12px; color: #92400e; padding: 10px 0 12px;
+    }
+    .va-accordion-note i { color: #d97706; }
+    .xendit-methods {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
+        margin-bottom: 0;
+    }
+    .xendit-method-card {
+        position: relative; display: flex; flex-direction: column;
+        align-items: center; gap: 8px;
+        padding: 16px 12px; border: 2px solid #e2e8f0;
+        border-radius: 12px; background: #fff;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .xendit-method-card:hover { border-color: #94a3b8; background: #f8fafc; }
+    .xendit-method-card--selected { border-color: var(--travhub-base); background: rgba(229,32,41,0.04); box-shadow: 0 0 0 3px rgba(229,32,41,0.1); }
     .method-radio { display: none; }
-    .method-icon { font-size: 30px; line-height: 1; }
-    .method-label { font-size: 12px; font-weight: 700; color: #334155; }
-    .method-check {
-        position: absolute; top: 7px; right: 7px;
+    .xendit-method-logo {
+        width: 64px; height: 28px; object-fit: contain;
+        border-radius: 4px; display: block;
+    }
+    .xendit-method-label { font-size: 12px; font-weight: 700; color: #334155; text-align: center; }
+    .xendit-check {
+        position: absolute; top: 6px; right: 6px;
         width: 20px; height: 20px; border-radius: 50%;
         background: #f1f5f9; color: #94a3b8;
         display: flex; align-items: center; justify-content: center;
         font-size: 9px; transition: all 0.2s; opacity: 0;
     }
-    .method-check.visible { background: var(--travhub-base); color: #fff; opacity: 1; }
+    .xendit-check.visible { background: var(--travhub-base); color: #fff; opacity: 1; }
+
+    .pay-select-hint {
+        font-size: 13px; color: #94a3b8; text-align: center; padding: 8px 0;
+        display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
 
     .terms-box {
         padding: 16px 18px; background: #f8fafc; border-radius: 12px;

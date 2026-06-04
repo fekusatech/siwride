@@ -3,7 +3,7 @@
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
-    import { Link } from '@inertiajs/svelte';
+    import { Link, useForm } from '@inertiajs/svelte';
     import { formatRupiah } from '@/lib/utils';
 
     interface OrderData {
@@ -23,6 +23,8 @@
     let { booking_code, order } = $props<{ booking_code: string; order: OrderData | null }>();
 
     let totalPrice = $derived(order ? parseFloat(order.price) : 0);
+
+
 </script>
 
 <AppHead title="Booking Confirmed - Siwride" />
@@ -52,12 +54,40 @@
 
                 <!-- Success Header -->
                 <div class="success-header">
-                    <div class="success-icon">
-                        <i class="fas fa-check"></i>
+                    <div class="success-icon {order?.payment_status === 'pending' ? 'bg-warning' : ''}">
+                        <i class="fas {order?.payment_status === 'pending' ? 'fa-hourglass-half' : 'fa-check'}"></i>
                     </div>
-                    <h2>Thank You{order?.customer_name ? ', ' + order.customer_name : ''}!</h2>
-                    <p>Your transfer has been booked successfully. We'll be in touch shortly.</p>
-                    <div class="booking-code-badge">
+                    <h2>{order?.payment_status === 'pending' ? 'Waiting for Payment' : 'Booking Confirmed'}!</h2>
+                    
+                    {#if order?.payment_status === 'pending'}
+                        <p>Please complete your payment before the time expires so we can confirm your order.</p>
+                        
+                        {#if order?.payment_reference && order.payment_reference.startsWith('http')}
+                            <div style="margin: 20px 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                                <a href={order.payment_reference} target="_blank" class="btn-book-again" style="text-decoration:none;">
+                                    Open Payment Page / Change Method in Xendit <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+
+                        {:else if order?.payment_reference}
+                            <div class="payment-instruction-box">
+                                <span class="code-label">Payment Method: {order.payment_method}</span>
+                                <div class="va-box">
+                                    <span class="va-number">{order.payment_reference}</span>
+                                    <button class="btn-copy" aria-label="Copy VA" onclick={() => { navigator.clipboard.writeText(order.payment_reference); alert('VA Number copied!'); }}>
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                {#if order?.payment_expiry}
+                                    <span class="expiry-text"><i class="fas fa-clock"></i> Pay before: {order.payment_expiry}</span>
+                                {/if}
+                            </div>
+                        {/if}
+                    {:else}
+                        <p>Your transfer has been booked successfully. We'll be in touch shortly.</p>
+                    {/if}
+                    
+                    <div class="booking-code-badge" style="margin-top:20px;">
                         <span class="code-label">Booking Reference</span>
                         <span class="code-value">{booking_code}</span>
                     </div>
@@ -222,4 +252,55 @@
     .btn-home:hover { background: #0f172a; transform: translateY(-2px); }
     .btn-book-again { background: var(--travhub-base); color: #fff; box-shadow: 0 6px 20px rgba(229,32,41,0.25); }
     .btn-book-again:hover { background: #c41820; transform: translateY(-2px); }
+
+    /* Payment Instruction Box */
+    .bg-warning { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 8px 25px rgba(245,158,11,0.3); }
+    .payment-instruction-box {
+        background: #fefce8; border: 1px solid #fef08a; padding: 20px; border-radius: 12px;
+        margin: 20px auto; max-width: 400px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .payment-ref-container { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .btn-copy { background: none; border: none; color: #64748b; cursor: pointer; font-size: 18px; padding: 4px; }
+    .btn-copy:hover { color: var(--travhub-base); }
+    .expiry-text { font-size: 12px; color: #b45309; font-weight: 600; margin-top: 8px; }
+    .btn-cancel {
+        background-color: #f1f1f1;
+        color: #333;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+    .btn-cancel:hover {
+        background-color: #e0e0e0;
+    }
+    .btn-submit {
+        background-color: var(--travhub-base);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+    .btn-submit:hover {
+        background-color: var(--travhub-base-dark);
+    }
+    .change-payment-box {
+        background: #fdfdfd;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+    .change-payment-box h4 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+        color: #333;
+    }
 </style>

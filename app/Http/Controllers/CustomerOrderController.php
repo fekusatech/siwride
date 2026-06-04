@@ -8,8 +8,9 @@ use App\Models\Order;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
 use App\Models\ZonePricingRule;
+use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,10 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Xendit\Configuration;
+use Xendit\Invoice\CreateInvoiceRequest;
+use Xendit\Invoice\InvoiceApi;
 
 class CustomerOrderController extends Controller
 {
@@ -76,39 +81,6 @@ class CustomerOrderController extends Controller
     }
 
     /**
-     * Display payment page — dummy payment UI.
-     */
-    public function payment(Request $request): Response
-    {
-        $bookingCode = $request->input('code', '');
-        $order = null;
-
-        if ($bookingCode) {
-            $order = Order::with(['vehicleCategory'])->where('booking_code', $bookingCode)->first();
-        }
-
-        return Inertia::render('customer/payment', [
-            'booking_code' => $bookingCode,
-            'order' => $order ? [
-                'booking_code' => $order->booking_code,
-                'customer_name' => $order->customer_name,
-                'pickup_address' => $order->pickup_address,
-                'dropoff_address' => $order->dropoff_address,
-                'date' => $order->date->format('Y-m-d'),
-                'time' => substr($order->time, 0, 5),
-                'passengers' => $order->passengers,
-                'extras' => $order->extras ?? [],
-                'price' => $order->price,
-                'vehicle_category' => $order->vehicleCategory ? [
-                    'title' => $order->vehicleCategory->title,
-                    'image_url' => $order->vehicleCategory->image_url,
-                    'base_price' => $order->vehicleCategory->base_price,
-                ] : null,
-            ] : null,
-        ]);
-    }
-
-    /**
      * Display payment success page.
      */
     public function paymentSuccess(Request $request): Response
@@ -129,6 +101,10 @@ class CustomerOrderController extends Controller
                 'passengers' => $order->passengers,
                 'extras' => $order->extras ?? [],
                 'price' => $order->price,
+                'payment_method' => $order->payment_method,
+                'payment_reference' => $order->payment_reference,
+                'payment_status' => $order->payment_status,
+                'payment_expiry' => $order->payment_expiry ? Carbon::parse($order->payment_expiry)->format('Y-m-d H:i:s') : null,
                 'vehicle_category' => $order->vehicleCategory ? [
                     'title' => $order->vehicleCategory->title,
                     'image_url' => $order->vehicleCategory->image_url,
@@ -157,10 +133,10 @@ class CustomerOrderController extends Controller
         $pickupZone = Zone::findContainingPoint((float) $validated['pickup_latitude'], (float) $validated['pickup_longitude']);
         $dropoffZone = Zone::findContainingPoint((float) $validated['dropoff_latitude'], (float) $validated['dropoff_longitude']);
 
-        if (!$pickupZone) {
+        if (! $pickupZone) {
             return response()->json(['error' => 'Alamat penjemputan (Pickup) berada di luar zona layanan kami.'], 422);
         }
-        if (!$dropoffZone) {
+        if (! $dropoffZone) {
             return response()->json(['error' => 'Alamat tujuan (Dropoff) berada di luar zona layanan kami.'], 422);
         }
 
@@ -169,7 +145,7 @@ class CustomerOrderController extends Controller
             ->where('dropoff_zone_id', $dropoffZone->id)
             ->first();
 
-        if (!$pricingRule) {
+        if (! $pricingRule) {
             return response()->json(['error' => "Maaf, rute dari {$pickupZone->name} ke {$dropoffZone->name} saat ini belum tersedia."], 422);
         }
 
@@ -254,9 +230,40 @@ class CustomerOrderController extends Controller
     }
 
     /**
+     * Track a specific booking by its exact booking code.
+     */
+    public function trackBooking(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string'],
+        ]);
+
+        $order = Order::with(['driver'])
+            ->where('booking_code', strtoupper($validated['code']))
+            ->first();
+
+        if (! $order) {
+            return response()->json(['message' => 'Booking not found'], 404);
+        }
+
+        return response()->json([
+            'order' => [
+                'booking_code' => $order->booking_code,
+                'status' => $order->status,
+                'customer_name' => $order->customer_name,
+                'pickup_address' => $order->pickup_address,
+                'dropoff_address' => $order->dropoff_address,
+                'date' => $order->date->format('Y-m-d'),
+                'time' => $order->time,
+                'driver_name' => $order->driver?->name,
+            ],
+        ]);
+    }
+
+    /**
      * Store a new customer order (from checkout page).
      */
-    public function store(StoreCustomerOrderRequest $request): RedirectResponse
+    public function store(StoreCustomerOrderRequest $request): SymfonyResponse
     {
         $validated = $request->validated();
 
@@ -329,10 +336,10 @@ class CustomerOrderController extends Controller
                 $pickupZone = Zone::findContainingPoint($pickupLat, $pickupLng);
                 $dropoffZone = Zone::findContainingPoint($dropoffLat, $dropoffLng);
 
-                if (!$pickupZone) {
+                if (! $pickupZone) {
                     throw ValidationException::withMessages(['pickup_address' => 'Alamat penjemputan berada di luar zona layanan.']);
                 }
-                if (!$dropoffZone) {
+                if (! $dropoffZone) {
                     throw ValidationException::withMessages(['dropoff_address' => 'Alamat tujuan berada di luar zona layanan.']);
                 }
 
@@ -341,7 +348,7 @@ class CustomerOrderController extends Controller
                     ->where('dropoff_zone_id', $dropoffZone->id)
                     ->first();
 
-                if (!$pricingRule) {
+                if (! $pricingRule) {
                     throw ValidationException::withMessages(['pickup_address' => "Rute dari {$pickupZone->name} ke {$dropoffZone->name} belum tersedia."]);
                 }
 
@@ -357,7 +364,7 @@ class CustomerOrderController extends Controller
         }
         $totalPrice = $basePrice + $extrasTotal;
 
-        Order::create([
+        $order = Order::create([
             'booking_code' => $bookingCode,
             'order_number' => $orderNumber,
             'customer_id' => $customer->id,
@@ -367,7 +374,12 @@ class CustomerOrderController extends Controller
             'date' => $validated['date'],
             'time' => $validated['time'],
             'pickup_address' => $validated['pickup_address'],
+            'pickup_latitude' => $validated['pickup_latitude'] ?? null,
+            'pickup_longitude' => $validated['pickup_longitude'] ?? null,
             'dropoff_address' => $validated['dropoff_address'],
+            'dropoff_latitude' => $validated['dropoff_latitude'] ?? null,
+            'dropoff_longitude' => $validated['dropoff_longitude'] ?? null,
+            'distance_km' => $validated['exact_distance_km'] ?? null,
             'passengers' => $validated['passengers'],
             'notes' => $validated['notes'] ?? null,
             'extras' => $extras ?: null,
@@ -383,18 +395,62 @@ class CustomerOrderController extends Controller
             Auth::guard('customer')->login($customer);
         }
 
-        return redirect()->route('booking.payment', ['code' => $bookingCode]);
+        try {
+            $redirectUrl = $this->generateXenditPayment($order);
+
+            // If it returns an Inertia redirect (Inertia::location) for external URLs
+            if (str_starts_with($redirectUrl, 'http') && ! str_starts_with($redirectUrl, url('/'))) {
+                return inertia()->location($redirectUrl);
+            }
+
+            return redirect($redirectUrl);
+        } catch (\Exception $e) {
+            // If payment generation fails, redirect back to checkout with error
+            return redirect()->back()->withErrors(['payment_method' => 'Gagal membuat tagihan: '.$e->getMessage()]);
+        }
     }
 
     /**
-     * Process dummy payment and redirect to success.
+     * Generate Xendit Payment and return redirect URL
      */
-    public function processPayment(Request $request): RedirectResponse
+    private function generateXenditPayment(Order $order): string
     {
-        $bookingCode = $request->input('booking_code', '');
+        Configuration::setXenditKey(config('services.xendit.secret_key'));
 
-        // Dummy payment processing — just redirect to success
-        return redirect()->route('booking.payment-success', ['code' => $bookingCode]);
+        $paymentReference = null;
+        $expiry = now()->addHours(24);
+
+        // Khusus untuk local development di Windows/XAMPP yang sering bermasalah dengan SSL
+        $guzzleClient = new Client([
+            'verify' => app()->environment('local') ? false : true,
+        ]);
+
+        $apiInstance = new InvoiceApi($guzzleClient);
+
+        $req = new CreateInvoiceRequest([
+            'external_id' => $order->booking_code.'_'.time(),
+            'amount' => (float) $order->price,
+            'payer_email' => $order->customer_email,
+            'description' => 'Payment for Booking '.$order->booking_code,
+        ]);
+
+        $result = $apiInstance->createInvoice($req);
+
+        // Xendit Invoice URL
+        $paymentReference = $result->getInvoiceUrl();
+
+        $order->update([
+            'payment_method' => 'Xendit Invoice',
+            'payment_reference' => $paymentReference,
+            'payment_status' => 'pending',
+            'payment_expiry' => $expiry,
+        ]);
+
+        if (str_starts_with($paymentReference, 'http')) {
+            return $paymentReference;
+        }
+
+        return route('booking.payment-success', ['code' => $order->booking_code]);
     }
 
     /**
@@ -426,7 +482,7 @@ class CustomerOrderController extends Controller
      */
     public function show($bookingCode): Response
     {
-        $order = Order::with(['customer', 'driver'])->where('booking_code', $bookingCode)->firstOrFail();
+        $order = Order::with(['customer', 'driver', 'vehicleCategory'])->where('booking_code', $bookingCode)->firstOrFail();
 
         return Inertia::render('customer/booking-detail', [
             'order' => $order,
