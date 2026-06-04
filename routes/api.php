@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\WebhookController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -130,6 +131,74 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    // Webhooks
-    Route::post('/webhooks/xendit', [\App\Http\Controllers\WebhookController::class, 'xendit'])->name('webhooks.xendit');
+});
+
+// ─────────────────────────────────────────────
+// Xendit Webhooks (Public — no auth, verified by callback token)
+// Base URL: https://siwride.com/api/webhooks/xendit/{product}
+// ─────────────────────────────────────────────
+Route::prefix('webhooks/xendit')->group(function () {
+    Route::post('/invoice', [WebhookController::class, 'invoice'])
+        ->name('webhooks.xendit.invoice');
+
+    Route::post('/fva', [WebhookController::class, 'fva'])
+        ->name('webhooks.xendit.fva');
+
+    Route::post('/disbursement', [WebhookController::class, 'disbursement'])
+        ->name('webhooks.xendit.disbursement');
+
+    Route::post('/payout-link', [WebhookController::class, 'payoutLink'])
+        ->name('webhooks.xendit.payout-link');
+
+    Route::post('/retail-outlet', [WebhookController::class, 'retailOutlet'])
+        ->name('webhooks.xendit.retail-outlet');
+
+    Route::post('/cards', [WebhookController::class, 'cards'])
+        ->name('webhooks.xendit.cards');
+
+    Route::post('/direct-debit', [WebhookController::class, 'directDebit'])
+        ->name('webhooks.xendit.direct-debit');
+
+    Route::post('/xenplatform', [WebhookController::class, 'xenplatform'])
+        ->name('webhooks.xendit.xenplatform');
+
+    Route::post('/reports', [WebhookController::class, 'reports'])
+        ->name('webhooks.xendit.reports');
+
+    Route::post('/payment-request', [WebhookController::class, 'paymentRequest'])
+        ->name('webhooks.xendit.payment-request');
+
+    Route::post('/payment-method', [WebhookController::class, 'paymentMethod'])
+        ->name('webhooks.xendit.payment-method');
+
+    Route::post('/payment-token', [WebhookController::class, 'paymentToken'])
+        ->name('webhooks.xendit.payment-token');
+
+    Route::post('/ewallet', [WebhookController::class, 'ewallet'])
+        ->name('webhooks.xendit.ewallet');
+
+    Route::post('/recurring-payment', [WebhookController::class, 'recurringPayment'])
+        ->name('webhooks.xendit.recurring-payment');
+
+    Route::post('/paylater', [WebhookController::class, 'paylater'])
+        ->name('webhooks.xendit.paylater');
+
+    Route::post('/qr-code', [WebhookController::class, 'qrCode'])
+        ->name('webhooks.xendit.qr-code');
+
+    Route::post('/payment-session', [WebhookController::class, 'paymentSession'])
+        ->name('webhooks.xendit.payment-session');
+
+    Route::post('/bill-payments', [WebhookController::class, 'billPayments'])
+        ->name('webhooks.xendit.bill-payments');
+
+    Route::post('/payouts-v3', [WebhookController::class, 'payoutsV3'])
+        ->name('webhooks.xendit.payouts-v3');
+
+    Route::post('/payment-request-v3', [WebhookController::class, 'paymentRequestV3'])
+        ->name('webhooks.xendit.payment-request-v3');
+
+    // Deprecated — single catch-all endpoint (kept for backward compatibility)
+    Route::post('/', [WebhookController::class, 'xendit'])
+        ->name('webhooks.xendit');
 });
