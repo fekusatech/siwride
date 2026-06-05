@@ -416,7 +416,9 @@ class CustomerOrderController extends Controller
      */
     private function generateXenditPayment(Order $order): string
     {
-        Configuration::setXenditKey(config('services.xendit.secret_key'));
+        Configuration::setXenditKey(
+            \App\Models\Setting::getValue('xendit_secret_key') ?? config('services.xendit.secret_key')
+        );
 
         $paymentReference = null;
         $expiry = now()->addHours(24);

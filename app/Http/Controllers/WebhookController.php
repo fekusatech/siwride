@@ -14,7 +14,7 @@ class WebhookController extends Controller
      */
     private function verifyToken(Request $request): bool
     {
-        $token = config('services.xendit.webhook_token');
+        $token = \App\Models\Setting::getValue('xendit_webhook_token') ?? config('services.xendit.webhook_token');
         $callbackToken = $request->header('x-callback-token');
 
         if (! $token) {
