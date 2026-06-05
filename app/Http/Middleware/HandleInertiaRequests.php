@@ -44,7 +44,7 @@ class HandleInertiaRequests extends Middleware
             'recaptcha_enabled' => '0',
             'recaptcha_site_key' => null,
             'recaptcha_secret_key' => null,
-            
+
             // Company Info
             'company_phone' => '+62 812-3456-78',
             'company_email' => 'info@siwride.com',
@@ -58,7 +58,7 @@ class HandleInertiaRequests extends Middleware
             'hero_welcome_text' => 'Welcome to Siwride',
             'hero_title' => 'Hassle-Free Bali Travels with Siwride',
             'hero_subtitle' => 'Book your professional driver in advance and enjoy a comfortable, safe, and reliable journey across the beautiful island of Bali.',
-            
+
             // Premium Services
             'services_title' => 'Our Premium Services',
             'services_subtitle' => 'We offer a wide range of services to cater to your every need.',
@@ -164,16 +164,16 @@ class HandleInertiaRequests extends Middleware
                 [
                     'title' => 'Professional Drivers',
                     'text' => 'All our drivers are highly trained, vetted, and dedicated to ensuring your smooth and safe journey everywhere you go.',
-                    'icon' => 'icon-traveler-with-a-suitcase-1'
+                    'icon' => 'icon-traveler-with-a-suitcase-1',
                 ],
                 [
                     'title' => 'Transparent Pricing',
                     'text' => 'No hidden fees or unexpected surges! Enjoy high-quality service at fair, fixed rates every time you ride.',
-                    'icon' => 'flaticon-check'
-                ]
+                    'icon' => 'flaticon-check',
+                ],
             ],
             'why_choose_us_passenger_count' => '10k+',
-            
+
             // Testimonials
             'customer_testimonials' => [
                 [
@@ -211,7 +211,7 @@ class HandleInertiaRequests extends Middleware
                     'rating' => 5,
                     'img' => '/assets/images/resources/why-choose-one-author-2.png',
                 ],
-            ]
+            ],
         ];
 
         $settings = Setting::values($defaults);
@@ -224,8 +224,8 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
-        if (!empty($settings['logo']) && !str_starts_with($settings['logo'], '/storage/')) {
-            $settings['logo'] = '/storage/' . $settings['logo'];
+        if (! empty($settings['logo']) && ! str_starts_with($settings['logo'], '/storage/')) {
+            $settings['logo'] = '/storage/'.$settings['logo'];
         }
 
         return [

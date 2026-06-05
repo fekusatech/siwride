@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Setting;
+use Illuminate\Database\Seeder;
 
 class SettingSeeder extends Seeder
 {
@@ -22,38 +22,38 @@ class SettingSeeder extends Seeder
             'company_twitter' => 'https://twitter.com/siwride',
             'company_instagram' => 'https://instagram.com/siwride',
             'company_linkedin' => 'https://linkedin.com/company/siwride',
-            
+
             'hero_welcome_text' => 'Premium Bali Transport',
             'hero_title' => 'Your Journey, Our Priority',
             'hero_subtitle' => 'Experience the beauty of Bali with our professional drivers and premium vehicles. Safe, comfortable, and reliable.',
-            
+
             'services_title' => 'Our Premium Services',
             'services_subtitle' => 'What We Offer',
             'our_services' => json_encode([
                 [
                     'title' => 'Airport Transfers',
                     'description' => 'Start and end your trip right. Our driver will be waiting at the arrival gate with your name sign.',
-                    'icon' => 'icon-traveler-with-a-suitcase-1'
+                    'icon' => 'icon-traveler-with-a-suitcase-1',
                 ],
                 [
                     'title' => 'Daily Charters',
                     'description' => 'Hire a car and driver for the whole day. Explore Bali at your own pace with unlimited mileage within designated zones.',
-                    'icon' => 'flaticon-check'
+                    'icon' => 'flaticon-check',
                 ],
                 [
                     'title' => 'Point-to-Point',
                     'description' => 'Direct transfers between your hotel, beach clubs, restaurants, or any destination in Bali.',
-                    'icon' => 'icon-traveler-with-a-suitcase-1'
+                    'icon' => 'icon-traveler-with-a-suitcase-1',
                 ],
                 [
                     'title' => 'Event Transport',
                     'description' => 'Coordinated transportation for weddings, conferences, or group tours. Premium vans available.',
-                    'icon' => 'flaticon-check'
-                ]
+                    'icon' => 'flaticon-check',
+                ],
             ]),
 
             'coverage_area_title' => 'Where We Operate',
-            
+
             'destinations_title' => 'Must-Visit Locations',
             'destinations_subtitle' => 'Explore the Best of Bali',
             'popular_destinations' => json_encode([
@@ -86,7 +86,7 @@ class SettingSeeder extends Seeder
                     'name' => 'Lempuyang Temple',
                     'location' => 'Karangasem, Bali',
                     'img' => '/assets/images/destination/lempuyang.jpg',
-                ]
+                ],
             ]),
 
             'why_choose_us_title' => 'Why Choose Siwride?',
@@ -97,18 +97,18 @@ class SettingSeeder extends Seeder
                 [
                     'title' => 'Professional Drivers',
                     'text' => 'Fully licensed, English-speaking drivers who know the best routes.',
-                    'icon' => 'icon-traveler-with-a-suitcase-1'
+                    'icon' => 'icon-traveler-with-a-suitcase-1',
                 ],
                 [
                     'title' => 'Transparent Pricing',
                     'text' => 'Fixed rates with no hidden fees, tolls, or parking charges added later.',
-                    'icon' => 'flaticon-check'
+                    'icon' => 'flaticon-check',
                 ],
                 [
                     'title' => 'Pristine Vehicles',
                     'text' => 'Clean, air-conditioned, and regularly serviced cars for your comfort.',
-                    'icon' => 'icon-traveler-with-a-suitcase-1'
-                ]
+                    'icon' => 'icon-traveler-with-a-suitcase-1',
+                ],
             ]),
 
             'customer_testimonials' => json_encode([
