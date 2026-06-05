@@ -21,6 +21,9 @@ class SettingController extends Controller
                 'recaptcha_enabled' => '0',
                 'recaptcha_site_key' => null,
                 'recaptcha_secret_key' => null,
+                'xendit_enabled' => '0',
+                'xendit_secret_key' => null,
+                'xendit_webhook_token' => null,
                 'updated_at' => Setting::query()->max('updated_at'),
             ]),
         ]);
@@ -34,6 +37,9 @@ class SettingController extends Controller
             'recaptcha_enabled' => ['required', 'boolean'],
             'recaptcha_site_key' => ['nullable', 'string', 'max:255'],
             'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
+            'xendit_enabled' => ['required', 'boolean'],
+            'xendit_secret_key' => ['nullable', 'string', 'max:500'],
+            'xendit_webhook_token' => ['nullable', 'string', 'max:500'],
         ]);
 
         if ($validated['recaptcha_enabled']) {
@@ -43,10 +49,19 @@ class SettingController extends Controller
             ]);
         }
 
+        if ($validated['xendit_enabled']) {
+            $request->validate([
+                'xendit_secret_key' => ['required', 'string', 'max:500'],
+            ]);
+        }
+
         Setting::setValue('business_name', $validated['business_name']);
         Setting::setValue('recaptcha_enabled', $validated['recaptcha_enabled'] ? '1' : '0');
         Setting::setValue('recaptcha_site_key', $validated['recaptcha_site_key'] ?? '');
         Setting::setValue('recaptcha_secret_key', $validated['recaptcha_secret_key'] ?? '');
+        Setting::setValue('xendit_enabled', $validated['xendit_enabled'] ? '1' : '0');
+        Setting::setValue('xendit_secret_key', $validated['xendit_secret_key'] ?? '');
+        Setting::setValue('xendit_webhook_token', $validated['xendit_webhook_token'] ?? '');
 
         $currentLogo = Setting::getValue('logo');
         if ($request->hasFile('logo')) {
