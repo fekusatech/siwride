@@ -15,6 +15,7 @@
         recaptcha_secret_key: setting.recaptcha_secret_key ?? '',
         xendit_enabled: setting.xendit_enabled === '1',
         xendit_secret_key: setting.xendit_secret_key ?? '',
+        xendit_public_key: setting.xendit_public_key ?? '',
         xendit_webhook_token: setting.xendit_webhook_token ?? '',
     });
 
@@ -317,6 +318,26 @@
                                         {#if form.errors.xendit_secret_key}
                                             <div class="text-danger small mt-1">
                                                 {form.errors.xendit_secret_key}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <div class="col-12">
+                                        <label
+                                            for="xendit_public_key"
+                                            class="form-label fw-bold"
+                                            >Public Key</label
+                                        >
+                                        <input
+                                            id="xendit_public_key"
+                                            name="xendit_public_key"
+                                            type="text"
+                                            class="form-control"
+                                            bind:value={form.xendit_public_key}
+                                            placeholder="xnd_public_production_..."
+                                        />
+                                        {#if form.errors.xendit_public_key}
+                                            <div class="text-danger small mt-1">
+                                                {form.errors.xendit_public_key}
                                             </div>
                                         {/if}
                                     </div>

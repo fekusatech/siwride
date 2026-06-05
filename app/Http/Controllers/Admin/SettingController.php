@@ -23,6 +23,7 @@ class SettingController extends Controller
                 'recaptcha_secret_key' => null,
                 'xendit_enabled' => '0',
                 'xendit_secret_key' => null,
+                'xendit_public_key' => null,
                 'xendit_webhook_token' => null,
                 'updated_at' => Setting::query()->max('updated_at'),
             ]),
@@ -39,6 +40,7 @@ class SettingController extends Controller
             'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
             'xendit_enabled' => ['required', 'boolean'],
             'xendit_secret_key' => ['nullable', 'string', 'max:500'],
+            'xendit_public_key' => ['nullable', 'string', 'max:500'],
             'xendit_webhook_token' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -61,6 +63,7 @@ class SettingController extends Controller
         Setting::setValue('recaptcha_secret_key', $validated['recaptcha_secret_key'] ?? '');
         Setting::setValue('xendit_enabled', $validated['xendit_enabled'] ? '1' : '0');
         Setting::setValue('xendit_secret_key', $validated['xendit_secret_key'] ?? '');
+        Setting::setValue('xendit_public_key', $validated['xendit_public_key'] ?? '');
         Setting::setValue('xendit_webhook_token', $validated['xendit_webhook_token'] ?? '');
 
         $currentLogo = Setting::getValue('logo');
