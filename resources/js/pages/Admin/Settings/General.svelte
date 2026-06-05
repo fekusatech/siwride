@@ -309,7 +309,7 @@
                                         <input
                                             id="xendit_secret_key"
                                             name="xendit_secret_key"
-                                            type="password"
+                                            type="text"
                                             class="form-control"
                                             bind:value={form.xendit_secret_key}
                                             placeholder="xnd_production_..."
@@ -329,7 +329,7 @@
                                         <input
                                             id="xendit_webhook_token"
                                             name="xendit_webhook_token"
-                                            type="password"
+                                            type="text"
                                             class="form-control"
                                             bind:value={form.xendit_webhook_token}
                                             placeholder="Enter Xendit webhook callback token"
