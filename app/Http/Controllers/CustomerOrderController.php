@@ -98,6 +98,11 @@ class CustomerOrderController extends Controller
                 'passengers' => $request->input('passengers', '1'),
             ],
             'vehicleCategory' => $vehicleCategory,
+            'customer' => $customer ? [
+                'name' => $customer->name,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+            ] : null,
         ]);
     }
 

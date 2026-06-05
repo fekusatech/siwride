@@ -101,14 +101,26 @@
         });
     });
 
-    // Pre-fill from auth customer
+    // Pre-fill from auth customer — auto-fill when logged in
     let useProfileData = $state(false);
+
+    // Auto-enable profile data if customer is logged in
+    onMount(() => {
+        if ((page.props as any).auth?.customer) {
+            useProfileData = true;
+        }
+    });
+
     $effect(() => {
         if (useProfileData && (page.props as any).auth?.customer) {
             const c = (page.props as any).auth.customer;
-            form.customer_name = c.name;
-            form.email = c.email;
+            form.customer_name = c.name || '';
+            form.email = c.email || '';
             if (c.phone) form.customer_phone = c.phone;
+        } else if (!useProfileData) {
+            form.customer_name = '';
+            form.email = '';
+            form.customer_phone = '';
         }
     });
 
@@ -822,6 +834,7 @@
                                                 placeholder="Enter your full name"
                                                 minlength="3"
                                                 maxlength="100"
+                                                disabled={useProfileData}
                                             />
                                         </div>
                                         <div class="form-group">
@@ -837,6 +850,7 @@
                                                     : ''}"
                                                 placeholder="your.email@example.com"
                                                 maxlength="100"
+                                                disabled={useProfileData}
                                             />
                                             {#if emailError}<small
                                                     class="error-text"
@@ -856,6 +870,7 @@
                                                 class="premium-input"
                                                 placeholder="+60 12 345 6789"
                                                 maxlength="20"
+                                                disabled={useProfileData && !!(page.props as any).auth?.customer?.phone}
                                             />
                                         </div>
                                         <div class="form-group">
