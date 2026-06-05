@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Services\OrderCancellationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -21,6 +22,9 @@ class CustomerProfileController extends Controller
         $orders = Order::where('customer_id', $customer->id)
             ->orderBy('created_at', 'desc')
             ->get();
+
+        $cancellationService = new OrderCancellationService();
+        $orders->each(fn ($order) => $cancellationService->autoCancelIfEligible($order));
 
         return Inertia::render('customer/profile', [
             'orders' => $orders,

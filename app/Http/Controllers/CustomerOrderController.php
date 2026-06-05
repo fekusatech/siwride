@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
 use App\Models\ZonePricingRule;
+use App\Services\OrderCancellationService;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
@@ -134,10 +135,10 @@ class CustomerOrderController extends Controller
         $dropoffZone = Zone::findContainingPoint((float) $validated['dropoff_latitude'], (float) $validated['dropoff_longitude']);
 
         if (! $pickupZone) {
-            return response()->json(['error' => 'Alamat penjemputan (Pickup) berada di luar zona layanan kami.'], 422);
+            return response()->json(['error' => 'The pickup address is outside our service area.'], 422);
         }
         if (! $dropoffZone) {
-            return response()->json(['error' => 'Alamat tujuan (Dropoff) berada di luar zona layanan kami.'], 422);
+            return response()->json(['error' => 'The dropoff address is outside our service area.'], 422);
         }
 
         $pricingRule = ZonePricingRule::active()
@@ -146,7 +147,7 @@ class CustomerOrderController extends Controller
             ->first();
 
         if (! $pricingRule) {
-            return response()->json(['error' => "Maaf, rute dari {$pickupZone->name} ke {$dropoffZone->name} saat ini belum tersedia."], 422);
+            return response()->json(['error' => "The route from {$pickupZone->name} to {$dropoffZone->name} is currently not available."], 422);
         }
 
         $categories = VehicleCategory::all();
@@ -187,7 +188,7 @@ class CustomerOrderController extends Controller
         if ($request->boolean('create_account') && $customer && $customer->password) {
             return response()->json([
                 'valid' => false,
-                'message' => 'Email ini sudah terdaftar. Silakan login terlebih dahulu untuk melanjutkan booking.',
+                'message' => 'This email is already registered. Please log in to continue booking.',
             ]);
         }
 
@@ -273,7 +274,7 @@ class CustomerOrderController extends Controller
         // If trying to create account but email already registered with password
         if ($request->boolean('create_account') && $customer && $customer->password) {
             throw ValidationException::withMessages([
-                'email' => 'Email ini sudah terdaftar. Silakan login terlebih dahulu untuk melanjutkan booking.',
+                'email' => 'This email is already registered. Please log in to continue booking.',
             ]);
         }
 
@@ -337,10 +338,10 @@ class CustomerOrderController extends Controller
                 $dropoffZone = Zone::findContainingPoint($dropoffLat, $dropoffLng);
 
                 if (! $pickupZone) {
-                    throw ValidationException::withMessages(['pickup_address' => 'Alamat penjemputan berada di luar zona layanan.']);
+                    throw ValidationException::withMessages(['pickup_address' => 'The pickup address is outside our service area.']);
                 }
                 if (! $dropoffZone) {
-                    throw ValidationException::withMessages(['dropoff_address' => 'Alamat tujuan berada di luar zona layanan.']);
+                    throw ValidationException::withMessages(['dropoff_address' => 'The dropoff address is outside our service area.']);
                 }
 
                 $pricingRule = ZonePricingRule::active()
@@ -349,7 +350,7 @@ class CustomerOrderController extends Controller
                     ->first();
 
                 if (! $pricingRule) {
-                    throw ValidationException::withMessages(['pickup_address' => "Rute dari {$pickupZone->name} ke {$dropoffZone->name} belum tersedia."]);
+                    throw ValidationException::withMessages(['pickup_address' => "The route from {$pickupZone->name} to {$dropoffZone->name} is not available."]);
                 }
 
                 $exactDistance = isset($validated['exact_distance_km']) ? (float) $validated['exact_distance_km'] : null;
@@ -406,7 +407,7 @@ class CustomerOrderController extends Controller
             return redirect($redirectUrl);
         } catch (\Exception $e) {
             // If payment generation fails, redirect back to checkout with error
-            return redirect()->back()->withErrors(['payment_method' => 'Gagal membuat tagihan: '.$e->getMessage()]);
+            return redirect()->back()->withErrors(['payment_method' => 'Failed to create payment invoice: '.$e->getMessage()]);
         }
     }
 
@@ -478,11 +479,56 @@ class CustomerOrderController extends Controller
     }
 
     /**
+     * Cancel an order (customer initiated).
+     */
+    public function cancelOrder(Request $request, $bookingCode): JsonResponse
+    {
+        $order = Order::where('booking_code', $bookingCode)->firstOrFail();
+
+        // Verify the user is the order owner (if authenticated) or it's a guest order
+        if ($request->user('customer') && $order->customer_id !== $request->user('customer')->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $cancellationService = new OrderCancellationService;
+
+        // Check if order can be cancelled
+        if (! $cancellationService->canBeCancelled($order)) {
+            return response()->json([
+                'message' => 'This order cannot be cancelled. It may have already been paid or cancelled.',
+            ], 422);
+        }
+
+        // Cancel the order
+        if ($cancellationService->manuallyCancel($order)) {
+            return response()->json([
+                'message' => 'Order has been cancelled successfully.',
+                'order' => [
+                    'booking_code' => $order->booking_code,
+                    'status' => 'cancelled',
+                    'payment_status' => $order->payment_status,
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Failed to cancel order.',
+        ], 500);
+    }
+
+    /**
      * Display customer booking details.
      */
     public function show($bookingCode): Response
     {
         $order = Order::with(['customer', 'driver', 'vehicleCategory'])->where('booking_code', $bookingCode)->firstOrFail();
+
+        // Automatically cancel order if it's eligible
+        $cancellationService = new OrderCancellationService;
+        $cancellationService->autoCancelIfEligible($order);
+
+        // Refresh order from database to get updated status
+        $order = $order->fresh();
 
         return Inertia::render('customer/booking-detail', [
             'order' => $order,

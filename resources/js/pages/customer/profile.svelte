@@ -1,6 +1,7 @@
 <script lang="ts">
     import { page } from '@inertiajs/svelte';
     import { useForm, Link, router } from '@inertiajs/svelte';
+    import { formatTime12 } from '@/lib/pickupTime';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -25,7 +26,10 @@
 
     const totalPages = $derived(Math.ceil(orders.length / ORDERS_PER_PAGE));
     const paginatedOrders = $derived(
-        orders.slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE),
+        orders.slice(
+            (currentPage - 1) * ORDERS_PER_PAGE,
+            currentPage * ORDERS_PER_PAGE,
+        ),
     );
 
     const goToPage = (page: number) => {
@@ -264,9 +268,8 @@
                                                             ><i
                                                                 class="fas fa-clock text-muted"
                                                             ></i>
-                                                            {order.time.substring(
-                                                                0,
-                                                                5,
+                                                            {formatTime12(
+                                                                order.time,
                                                             )}</span
                                                         >
                                                         <span class="ml-3"
@@ -314,30 +317,44 @@
                                 {#if totalPages > 1}
                                     <div class="pagination-bar">
                                         <span class="pagination-info">
-                                            Showing {(currentPage - 1) * ORDERS_PER_PAGE + 1}–{Math.min(currentPage * ORDERS_PER_PAGE, orders.length)} of {orders.length} orders
+                                            Showing {(currentPage - 1) *
+                                                ORDERS_PER_PAGE +
+                                                1}–{Math.min(
+                                                currentPage * ORDERS_PER_PAGE,
+                                                orders.length,
+                                            )} of {orders.length} orders
                                         </span>
                                         <div class="pagination-controls">
                                             <button
                                                 class="page-btn"
                                                 disabled={currentPage === 1}
-                                                onclick={() => goToPage(currentPage - 1)}
+                                                onclick={() =>
+                                                    goToPage(currentPage - 1)}
                                             >
-                                                <i class="fas fa-chevron-left"></i>
+                                                <i class="fas fa-chevron-left"
+                                                ></i>
                                             </button>
                                             {#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
                                                 <button
-                                                    class="page-btn {currentPage === page ? 'active' : ''}"
-                                                    onclick={() => goToPage(page)}
+                                                    class="page-btn {currentPage ===
+                                                    page
+                                                        ? 'active'
+                                                        : ''}"
+                                                    onclick={() =>
+                                                        goToPage(page)}
                                                 >
                                                     {page}
                                                 </button>
                                             {/each}
                                             <button
                                                 class="page-btn"
-                                                disabled={currentPage === totalPages}
-                                                onclick={() => goToPage(currentPage + 1)}
+                                                disabled={currentPage ===
+                                                    totalPages}
+                                                onclick={() =>
+                                                    goToPage(currentPage + 1)}
                                             >
-                                                <i class="fas fa-chevron-right"></i>
+                                                <i class="fas fa-chevron-right"
+                                                ></i>
                                             </button>
                                         </div>
                                     </div>

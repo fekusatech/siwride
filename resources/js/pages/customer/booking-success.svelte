@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from '@inertiajs/svelte';
-    import AppHead from '@/components/AppHead.svelte';
+    import { formatTime12 } from '@/lib/pickupTime';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
@@ -144,7 +144,9 @@
                                     >
                                     <span
                                         style="font-weight: 500; color: #333; text-align: right;"
-                                        >{order.date} at {order.time}</span
+                                        >{order.date} at {order.time
+                                            ? formatTime12(order.time)
+                                            : '—'}</span
                                     >
                                 </div>
                                 <div

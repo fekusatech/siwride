@@ -8,7 +8,12 @@
     import LocationSearchInput from '@/components/LocationSearchInput.svelte';
     import DatePicker from '@/components/DatePicker.svelte';
     import TimePicker from '@/components/TimePicker.svelte';
-    import { getMinPickupTime, formatEarliestTime, isPickupTimeValid } from '@/lib/pickupTime';
+    import {
+        getMinPickupTime,
+        formatEarliestTime,
+        isPickupTimeValid,
+    } from '@/lib/pickupTime';
+    import { formatTime12 } from '@/lib/pickupTime';
     import { formatRupiah } from '@/lib/utils';
 
     /** Reactive clock — ticks every minute so earliest-time notices stay fresh. */
@@ -35,7 +40,13 @@
         vehicleCategories = [],
         allVehicleCategories = [],
     } = $props<{
-        prefill: { pickup: string; dropoff: string; date: string; time: string; passengers: string };
+        prefill: {
+            pickup: string;
+            dropoff: string;
+            date: string;
+            time: string;
+            passengers: string;
+        };
         vehicleCategories: VehicleCategory[];
         allVehicleCategories: VehicleCategory[];
     }>();
@@ -67,19 +78,36 @@
         if (!isoDate) return '';
         const [y, m, d] = isoDate.split('-').map(Number);
         const dateObj = new Date(y, m - 1, d);
-        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const months = [
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
+        ];
         return `${d} ${months[m - 1]} ${y}`;
     }
 
     // Dynamic Pricing state
     let estimatedPrices = $state<Record<number, number>>({});
     let isPricingLoaded = $state(false);
-    let priceZoneInfo = $state<{ pickup_zone: string | null; dropoff_zone: string | null; distance_km: number | null }>({
+    let priceZoneInfo = $state<{
+        pickup_zone: string | null;
+        dropoff_zone: string | null;
+        distance_km: number | null;
+    }>({
         pickup_zone: null,
         dropoff_zone: null,
         distance_km: null,
     });
-    
+
     // Dynamic route info
     let exactDistanceStr = $state<string | null>(null);
     let exactDurationStr = $state<string | null>(null);
@@ -87,12 +115,23 @@
     let zoneError = $state<string | null>(null);
 
     /** Geocodes an address string and returns {lat, lng} or null. */
-    async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+    async function geocodeAddress(
+        address: string,
+    ): Promise<{ lat: number; lng: number } | null> {
         return new Promise((resolve) => {
             try {
                 const geocoder = new (window as any).google.maps.Geocoder();
                 geocoder.geocode(
-                    { address, region: 'id', bounds: { south: -8.95, west: 114.4, north: -8.06, east: 115.72 } },
+                    {
+                        address,
+                        region: 'id',
+                        bounds: {
+                            south: -8.95,
+                            west: 114.4,
+                            north: -8.06,
+                            east: 115.72,
+                        },
+                    },
                     (results: any, status: string) => {
                         if (status === 'OK' && results && results[0]) {
                             const loc = results[0].geometry.location;
@@ -100,7 +139,7 @@
                         } else {
                             resolve(null);
                         }
-                    }
+                    },
                 );
             } catch {
                 resolve(null);
@@ -109,14 +148,25 @@
     }
 
     /** Calls the estimate-price API and stores the result. */
-    async function fetchPriceEstimate(pLat: number, pLng: number, dLat: number, dLng: number, exactDistanceKm: number | null = null) {
+    async function fetchPriceEstimate(
+        pLat: number,
+        pLng: number,
+        dLat: number,
+        dLng: number,
+        exactDistanceKm: number | null = null,
+    ) {
         try {
             let url = `/booking/estimate-price?pickup_latitude=${pLat}&pickup_longitude=${pLng}&dropoff_latitude=${dLat}&dropoff_longitude=${dLng}`;
             if (exactDistanceKm !== null) {
                 url += `&exact_distance_km=${exactDistanceKm}`;
             }
-            const res = await fetch(url, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
-            
+            const res = await fetch(url, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
             if (!res.ok) {
                 if (res.status === 422) {
                     const errData = await res.json();
@@ -126,8 +176,12 @@
             }
             zoneError = null;
             const data = await res.json();
-            priceZoneInfo = { pickup_zone: data.pickup_zone, dropoff_zone: data.dropoff_zone, distance_km: data.distance_km };
-            
+            priceZoneInfo = {
+                pickup_zone: data.pickup_zone,
+                dropoff_zone: data.dropoff_zone,
+                distance_km: data.distance_km,
+            };
+
             const newPrices: Record<number, number> = {};
             if (data.prices) {
                 data.prices.forEach((p: any) => {
@@ -146,17 +200,23 @@
 
     /** Geocodes both addresses then fetches the price estimate. */
     async function geocodeAndEstimate() {
-        if (!pickup || !dropoff) { isPricingLoaded = true; return; }
+        if (!pickup || !dropoff) {
+            isPricingLoaded = true;
+            return;
+        }
 
         isPricingLoaded = false;
-        
+
         // Wait for google maps to be available
         let waited = 0;
         while (typeof (window as any).google === 'undefined' && waited < 5000) {
             await new Promise((r) => setTimeout(r, 300));
             waited += 300;
         }
-        if (typeof (window as any).google === 'undefined') { isPricingLoaded = true; return; }
+        if (typeof (window as any).google === 'undefined') {
+            isPricingLoaded = true;
+            return;
+        }
 
         const [pickupCoords, dropoffCoords] = await Promise.all([
             geocodeAddress(pickup),
@@ -166,7 +226,9 @@
         if (pickupCoords && dropoffCoords) {
             let exactDistanceKm: number | null = null;
             try {
-                const service = new (window as any).google.maps.DistanceMatrixService();
+                const service = new (
+                    window as any
+                ).google.maps.DistanceMatrixService();
                 const dmResponse = await new Promise<any>((resolve, reject) => {
                     service.getDistanceMatrix(
                         {
@@ -177,7 +239,7 @@
                         (response: any, status: string) => {
                             if (status === 'OK') resolve(response);
                             else reject(status);
-                        }
+                        },
                     );
                 });
                 const element = dmResponse.rows[0].elements[0];
@@ -189,7 +251,13 @@
             } catch (err) {
                 // ignore
             }
-            await fetchPriceEstimate(pickupCoords.lat, pickupCoords.lng, dropoffCoords.lat, dropoffCoords.lng, exactDistanceKm);
+            await fetchPriceEstimate(
+                pickupCoords.lat,
+                pickupCoords.lng,
+                dropoffCoords.lat,
+                dropoffCoords.lng,
+                exactDistanceKm,
+            );
         } else {
             isPricingLoaded = true;
         }
@@ -216,7 +284,6 @@
         return 0; // Default to 0 instead of average if not loaded
     }
 
-
     // Default route info
     const routeInfo = {
         distance: '0 km',
@@ -229,17 +296,23 @@
         if (!pickup || !dropoff || !date) return;
         // Validate time when today is selected
         if (time && !isPickupTimeValid(date, time, now)) {
-            alert(`Please select a pickup time at least 30 minutes from now. Earliest available: ${formatEarliestTime(date, now)}`);
+            alert(
+                `Please select a pickup time at least 30 minutes from now. Earliest available: ${formatEarliestTime(date, now)}`,
+            );
             return;
         }
         // Re-fetch page with new params to filter vehicles
-        router.get('/booking', {
-            pickup,
-            dropoff,
-            date,
-            time,
-            passengers: String(passengerCount),
-        }, { preserveScroll: true, replace: true });
+        router.get(
+            '/booking',
+            {
+                pickup,
+                dropoff,
+                date,
+                time,
+                passengers: String(passengerCount),
+            },
+            { preserveScroll: true, replace: true },
+        );
     }
 
     function selectVehicle(category: VehicleCategory) {
@@ -257,16 +330,25 @@
     const authCustomer = $derived((page.props as any).auth?.customer ?? null);
 
     let trackCode = $state('');
-    let trackResult = $state<null | { found: boolean; order?: any; message?: string }>(null);
+    let trackResult = $state<null | {
+        found: boolean;
+        order?: any;
+        message?: string;
+    }>(null);
     let isTracking = $state(false);
 
     const formatStatus = (status: string) => {
         switch (status) {
-            case 'pending':   return { text: 'Pending',   bg: '#fff3cd', color: '#856404' };
-            case 'confirmed': return { text: 'Confirmed', bg: '#d1ecf1', color: '#0c5460' };
-            case 'completed': return { text: 'Completed', bg: '#d4edda', color: '#155724' };
-            case 'cancelled': return { text: 'Cancelled', bg: '#f8d7da', color: '#721c24' };
-            default:          return { text: status,      bg: '#e2e3e5', color: '#383d41' };
+            case 'pending':
+                return { text: 'Pending', bg: '#fff3cd', color: '#856404' };
+            case 'confirmed':
+                return { text: 'Confirmed', bg: '#d1ecf1', color: '#0c5460' };
+            case 'completed':
+                return { text: 'Completed', bg: '#d4edda', color: '#155724' };
+            case 'cancelled':
+                return { text: 'Cancelled', bg: '#f8d7da', color: '#721c24' };
+            default:
+                return { text: status, bg: '#e2e3e5', color: '#383d41' };
         }
     };
 
@@ -277,17 +359,30 @@
         isTracking = true;
         trackResult = null;
         try {
-            const res = await fetch(`/booking/track?code=${encodeURIComponent(code)}`, {
-                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            });
+            const res = await fetch(
+                `/booking/track?code=${encodeURIComponent(code)}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                },
+            );
             if (res.ok) {
                 const data = await res.json();
                 trackResult = { found: true, order: data.order };
             } else {
-                trackResult = { found: false, message: 'Booking not found. Please check your booking code.' };
+                trackResult = {
+                    found: false,
+                    message:
+                        'Booking not found. Please check your booking code.',
+                };
             }
         } catch {
-            trackResult = { found: false, message: 'Unable to fetch booking. Please try again.' };
+            trackResult = {
+                found: false,
+                message: 'Unable to fetch booking. Please try again.',
+            };
         } finally {
             isTracking = false;
         }
@@ -327,7 +422,9 @@
         <div class="page-header__shape-one"></div>
         <div class="page-header__shape-two"></div>
         <div class="container">
-            <h2 class="page-header__title bw-split-in-right">Book a Transfer</h2>
+            <h2 class="page-header__title bw-split-in-right">
+                Book a Transfer
+            </h2>
             <ul class="travhub-breadcrumb list-unstyled">
                 <li><a href="/">Home</a></li>
                 <li><span>Book a Transfer</span></li>
@@ -336,33 +433,42 @@
     </section>
 
     <!-- Main Booking Section -->
-    <section class="booking-main" style="padding: 60px 0 100px; background: #f4f7f9;">
+    <section
+        class="booking-main"
+        style="padding: 60px 0 100px; background: #f4f7f9;"
+    >
         <div class="container">
-
             <!-- SECTION A: Route Form -->
             <div class="booking-card mb-4">
                 <div class="booking-card__header">
                     <div class="step-badge">1</div>
                     <div>
-                        <h4 class="booking-card__title">Your Transfer Details</h4>
-                        <p class="booking-card__subtitle">Enter your route and travel information</p>
+                        <h4 class="booking-card__title">
+                            Your Transfer Details
+                        </h4>
+                        <p class="booking-card__subtitle">
+                            Enter your route and travel information
+                        </p>
                     </div>
                 </div>
-                
-                <div class="booking-card__body">
-                <!-- Error / Notice -->
-                        {#if zoneError}
-                            <div class="alert alert-danger p-3 mb-4 rounded-3 border-0">
-                                <i class="fas fa-exclamation-triangle me-2"></i> {zoneError}
-                            </div>
-                        {/if}
-                    <form onsubmit={handleRouteSearch}>
 
+                <div class="booking-card__body">
+                    <!-- Error / Notice -->
+                    {#if zoneError}
+                        <div
+                            class="alert alert-danger p-3 mb-4 rounded-3 border-0"
+                        >
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {zoneError}
+                        </div>
+                    {/if}
+                    <form onsubmit={handleRouteSearch}>
                         <!-- Row 1: Address fields — full width each -->
                         <div class="route-form-row route-form-row--locations">
                             <div class="form-group">
                                 <label class="form-label">
-                                    <i class="fas fa-map-marker-alt text-danger"></i>
+                                    <i class="fas fa-map-marker-alt text-danger"
+                                    ></i>
                                     Pickup Location *
                                 </label>
                                 <LocationSearchInput
@@ -376,7 +482,9 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">
-                                    <i class="fas fa-flag-checkered text-success"></i>
+                                    <i
+                                        class="fas fa-flag-checkered text-success"
+                                    ></i>
                                     Drop-off Location *
                                 </label>
                                 <LocationSearchInput
@@ -394,7 +502,10 @@
                         <div class="route-form-row route-form-row--search">
                             <div class="form-group">
                                 <label class="form-label">
-                                    <i class="fas fa-calendar-alt" style="color: var(--travhub-base);"></i>
+                                    <i
+                                        class="fas fa-calendar-alt"
+                                        style="color: var(--travhub-base);"
+                                    ></i>
                                     Transfer Date *
                                 </label>
                                 <DatePicker
@@ -406,7 +517,10 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">
-                                    <i class="fas fa-clock" style="color: var(--travhub-base);"></i>
+                                    <i
+                                        class="fas fa-clock"
+                                        style="color: var(--travhub-base);"
+                                    ></i>
                                     Pickup Time *
                                 </label>
                                 <TimePicker
@@ -414,151 +528,216 @@
                                     bind:value={time}
                                     placeholder="Select time"
                                     required
-                                    minTime={minTime}
+                                    {minTime}
                                 />
                                 {#if minTime}
                                     <p class="booking-time-notice">
                                         <i class="fas fa-info-circle"></i>
-                                        Earliest pickup today: <strong>{formatEarliestTime(date, now)}</strong>
+                                        Earliest pickup today:
+                                        <strong
+                                            >{formatEarliestTime(
+                                                date,
+                                                now,
+                                            )}</strong
+                                        >
                                     </p>
                                 {/if}
                             </div>
                             <div class="form-group">
                                 <label class="form-label">
-                                    <i class="fas fa-users" style="color: var(--travhub-base);"></i>
+                                    <i
+                                        class="fas fa-users"
+                                        style="color: var(--travhub-base);"
+                                    ></i>
                                     Passengers
                                 </label>
                                 <div class="passenger-counter">
-                                    <button type="button" class="counter-btn" onclick={() => { if (passengerCount > 1) passengerCount--; }} aria-label="Decrease passengers">
+                                    <button
+                                        type="button"
+                                        class="counter-btn"
+                                        onclick={() => {
+                                            if (passengerCount > 1)
+                                                passengerCount--;
+                                        }}
+                                        aria-label="Decrease passengers"
+                                    >
                                         <i class="fas fa-minus"></i>
                                     </button>
                                     <span class="counter-value">
                                         <i class="fas fa-user counter-icon"></i>
                                         {passengerCount}
                                     </span>
-                                    <button type="button" class="counter-btn" onclick={() => { if (passengerCount < 50) passengerCount++; }} aria-label="Increase passengers">
+                                    <button
+                                        type="button"
+                                        class="counter-btn"
+                                        onclick={() => {
+                                            if (passengerCount < 50)
+                                                passengerCount++;
+                                        }}
+                                        aria-label="Increase passengers"
+                                    >
                                         <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
                             <div class="form-group form-group--action">
-                                <label class="form-label form-label--hidden" id="btnlabel" aria-hidden="true">&nbsp;</label>
+                                <label
+                                    class="form-label form-label--hidden"
+                                    id="btnlabel"
+                                    aria-hidden="true">&nbsp;</label
+                                >
                                 <button type="submit" class="search-btn">
                                     <i class="fas fa-search"></i>
                                     Search Vehicles
                                 </button>
                             </div>
                         </div>
-
                     </form>
                 </div>
             </div>
 
             <!-- SECTION B: Route Information -->
             {#if pickup && dropoff}
-            <div class="booking-card mb-4">
-                <div class="booking-card__header">
-                    <div class="step-badge">2</div>
-                    <div>
-                        <h4 class="booking-card__title">Route Information</h4>
-                        <p class="booking-card__subtitle">Estimated details for your transfer</p>
-                    </div>
-                </div>
-                <div class="booking-card__body">
-                    <div class="route-info-card">
-                        
-
-                        <!-- Dynamic Pricing / Info Content -->
-                        <div class="route-info-route">
-                            <div class="route-point">
-                                <div class="route-dot route-dot--from"></div>
-                                <div class="route-point-text">
-                                    <span class="route-label">FROM</span>
-                                    <span class="route-address">{pickup}</span>
-                                    {#if pickupAddress && pickupAddress !== pickup}
-                                        <small class="route-full-address text-muted d-block mt-1">{pickupAddress}</small>
-                                    {/if}
-                                </div>
-                            </div>
-                            <div class="route-connector">
-                                <div class="route-line-v"></div>
-                                <div class="route-car-badge">
-                                    <i class="fas fa-car"></i>
-                                </div>
-                                <div class="route-line-v"></div>
-                            </div>
-                            <div class="route-point">
-                                <div class="route-dot route-dot--to"></div>
-                                <div class="route-point-text">
-                                    <span class="route-label">TO</span>
-                                    <span class="route-address">{dropoff}</span>
-                                    {#if dropoffAddress && dropoffAddress !== dropoff}
-                                        <small class="route-full-address text-muted d-block mt-1">{dropoffAddress}</small>
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="route-info-stats">
-                            <div class="route-stat">
-                                <i class="fas fa-road"></i>
-                                <div>
-                                    <span class="stat-label">Distance</span>
-                                    <span class="stat-value">
-                                        {#if !isPricingLoaded}
-                                            <i class="fas fa-spinner fa-spin"></i>
-                                        {:else if exactDistanceStr}
-                                            {exactDistanceStr}
-                                        {:else if priceZoneInfo.distance_km}
-                                            {priceZoneInfo.distance_km} km
-                                        {:else}
-                                            {routeInfo.distance}
-                                        {/if}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="route-stat">
-                                <i class="fas fa-clock"></i>
-                                <div>
-                                    <span class="stat-label">Travel Time</span>
-                                    <span class="stat-value">
-                                        {#if !isPricingLoaded}
-                                            <i class="fas fa-spinner fa-spin"></i>
-                                        {:else if exactDurationStr}
-                                            {exactDurationStr}
-                                        {:else}
-                                            {routeInfo.travelTime}
-                                        {/if}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="route-stat">
-                                <i class="fas fa-tag"></i>
-                                <div>
-                                    <span class="stat-label">Price From</span>
-                                    <span class="stat-value stat-value--price">
-                                        {#if !isPricingLoaded}
-                                            <i class="fas fa-spinner fa-spin"></i>
-                                        {:else if filteredCategories.length > 0}
-                                            {formatRupiah(getBasePrice(filteredCategories[0]))}
-                                        {:else}
-                                            {formatRupiah(routeInfo.fromPrice)}
-                                        {/if}
-                                    </span>
-                                </div>
-                            </div>
-                            {#if date}
-                            <div class="route-stat">
-                                <i class="fas fa-calendar-check"></i>
-                                <div>
-                                    <span class="stat-label">Transfer Date</span>
-                                    <span class="stat-value">{formatDate(date)} {time ? ' · ' + time : ''}</span>
-                                </div>
-                            </div>
-                            {/if}
+                <div class="booking-card mb-4">
+                    <div class="booking-card__header">
+                        <div class="step-badge">2</div>
+                        <div>
+                            <h4 class="booking-card__title">
+                                Route Information
+                            </h4>
+                            <p class="booking-card__subtitle">
+                                Estimated details for your transfer
+                            </p>
                         </div>
                     </div>
+                    <div class="booking-card__body">
+                        <div class="route-info-card">
+                            <!-- Dynamic Pricing / Info Content -->
+                            <div class="route-info-route">
+                                <div class="route-point">
+                                    <div
+                                        class="route-dot route-dot--from"
+                                    ></div>
+                                    <div class="route-point-text">
+                                        <span class="route-label">FROM</span>
+                                        <span class="route-address"
+                                            >{pickup}</span
+                                        >
+                                        {#if pickupAddress && pickupAddress !== pickup}
+                                            <small
+                                                class="route-full-address text-muted d-block mt-1"
+                                                >{pickupAddress}</small
+                                            >
+                                        {/if}
+                                    </div>
+                                </div>
+                                <div class="route-connector">
+                                    <div class="route-line-v"></div>
+                                    <div class="route-car-badge">
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="route-line-v"></div>
+                                </div>
+                                <div class="route-point">
+                                    <div class="route-dot route-dot--to"></div>
+                                    <div class="route-point-text">
+                                        <span class="route-label">TO</span>
+                                        <span class="route-address"
+                                            >{dropoff}</span
+                                        >
+                                        {#if dropoffAddress && dropoffAddress !== dropoff}
+                                            <small
+                                                class="route-full-address text-muted d-block mt-1"
+                                                >{dropoffAddress}</small
+                                            >
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="route-info-stats">
+                                <div class="route-stat">
+                                    <i class="fas fa-road"></i>
+                                    <div>
+                                        <span class="stat-label">Distance</span>
+                                        <span class="stat-value">
+                                            {#if !isPricingLoaded}
+                                                <i
+                                                    class="fas fa-spinner fa-spin"
+                                                ></i>
+                                            {:else if exactDistanceStr}
+                                                {exactDistanceStr}
+                                            {:else if priceZoneInfo.distance_km}
+                                                {priceZoneInfo.distance_km} km
+                                            {:else}
+                                                {routeInfo.distance}
+                                            {/if}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="route-stat">
+                                    <i class="fas fa-clock"></i>
+                                    <div>
+                                        <span class="stat-label"
+                                            >Travel Time</span
+                                        >
+                                        <span class="stat-value">
+                                            {#if !isPricingLoaded}
+                                                <i
+                                                    class="fas fa-spinner fa-spin"
+                                                ></i>
+                                            {:else if exactDurationStr}
+                                                {exactDurationStr}
+                                            {:else}
+                                                {routeInfo.travelTime}
+                                            {/if}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="route-stat">
+                                    <i class="fas fa-tag"></i>
+                                    <div>
+                                        <span class="stat-label"
+                                            >Price From</span
+                                        >
+                                        <span
+                                            class="stat-value stat-value--price"
+                                        >
+                                            {#if !isPricingLoaded}
+                                                <i
+                                                    class="fas fa-spinner fa-spin"
+                                                ></i>
+                                            {:else if filteredCategories.length > 0}
+                                                {formatRupiah(
+                                                    getBasePrice(
+                                                        filteredCategories[0],
+                                                    ),
+                                                )}
+                                            {:else}
+                                                {formatRupiah(
+                                                    routeInfo.fromPrice,
+                                                )}
+                                            {/if}
+                                        </span>
+                                    </div>
+                                </div>
+                                {#if date}
+                                    <div class="route-stat">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <div>
+                                            <span class="stat-label"
+                                                >Transfer Date</span
+                                            >
+                                            <span class="stat-value"
+                                                >{formatDate(date)}
+                                                {time ? ' · ' + time : ''}</span
+                                            >
+                                        </div>
+                                    </div>
+                                {/if}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
             {/if}
 
             <!-- SECTION C: Vehicle Categories -->
@@ -580,15 +759,23 @@
                     {#if filteredCategories.length === 0}
                         <div class="no-vehicles">
                             <i class="fas fa-car-crash"></i>
-                            <h5>No vehicles available for {passengerCount} passengers</h5>
-                            <p>Please reduce the passenger count or contact us for a custom arrangement.</p>
+                            <h5>
+                                No vehicles available for {passengerCount} passengers
+                            </h5>
+                            <p>
+                                Please reduce the passenger count or contact us
+                                for a custom arrangement.
+                            </p>
                         </div>
                     {:else}
                         <div class="vehicle-grid">
                             {#each filteredCategories as category}
                                 <div class="vehicle-card">
                                     <div class="vehicle-card__image">
-                                        <img src={category.image_url} alt={category.title} />
+                                        <img
+                                            src={category.image_url}
+                                            alt={category.title}
+                                        />
                                         <!-- {#if category.vehicle_type === 'premium'}
                                             <div class="vehicle-badge vehicle-badge--premium">Premium</div>
                                         {:else if category.vehicle_type === 'special'}
@@ -597,15 +784,34 @@
                                     </div>
                                     <div class="vehicle-card__body">
                                         <div class="vehicle-card__title-row">
-                                            <h5 class="vehicle-card__title">{category.title}</h5>
+                                            <h5 class="vehicle-card__title">
+                                                {category.title}
+                                            </h5>
                                             {#if category.examples}
-                                                <div class="vehicle-tooltip-wrap">
-                                                    <button type="button" class="vehicle-tooltip-btn" aria-label="Example vehicles">
-                                                        <i class="fas fa-info-circle"></i>
+                                                <div
+                                                    class="vehicle-tooltip-wrap"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        class="vehicle-tooltip-btn"
+                                                        aria-label="Example vehicles"
+                                                    >
+                                                        <i
+                                                            class="fas fa-info-circle"
+                                                        ></i>
                                                     </button>
-                                                    <div class="vehicle-tooltip" role="tooltip">
-                                                        <span class="vehicle-tooltip__label">Example vehicles</span>
-                                                        <span class="vehicle-tooltip__value">{category.examples}</span>
+                                                    <div
+                                                        class="vehicle-tooltip"
+                                                        role="tooltip"
+                                                    >
+                                                        <span
+                                                            class="vehicle-tooltip__label"
+                                                            >Example vehicles</span
+                                                        >
+                                                        <span
+                                                            class="vehicle-tooltip__value"
+                                                            >{category.examples}</span
+                                                        >
                                                     </div>
                                                 </div>
                                             {/if}
@@ -613,17 +819,26 @@
                                         <div class="vehicle-card__specs">
                                             <span class="spec-item">
                                                 <i class="fas fa-users"></i>
-                                                {category.passenger_capacity ?? '—'} Passengers
+                                                {category.passenger_capacity ??
+                                                    '—'} Passengers
                                             </span>
                                             <span class="spec-item">
                                                 <i class="fas fa-suitcase"></i>
-                                                {category.luggage_capacity ?? '—'} Luggage
+                                                {category.luggage_capacity ??
+                                                    '—'} Luggage
                                             </span>
                                         </div>
                                         {#if category.advantages && category.advantages.length > 0}
-                                            <ul class="vehicle-card__advantages">
+                                            <ul
+                                                class="vehicle-card__advantages"
+                                            >
                                                 {#each category.advantages.slice(0, 3) as adv}
-                                                    <li><i class="fas fa-check-circle"></i> {adv}</li>
+                                                    <li>
+                                                        <i
+                                                            class="fas fa-check-circle"
+                                                        ></i>
+                                                        {adv}
+                                                    </li>
                                                 {/each}
                                             </ul>
                                         {/if}
@@ -632,16 +847,29 @@
                                         <div class="vehicle-card__price">
                                             <span class="price-from">From</span>
                                             {#if !isPricingLoaded}
-                                                <span class="price-amount price-calculating"><i class="fas fa-spinner fa-spin"></i></span>
+                                                <span
+                                                    class="price-amount price-calculating"
+                                                    ><i
+                                                        class="fas fa-spinner fa-spin"
+                                                    ></i></span
+                                                >
                                             {:else}
-                                                <span class="price-amount">{formatRupiah(getBasePrice(category))}</span>
+                                                <span class="price-amount"
+                                                    >{formatRupiah(
+                                                        getBasePrice(category),
+                                                    )}</span
+                                                >
                                             {/if}
                                         </div>
                                         <button
                                             type="button"
                                             class="select-btn"
-                                            onclick={() => selectVehicle(category)}
-                                            disabled={!pickup || !dropoff || !date || !!zoneError}
+                                            onclick={() =>
+                                                selectVehicle(category)}
+                                            disabled={!pickup ||
+                                                !dropoff ||
+                                                !date ||
+                                                !!zoneError}
                                         >
                                             Select
                                         </button>
@@ -654,12 +882,12 @@
                     {#if !pickup || !dropoff || !date}
                         <div class="fill-route-notice">
                             <i class="fas fa-info-circle"></i>
-                            Please fill in your pickup location, destination, and date above to select a vehicle.
+                            Please fill in your pickup location, destination, and
+                            date above to select a vehicle.
                         </div>
                     {/if}
                 </div>
             </div>
-
         </div>
     </section>
 
@@ -667,7 +895,6 @@
     <section style="padding: 0 0 100px; background: #f4f7f9;">
         <div class="container">
             <div class="track-history-grid">
-
                 <!-- Track Booking Card -->
                 <div class="booking-card track-card">
                     <div class="booking-card__header">
@@ -675,8 +902,12 @@
                             <i class="fas fa-search-location"></i>
                         </div>
                         <div>
-                            <h4 class="booking-card__title">Track Your Booking</h4>
-                            <p class="booking-card__subtitle">Enter your booking code to check the status</p>
+                            <h4 class="booking-card__title">
+                                Track Your Booking
+                            </h4>
+                            <p class="booking-card__subtitle">
+                                Enter your booking code to check the status
+                            </p>
                         </div>
                     </div>
                     <div class="booking-card__body">
@@ -689,9 +920,17 @@
                                     bind:value={trackCode}
                                     placeholder="e.g. SWABC123"
                                     maxlength="20"
-                                    oninput={(e) => { trackCode = e.currentTarget.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
+                                    oninput={(e) => {
+                                        trackCode = e.currentTarget.value
+                                            .toUpperCase()
+                                            .replace(/[^A-Z0-9]/g, '');
+                                    }}
                                 />
-                                <button type="submit" class="track-btn" disabled={isTracking || !trackCode.trim()}>
+                                <button
+                                    type="submit"
+                                    class="track-btn"
+                                    disabled={isTracking || !trackCode.trim()}
+                                >
                                     {#if isTracking}
                                         <i class="fas fa-spinner fa-spin"></i> Tracking...
                                     {:else}
@@ -707,8 +946,13 @@
                                 {@const statusInfo = formatStatus(order.status)}
                                 <div class="track-result">
                                     <div class="track-result__header">
-                                        <span class="track-booking-code">{order.booking_code}</span>
-                                        <span class="track-status-badge" style="background-color: {statusInfo.bg}; color: {statusInfo.color};">
+                                        <span class="track-booking-code"
+                                            >{order.booking_code}</span
+                                        >
+                                        <span
+                                            class="track-status-badge"
+                                            style="background-color: {statusInfo.bg}; color: {statusInfo.color};"
+                                        >
                                             {statusInfo.text}
                                         </span>
                                     </div>
@@ -718,26 +962,53 @@
                                             <span>{order.customer_name}</span>
                                         </div>
                                         <div class="track-info-row">
-                                            <i class="fas fa-map-marker-alt text-danger"></i>
-                                            <span class="track-addr">{order.pickup_address}</span>
+                                            <i
+                                                class="fas fa-map-marker-alt text-danger"
+                                            ></i>
+                                            <span class="track-addr"
+                                                >{order.pickup_address}</span
+                                            >
                                         </div>
                                         <div class="track-info-row">
-                                            <i class="fas fa-flag-checkered text-success"></i>
-                                            <span class="track-addr">{order.dropoff_address}</span>
+                                            <i
+                                                class="fas fa-flag-checkered text-success"
+                                            ></i>
+                                            <span class="track-addr"
+                                                >{order.dropoff_address}</span
+                                            >
                                         </div>
                                         <div class="track-info-row">
-                                            <i class="fas fa-calendar-alt" style="color: var(--travhub-base);"></i>
-                                            <span>{order.date} · {order.time?.substring(0,5)}</span>
+                                            <i
+                                                class="fas fa-calendar-alt"
+                                                style="color: var(--travhub-base);"
+                                            ></i>
+                                            <span
+                                                >{order.date} · {order.time
+                                                    ? formatTime12(order.time)
+                                                    : '—'}</span
+                                            >
                                         </div>
                                         {#if order.driver_name}
                                             <div class="track-info-row">
-                                                <i class="fas fa-id-badge" style="color: var(--travhub-base);"></i>
-                                                <span>Driver: <strong>{order.driver_name}</strong></span>
+                                                <i
+                                                    class="fas fa-id-badge"
+                                                    style="color: var(--travhub-base);"
+                                                ></i>
+                                                <span
+                                                    >Driver: <strong
+                                                        >{order.driver_name}</strong
+                                                    ></span
+                                                >
                                             </div>
                                         {/if}
                                     </div>
-                                    <a href="/booking/{order.booking_code}" class="track-detail-link">
-                                        View Full Details <i class="fas fa-chevron-right"></i>
+                                    <a
+                                        href="/booking/{order.booking_code}"
+                                        class="track-detail-link"
+                                    >
+                                        View Full Details <i
+                                            class="fas fa-chevron-right"
+                                        ></i>
                                     </a>
                                 </div>
                             {:else}
@@ -754,12 +1025,26 @@
                 <div class="history-shortcut-card">
                     {#if authCustomer}
                         <div class="history-card history-card--loggedin">
-                            <div class="history-card__avatar">{authCustomer.name.charAt(0).toUpperCase()}</div>
-                            <div class="history-card__info">
-                                <p class="history-card__greeting">Hello, <strong>{authCustomer.name.split(' ')[0]}</strong> 👋</p>
-                                <p class="history-card__sub">View all your past and upcoming rides in one place.</p>
+                            <div class="history-card__avatar">
+                                {authCustomer.name.charAt(0).toUpperCase()}
                             </div>
-                            <a href="/customer/profile" class="history-card__btn">
+                            <div class="history-card__info">
+                                <p class="history-card__greeting">
+                                    Hello, <strong
+                                        >{authCustomer.name.split(
+                                            ' ',
+                                        )[0]}</strong
+                                    > 👋
+                                </p>
+                                <p class="history-card__sub">
+                                    View all your past and upcoming rides in one
+                                    place.
+                                </p>
+                            </div>
+                            <a
+                                href="/customer/profile"
+                                class="history-card__btn"
+                            >
                                 <i class="fas fa-history"></i> My Order History
                             </a>
                         </div>
@@ -769,21 +1054,32 @@
                                 <i class="fas fa-clipboard-list"></i>
                             </div>
                             <div class="history-card__info">
-                                <h5 class="history-card__title">Track all your rides</h5>
-                                <p class="history-card__sub">Log in to your account to access your full order history, download receipts, and manage your bookings anytime.</p>
+                                <h5 class="history-card__title">
+                                    Track all your rides
+                                </h5>
+                                <p class="history-card__sub">
+                                    Log in to your account to access your full
+                                    order history, download receipts, and manage
+                                    your bookings anytime.
+                                </p>
                             </div>
                             <div class="history-card__actions">
-                                <a href="/customer/login" class="history-btn history-btn--primary">
+                                <a
+                                    href="/customer/login"
+                                    class="history-btn history-btn--primary"
+                                >
                                     <i class="fas fa-sign-in-alt"></i> Log In
                                 </a>
-                                <a href="/customer/register" class="history-btn history-btn--secondary">
+                                <a
+                                    href="/customer/register"
+                                    class="history-btn history-btn--secondary"
+                                >
                                     <i class="fas fa-user-plus"></i> Register
                                 </a>
                             </div>
                         </div>
                     {/if}
                 </div>
-
             </div>
         </div>
     </section>
@@ -797,7 +1093,7 @@
         background: #fff;
         border-radius: 16px;
         border: 1px solid #eaeef2;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
         overflow: visible;
     }
     .booking-card__header {
@@ -835,7 +1131,10 @@
         padding: 24px 28px;
     }
     @media (max-width: 768px) {
-        .booking-card__header, .booking-card__body { padding: 16px; }
+        .booking-card__header,
+        .booking-card__body {
+            padding: 16px;
+        }
     }
 
     /* ── Route Form — Two rows ── */
@@ -861,14 +1160,13 @@
         .route-form-row--search {
             grid-template-columns: 1fr 1fr;
         }
-       /* .form-group--action {
+        /* .form-group--action {
             grid-column: span 2;
         } */
         /* Button is now on its own row — no label offset needed */
         .search-btn {
             margin-top: 0;
         }
-        
     }
 
     /* Mobile: everything stacks */
@@ -891,8 +1189,16 @@
         }
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group--action { display: flex; flex-direction: column; justify-content: flex-start; }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .form-group--action {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
     .form-label {
         font-size: 11px;
         font-weight: 700;
@@ -906,14 +1212,16 @@
         /* Fixed label height so all controls' inputs start at the same vertical position */
         min-height: 18px;
     }
-    .form-label--hidden { visibility: hidden; }
+    .form-label--hidden {
+        visibility: hidden;
+    }
 
     /* ── Passenger Counter — compact ── */
     .passenger-counter {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 13px 12px;   /* same vertical padding as .dp-input / .tp-input */
+        padding: 13px 12px; /* same vertical padding as .dp-input / .tp-input */
         border: 2px solid #e2e8f0;
         border-radius: 10px;
         background: #f8fafc;
@@ -934,7 +1242,10 @@
         transition: all 0.2s;
         flex-shrink: 0;
     }
-    .counter-btn:hover { border-color: var(--travhub-base); color: var(--travhub-base); }
+    .counter-btn:hover {
+        border-color: var(--travhub-base);
+        color: var(--travhub-base);
+    }
     .counter-value {
         font-size: 15px;
         font-weight: 700;
@@ -946,12 +1257,15 @@
         justify-content: center;
         gap: 5px;
     }
-    .counter-icon { color: #64748b; font-size: 13px; }
+    .counter-icon {
+        color: #64748b;
+        font-size: 13px;
+    }
 
     /* ── Search Button ── */
     .search-btn {
         width: 100%;
-        padding: 13px 20px;   /* same vertical padding as .dp-input / .tp-input */
+        padding: 13px 20px; /* same vertical padding as .dp-input / .tp-input */
         background: var(--travhub-base);
         color: #fff;
         border: none;
@@ -964,14 +1278,17 @@
         justify-content: center;
         gap: 7px;
         transition: all 0.3s;
-        box-shadow: 0 4px 16px rgba(229,32,41,0.25);
+        box-shadow: 0 4px 16px rgba(229, 32, 41, 0.25);
         white-space: nowrap;
         box-sizing: border-box;
         /* Offset by label height + gap so the button face aligns with the inputs */
         /* margin-top: calc(18px + 6px); */
         margin-top: 0;
     }
-    .search-btn:hover { background: #111; transform: translateY(-1px); }
+    .search-btn:hover {
+        background: #111;
+        transform: translateY(-1px);
+    }
 
     /* ── Route Info Card ── */
     .route-info-card {
@@ -989,8 +1306,8 @@
     }
     .route-full-address {
         font-size: 11px;
-        letter-spacing: 0.2px; 
-        line-height: 1.4; 
+        letter-spacing: 0.2px;
+        line-height: 1.4;
     }
 
     /* ≤450px: stack route + stats vertically */
@@ -1020,11 +1337,30 @@
         flex-shrink: 0;
         margin-top: 4px;
     }
-    .route-dot--from { background: var(--travhub-base); }
-    .route-dot--to { background: #10b981; }
-    .route-point-text { display: flex; flex-direction: column; gap: 2px; }
-    .route-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; }
-    .route-address { font-size: 14px; font-weight: 600; color: #1e293b; line-height: 1.4; }
+    .route-dot--from {
+        background: var(--travhub-base);
+    }
+    .route-dot--to {
+        background: #10b981;
+    }
+    .route-point-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .route-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+    }
+    .route-address {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        line-height: 1.4;
+    }
     .route-connector {
         display: flex;
         align-items: center;
@@ -1034,7 +1370,13 @@
     .route-line-v {
         width: 2px;
         height: 14px;
-        background: repeating-linear-gradient(to bottom, #cbd5e1 0, #cbd5e1 4px, transparent 4px, transparent 8px);
+        background: repeating-linear-gradient(
+            to bottom,
+            #cbd5e1 0,
+            #cbd5e1 4px,
+            transparent 4px,
+            transparent 8px
+        );
     }
     .route-car-badge {
         background: #f1f5f9;
@@ -1060,11 +1402,31 @@
         gap: 10px;
         padding: 16px 20px;
     }
-    .route-stat i { font-size: 20px; color: var(--travhub-base); flex-shrink: 0; }
-    .route-stat div { display: flex; flex-direction: column; gap: 1px; }
-    .stat-label { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-value { font-size: 15px; font-weight: 700; color: #1e293b; }
-    .stat-value--price { color: var(--travhub-base); }
+    .route-stat i {
+        font-size: 20px;
+        color: var(--travhub-base);
+        flex-shrink: 0;
+    }
+    .route-stat div {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+    .stat-label {
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .stat-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .stat-value--price {
+        color: var(--travhub-base);
+    }
 
     /* Vertical dividers between cells on desktop — right border on all but last */
     .route-stat:not(:last-child) {
@@ -1085,7 +1447,7 @@
             border-right: 1px solid #e2e8f0;
         }
         /* Bottom border on top row cells */
-        .route-stat:nth-child(-n+2) {
+        .route-stat:nth-child(-n + 2) {
             border-bottom: 1px solid #e2e8f0;
         }
     }
@@ -1103,15 +1465,21 @@
         .route-stat:nth-child(odd) {
             border-right: none;
         }
-        .route-stat:nth-child(-n+2) {
+        .route-stat:nth-child(-n + 2) {
             border-bottom: none;
         }
         .route-stat:not(:last-child) {
             border-bottom: 1px solid #e2e8f0;
         }
-        .route-stat i { font-size: 16px; }
-        .stat-label { font-size: 10px; }
-        .stat-value { font-size: 13px; }
+        .route-stat i {
+            font-size: 16px;
+        }
+        .stat-label {
+            font-size: 10px;
+        }
+        .stat-value {
+            font-size: 13px;
+        }
     }
 
     /* ≤450px: 2×2 grid (Distance+Travel Time / Price From+Transfer Date) */
@@ -1129,7 +1497,7 @@
             border-right: 1px solid #e2e8f0;
         }
         /* Bottom border between the two rows */
-        .route-stat:nth-child(-n+2) {
+        .route-stat:nth-child(-n + 2) {
             border-bottom: 1px solid #e2e8f0;
         }
     }
@@ -1151,7 +1519,7 @@
     }
     .vehicle-card:hover {
         border-color: var(--travhub-base);
-        box-shadow: 0 12px 35px rgba(229,32,41,0.1);
+        box-shadow: 0 12px 35px rgba(229, 32, 41, 0.1);
         transform: translateY(-4px);
     }
     .vehicle-card__image {
@@ -1170,7 +1538,9 @@
         object-fit: contain;
         transition: transform 0.4s;
     }
-    .vehicle-card:hover .vehicle-card__image img { transform: scale(1.05); }
+    .vehicle-card:hover .vehicle-card__image img {
+        transform: scale(1.05);
+    }
     .vehicle-badge {
         position: absolute;
         top: 12px;
@@ -1182,10 +1552,24 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    .vehicle-badge--premium { background: #fef3c7; color: #92400e; }
-    .vehicle-badge--eco { background: #d1fae5; color: #065f46; }
-    .vehicle-card__body { padding: 20px; flex: 1; }
-    .vehicle-card__title { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 12px; }
+    .vehicle-badge--premium {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .vehicle-badge--eco {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    .vehicle-card__body {
+        padding: 20px;
+        flex: 1;
+    }
+    .vehicle-card__title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 12px;
+    }
 
     /* ── Vehicle title row + tooltip ── */
     .vehicle-card__title-row {
@@ -1215,7 +1599,9 @@
         align-items: center;
         transition: color 0.2s;
     }
-    .vehicle-tooltip-btn:hover { color: var(--travhub-base); }
+    .vehicle-tooltip-btn:hover {
+        color: var(--travhub-base);
+    }
     .vehicle-tooltip {
         display: none;
         position: absolute;
@@ -1228,7 +1614,7 @@
         padding: 10px 14px;
         min-width: 180px;
         max-width: 240px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
         pointer-events: none;
         /* Arrow */
         &::before {
@@ -1275,7 +1661,10 @@
         font-weight: 600;
         color: #475569;
     }
-    .spec-item i { color: var(--travhub-base); font-size: 14px; }
+    .spec-item i {
+        color: var(--travhub-base);
+        font-size: 14px;
+    }
     .vehicle-card__advantages {
         list-style: none;
         padding: 0;
@@ -1291,7 +1680,10 @@
         align-items: center;
         gap: 6px;
     }
-    .vehicle-card__advantages li i { color: #10b981; font-size: 12px; }
+    .vehicle-card__advantages li i {
+        color: #10b981;
+        font-size: 12px;
+    }
     .vehicle-card__footer {
         padding: 16px 20px;
         border-top: 1px solid #f0f4f8;
@@ -1301,9 +1693,22 @@
         gap: 12px;
         background: #fafbfc;
     }
-    .vehicle-card__price { display: flex; flex-direction: column; }
-    .price-from { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-    .price-amount { font-size: 24px; font-weight: 800; color: #1e293b; line-height: 1; }
+    .vehicle-card__price {
+        display: flex;
+        flex-direction: column;
+    }
+    .price-from {
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .price-amount {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+        line-height: 1;
+    }
     .select-btn {
         padding: 10px 20px;
         background: var(--travhub-base);
@@ -1316,8 +1721,13 @@
         transition: all 0.2s;
         white-space: nowrap;
     }
-    .select-btn:hover:not(:disabled) { background: #111; }
-    .select-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+    .select-btn:hover:not(:disabled) {
+        background: #111;
+    }
+    .select-btn:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+    }
 
     /* ── Notices ── */
     .no-vehicles {
@@ -1325,8 +1735,17 @@
         padding: 60px 20px;
         color: #94a3b8;
     }
-    .no-vehicles i { font-size: 48px; margin-bottom: 16px; display: block; }
-    .no-vehicles h5 { font-size: 18px; font-weight: 700; color: #475569; margin-bottom: 8px; }
+    .no-vehicles i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        display: block;
+    }
+    .no-vehicles h5 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 8px;
+    }
     .fill-route-notice {
         margin-top: 20px;
         padding: 14px 20px;
@@ -1339,7 +1758,10 @@
         align-items: center;
         gap: 10px;
     }
-    .fill-route-notice i { color: #f59e0b; font-size: 16px; }
+    .fill-route-notice i {
+        color: #f59e0b;
+        font-size: 16px;
+    }
     .booking-time-notice {
         margin-top: 1px;
         font-size: 11px;
@@ -1350,8 +1772,14 @@
         gap: 5px;
         margin-bottom: 0;
     }
-    .booking-time-notice i { color: #d97706; font-size: 11px; }
-    .booking-time-notice strong { font-weight: 800; color: #78350f; }
+    .booking-time-notice i {
+        color: #d97706;
+        font-size: 11px;
+    }
+    .booking-time-notice strong {
+        font-weight: 800;
+        color: #78350f;
+    }
 
     /* ── Track + History Grid ── */
     .track-history-grid {
@@ -1361,7 +1789,9 @@
         margin-top: 24px;
     }
     @media (max-width: 900px) {
-        .track-history-grid { grid-template-columns: 1fr; }
+        .track-history-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     /* Track icon badge */
@@ -1379,7 +1809,9 @@
     }
 
     /* Track Form */
-    .track-form { margin-bottom: 0; }
+    .track-form {
+        margin-bottom: 0;
+    }
     .track-input-row {
         display: flex;
         gap: 10px;
@@ -1398,8 +1830,15 @@
         transition: border-color 0.2s;
         outline: none;
     }
-    .track-input:focus { border-color: var(--travhub-base); background: #fff; }
-    .track-input::placeholder { font-weight: 400; letter-spacing: 0.5px; color: #94a3b8; }
+    .track-input:focus {
+        border-color: var(--travhub-base);
+        background: #fff;
+    }
+    .track-input::placeholder {
+        font-weight: 400;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+    }
     .track-btn {
         padding: 12px 22px;
         background: var(--travhub-base);
@@ -1414,10 +1853,16 @@
         align-items: center;
         gap: 7px;
         transition: all 0.2s;
-        box-shadow: 0 4px 16px rgba(229,32,41,0.25);
+        box-shadow: 0 4px 16px rgba(229, 32, 41, 0.25);
     }
-    .track-btn:hover:not(:disabled) { background: #111; transform: translateY(-1px); }
-    .track-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .track-btn:hover:not(:disabled) {
+        background: #111;
+        transform: translateY(-1px);
+    }
+    .track-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
     /* Track Result */
     .track-result {
@@ -1429,8 +1874,14 @@
         animation: fadeInUp 0.3s ease;
     }
     @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(8px); }
-        to   { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     .track-result__header {
         display: flex;
@@ -1466,8 +1917,16 @@
         font-size: 14px;
         color: #334155;
     }
-    .track-info-row i { width: 16px; flex-shrink: 0; margin-top: 2px; font-size: 13px; }
-    .track-addr { line-height: 1.4; font-size: 13px; }
+    .track-info-row i {
+        width: 16px;
+        flex-shrink: 0;
+        margin-top: 2px;
+        font-size: 13px;
+    }
+    .track-addr {
+        line-height: 1.4;
+        font-size: 13px;
+    }
     .track-detail-link {
         display: flex;
         align-items: center;
@@ -1482,7 +1941,9 @@
         text-decoration: none;
         transition: background 0.2s;
     }
-    .track-detail-link:hover { background: #f1f5f9; }
+    .track-detail-link:hover {
+        background: #f1f5f9;
+    }
     .track-not-found {
         margin-top: 16px;
         padding: 14px 16px;
@@ -1495,16 +1956,22 @@
         align-items: center;
         gap: 10px;
     }
-    .track-not-found i { font-size: 16px; flex-shrink: 0; }
+    .track-not-found i {
+        font-size: 16px;
+        flex-shrink: 0;
+    }
 
     /* ── History Shortcut ── */
-    .history-shortcut-card { display: flex; flex-direction: column; }
+    .history-shortcut-card {
+        display: flex;
+        flex-direction: column;
+    }
 
     .history-card {
         background: #fff;
         border-radius: 16px;
         border: 1px solid #eaeef2;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
         padding: 28px;
         display: flex;
         flex-direction: column;
@@ -1537,7 +2004,9 @@
         color: #e2e8f0;
         margin: 0 0 4px;
     }
-    .history-card__greeting strong { color: #fff; }
+    .history-card__greeting strong {
+        color: #fff;
+    }
     .history-card--loggedin .history-card__sub {
         color: #94a3b8;
         font-size: 14px;
@@ -1555,12 +2024,17 @@
         font-weight: 700;
         text-decoration: none;
         transition: all 0.2s;
-        box-shadow: 0 4px 16px rgba(229,32,41,0.35);
+        box-shadow: 0 4px 16px rgba(229, 32, 41, 0.35);
     }
-    .history-card__btn:hover { background: #c81a22; transform: translateY(-2px); }
+    .history-card__btn:hover {
+        background: #c81a22;
+        transform: translateY(-2px);
+    }
 
     /* Guest state */
-    .history-card--guest { background: #fff; }
+    .history-card--guest {
+        background: #fff;
+    }
     .history-card__icon {
         width: 54px;
         height: 54px;
@@ -1571,10 +2045,27 @@
         justify-content: center;
         flex-shrink: 0;
     }
-    .history-card__icon i { font-size: 24px; color: var(--travhub-base); }
-    .history-card__title { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 8px; }
-    .history-card__sub { font-size: 14px; color: #64748b; margin: 0; line-height: 1.6; }
-    .history-card__actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .history-card__icon i {
+        font-size: 24px;
+        color: var(--travhub-base);
+    }
+    .history-card__title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 8px;
+    }
+    .history-card__sub {
+        font-size: 14px;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.6;
+    }
+    .history-card__actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
     .history-btn {
         display: inline-flex;
         align-items: center;
@@ -1589,13 +2080,18 @@
     .history-btn--primary {
         background: var(--travhub-base);
         color: #fff;
-        box-shadow: 0 4px 16px rgba(229,32,41,0.25);
+        box-shadow: 0 4px 16px rgba(229, 32, 41, 0.25);
     }
-    .history-btn--primary:hover { background: #c81a22; transform: translateY(-1px); }
+    .history-btn--primary:hover {
+        background: #c81a22;
+        transform: translateY(-1px);
+    }
     .history-btn--secondary {
         background: #f1f5f9;
         color: #334155;
         border: 2px solid #e2e8f0;
     }
-    .history-btn--secondary:hover { background: #e2e8f0; }
+    .history-btn--secondary:hover {
+        background: #e2e8f0;
+    }
 </style>

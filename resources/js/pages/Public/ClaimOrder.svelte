@@ -1,6 +1,7 @@
 <script lang="ts">
     import AppHead from '@/components/AppHead.svelte';
     import { useForm } from '@inertiajs/svelte';
+    import { formatTime12 } from '@/lib/pickupTime';
     import { fade } from 'svelte/transition';
 
     let { order, isAssigned, isClaimPending, flash } = $props();
@@ -79,7 +80,7 @@
                         </h4>
                         <div class="opacity-75">
                             <i class="ti ti-clock me-1 mt-1"></i>
-                            {order.time} WITA
+                            {formatTime12(order.time)} WITA
                         </div>
                     </div>
 

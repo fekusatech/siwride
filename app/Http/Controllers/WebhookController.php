@@ -77,7 +77,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle Invoice webhooks (paid / expired).
+     * Handle Invoice webhooks (paid / expired / failed / cancelled).
      *
      * Configure at Xendit Dashboard → Settings → Webhooks → Invoices.
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/invoice
@@ -105,6 +105,18 @@ class WebhookController extends Controller
             return response()->json(['success' => true, 'message' => 'Invoice expired']);
         }
 
+        if ($payload['status'] ?? '' === 'FAILED') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Invoice failed']);
+        }
+
+        if ($payload['status'] ?? '' === 'CANCELLED') {
+            $this->markOrderCancelled($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Invoice cancelled']);
+        }
+
         return response()->json(['success' => true, 'message' => 'Invoice event ignored']);
     }
 
@@ -113,7 +125,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle FVA webhooks (paid, created, updated).
+     * Handle FVA webhooks (paid, created, updated, failed, expired).
      *
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/fva
      */
@@ -132,6 +144,18 @@ class WebhookController extends Controller
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'FVA paid']);
+        }
+
+        if (($payload['status'] ?? '') === 'EXPIRED') {
+            $this->markOrderExpired($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'FVA expired']);
+        }
+
+        if (($payload['status'] ?? '') === 'FAILED') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'FVA failed']);
         }
 
         return response()->json(['success' => true, 'message' => 'FVA event ignored']);
@@ -184,7 +208,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle Retail Outlet webhooks.
+     * Handle Retail Outlet webhooks (paid, failed, expired).
      *
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/retail-outlet
      */
@@ -203,6 +227,18 @@ class WebhookController extends Controller
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'OTC paid']);
+        }
+
+        if (($payload['status'] ?? '') === 'EXPIRED') {
+            $this->markOrderExpired($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'OTC expired']);
+        }
+
+        if (($payload['status'] ?? '') === 'FAILED') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'OTC failed']);
         }
 
         return response()->json(['success' => true]);
@@ -234,7 +270,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle Direct Debit webhooks.
+     * Handle Direct Debit webhooks (completed, failed).
      *
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/direct-debit
      */
@@ -253,6 +289,12 @@ class WebhookController extends Controller
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'Direct debit completed']);
+        }
+
+        if (($payload['event'] ?? '') === 'payment_failed') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Direct debit failed']);
         }
 
         return response()->json(['success' => true]);
@@ -305,7 +347,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle Payment Request v2 webhooks.
+     * Handle Payment Request v2 webhooks (success, failed, expired).
      *
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/payment-request
      */
@@ -324,6 +366,18 @@ class WebhookController extends Controller
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'Payment request success']);
+        }
+
+        if (($payload['event'] ?? '') === 'payment_request.payment_failed') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Payment request failed']);
+        }
+
+        if (($payload['event'] ?? '') === 'payment_request.expired') {
+            $this->markOrderExpired($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Payment request expired']);
         }
 
         return response()->json(['success' => true]);
@@ -376,7 +430,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle E-Wallet webhooks.
+     * Handle E-Wallet webhooks (completed, failed, cancelled).
      *
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/ewallet
      */
@@ -395,6 +449,18 @@ class WebhookController extends Controller
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'E-Wallet completed']);
+        }
+
+        if (($payload['status'] ?? '') === 'FAILED') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'E-Wallet failed']);
+        }
+
+        if (($payload['status'] ?? '') === 'CANCELLED') {
+            $this->markOrderCancelled($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'E-Wallet cancelled']);
         }
 
         return response()->json(['success' => true]);
@@ -426,7 +492,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle Paylater webhooks.
+     * Handle Paylater webhooks (completed, failed, cancelled).
      *
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/paylater
      */
@@ -447,6 +513,18 @@ class WebhookController extends Controller
             return response()->json(['success' => true, 'message' => 'Paylater completed']);
         }
 
+        if (($payload['status'] ?? '') === 'FAILED') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Paylater failed']);
+        }
+
+        if (($payload['status'] ?? '') === 'CANCELLED') {
+            $this->markOrderCancelled($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Paylater cancelled']);
+        }
+
         return response()->json(['success' => true]);
     }
 
@@ -455,7 +533,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle QR Code webhooks.
+     * Handle QR Code webhooks (completed, failed, expired).
      *
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/qr-code
      */
@@ -476,6 +554,18 @@ class WebhookController extends Controller
             return response()->json(['success' => true, 'message' => 'QR Code completed']);
         }
 
+        if (($payload['status'] ?? '') === 'FAILED') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'QR Code failed']);
+        }
+
+        if (($payload['status'] ?? '') === 'EXPIRED') {
+            $this->markOrderExpired($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'QR Code expired']);
+        }
+
         return response()->json(['success' => true]);
     }
 
@@ -484,7 +574,7 @@ class WebhookController extends Controller
     // ─────────────────────────────────────────────
 
     /**
-     * Handle Payment Session webhooks.
+     * Handle Payment Session webhooks (completed, failed, expired).
      *
      * Endpoint: POST https://siwride.com/api/webhooks/xendit/payment-session
      */
@@ -503,6 +593,18 @@ class WebhookController extends Controller
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'Payment session completed']);
+        }
+
+        if (($payload['event'] ?? '') === 'payment_session.failed') {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Payment session failed']);
+        }
+
+        if (($payload['event'] ?? '') === 'payment_session.expired') {
+            $this->markOrderExpired($order, $payload);
+
+            return response()->json(['success' => true, 'message' => 'Payment session expired']);
         }
 
         return response()->json(['success' => true]);
@@ -609,6 +711,24 @@ class WebhookController extends Controller
             return response()->json(['success' => true]);
         }
 
+        if (($payload['status'] ?? '') === 'FAILED' && $order) {
+            $this->markOrderFailed($order, $payload);
+
+            return response()->json(['success' => true]);
+        }
+
+        if (($payload['status'] ?? '') === 'CANCELLED' && $order) {
+            $this->markOrderCancelled($order, $payload);
+
+            return response()->json(['success' => true]);
+        }
+
+        if (($payload['status'] ?? '') === 'REFUNDED' && $order) {
+            $this->markOrderRefunded($order, $payload);
+
+            return response()->json(['success' => true]);
+        }
+
         return response()->json(['success' => true, 'message' => 'Ignored event']);
     }
 
@@ -650,5 +770,64 @@ class WebhookController extends Controller
         $order->update(['payment_status' => 'expired']);
 
         Log::info("Xendit Webhook — order {$order->booking_code} marked as expired");
+    }
+
+    /**
+     * Mark an order as failed.
+     */
+    private function markOrderFailed(?Order $order, array $payload): void
+    {
+        if (! $order) {
+            Log::warning('Xendit Webhook — order not found for failed event', [
+                'external_id' => $payload['external_id'] ?? null,
+            ]);
+
+            return;
+        }
+
+        $order->update(['payment_status' => 'failed']);
+
+        Log::info("Xendit Webhook — order {$order->booking_code} marked as failed", [
+            'reason' => $payload['failure_code'] ?? null,
+            'message' => $payload['failure_message'] ?? null,
+        ]);
+    }
+
+    /**
+     * Mark an order as cancelled.
+     */
+    private function markOrderCancelled(?Order $order, array $payload): void
+    {
+        if (! $order) {
+            Log::warning('Xendit Webhook — order not found for cancelled event', [
+                'external_id' => $payload['external_id'] ?? null,
+            ]);
+
+            return;
+        }
+
+        $order->update(['payment_status' => 'cancelled']);
+
+        Log::info("Xendit Webhook — order {$order->booking_code} marked as cancelled");
+    }
+
+    /**
+     * Mark an order as refunded.
+     */
+    private function markOrderRefunded(?Order $order, array $payload): void
+    {
+        if (! $order) {
+            Log::warning('Xendit Webhook — order not found for refunded event', [
+                'external_id' => $payload['external_id'] ?? null,
+            ]);
+
+            return;
+        }
+
+        $order->update(['payment_status' => 'refunded']);
+
+        Log::info("Xendit Webhook — order {$order->booking_code} marked as refunded", [
+            'refund_id' => $payload['refund_id'] ?? null,
+        ]);
     }
 }

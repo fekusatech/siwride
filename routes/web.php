@@ -85,6 +85,7 @@ Route::get('/booking/track', [CustomerOrderController::class, 'trackBooking'])->
 Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
 Route::get('/booking/estimate-price', [CustomerOrderController::class, 'estimatePrice'])->name('booking.estimate-price');
 Route::get('/booking/success', [CustomerOrderController::class, 'success'])->name('booking.success');
+Route::post('/booking/{booking_code}/cancel', [CustomerOrderController::class, 'cancelOrder'])->name('booking.cancel');
 Route::get('/booking/{booking_code}', [CustomerOrderController::class, 'show'])->name('booking.show');
 
 Route::middleware(['auth'])->group(function () {
