@@ -59,14 +59,34 @@ class CustomerOrderController extends Controller
 
     /**
      * Display checkout page — multi-step form after vehicle selection.
+     *
+     * If the logged-in customer has a recent pending order for the same route,
+     * redirect them to the booking detail / payment-waiting page instead.
      */
-    public function checkout(Request $request): Response
+    public function checkout(Request $request): Response|SymfonyResponse
     {
         $vehicleCategoryId = $request->input('vehicle_category_id');
         $vehicleCategory = null;
 
         if ($vehicleCategoryId) {
             $vehicleCategory = VehicleCategory::find($vehicleCategoryId);
+        }
+
+        // Check if logged-in customer has a pending unpaid order for this route
+        $customer = Auth::guard('customer')->user();
+        if ($customer) {
+            $pendingOrder = Order::where('customer_id', $customer->id)
+                ->where('status', 'pending')
+                ->where('payment_status', 'pending')
+                ->where('pickup_address', $request->input('pickup', ''))
+                ->where('dropoff_address', $request->input('dropoff', ''))
+                ->where('created_at', '>=', now()->subHours(24))
+                ->latest()
+                ->first();
+
+            if ($pendingOrder) {
+                return redirect()->route('booking.show', $pendingOrder->booking_code);
+            }
         }
 
         return Inertia::render('customer/checkout', [
@@ -406,8 +426,9 @@ class CustomerOrderController extends Controller
 
             return redirect($redirectUrl);
         } catch (\Exception $e) {
-            // If payment generation fails, redirect back to checkout with error
-            return redirect()->back()->withErrors(['payment_method' => 'Failed to create payment invoice: '.$e->getMessage()]);
+            // Payment generation failed — redirect to booking detail page so user can retry
+            return redirect()->route('booking.show', $order->booking_code)
+                ->with('error', 'Failed to create payment invoice: '.$e->getMessage());
         }
     }
 
@@ -516,6 +537,27 @@ class CustomerOrderController extends Controller
         return response()->json([
             'message' => 'Failed to cancel order.',
         ], 500);
+    }
+
+    /**
+     * Retry payment for a pending order that failed to generate a Xendit invoice.
+     */
+    public function retryPayment(string $bookingCode): JsonResponse
+    {
+        $order = Order::where('booking_code', $bookingCode)
+            ->where('status', 'pending')
+            ->where('payment_status', 'pending')
+            ->firstOrFail();
+
+        try {
+            $redirectUrl = $this->generateXenditPayment($order);
+
+            return response()->json(['payment_url' => $redirectUrl]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create payment: '.$e->getMessage(),
+            ], 422);
+        }
     }
 
     /**
