@@ -72,14 +72,20 @@ class CustomerOrderController extends Controller
             $vehicleCategory = VehicleCategory::find($vehicleCategoryId);
         }
 
-        // Check if logged-in customer has a pending unpaid order for this route
+        // Check if logged-in customer has a pending unpaid order matching this booking
         $customer = Auth::guard('customer')->user();
         if ($customer) {
+            $pickup = $request->input('pickup', '');
+            $dropoff = $request->input('dropoff', '');
+            $date = $request->input('date', '');
+
             $pendingOrder = Order::where('customer_id', $customer->id)
                 ->where('status', 'pending')
                 ->where('payment_status', 'pending')
-                ->where('pickup_address', $request->input('pickup', ''))
-                ->where('dropoff_address', $request->input('dropoff', ''))
+                ->when($pickup, fn ($q) => $q->where('pickup_address', 'LIKE', '%'.$pickup.'%'))
+                ->when($dropoff, fn ($q) => $q->where('dropoff_address', 'LIKE', '%'.$dropoff.'%'))
+                ->when($date, fn ($q) => $q->whereDate('date', $date))
+                ->when($vehicleCategoryId, fn ($q) => $q->where('vehicle_category_id', $vehicleCategoryId))
                 ->where('created_at', '>=', now()->subHours(24))
                 ->latest()
                 ->first();
