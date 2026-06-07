@@ -10,13 +10,16 @@
 Sistem pembayaran Xendit sudah terintegrasi dengan baik untuk handling **pembayaran sukses** dan **pembayaran kadaluarsa**, namun masih **KURANG dalam handling pembayaran gagal (failed)**.
 
 ### Status Saat Ini:
+
 ✅ **Sudah Implemented:**
-- Pembayaran sukses (PAID status) 
+
+- Pembayaran sukses (PAID status)
 - Invoice expiry handling
 - Webhook token verification
 - Multiple payment method support
 
 ❌ **BELUM Implemented:**
+
 - Payment failure handling
 - Timeout/cancellation status
 - Refund status handling
@@ -29,6 +32,7 @@ Sistem pembayaran Xendit sudah terintegrasi dengan baik untuk handling **pembaya
 ### 1. **Payment Status Pada Order Model**
 
 **Database Schema:**
+
 ```php
 // Migration: 2026_06_03_125743_add_payment_fields_to_orders_table.php
 $table->string('payment_status')->default('pending')->after('payment_reference');
@@ -36,6 +40,7 @@ $table->timestamp('payment_expiry')->nullable()->after('payment_status');
 ```
 
 **Status yang didukung saat ini:**
+
 - `pending` (default)
 - `paid` (dari webhook)
 - `expired` (dari webhook)
@@ -76,6 +81,7 @@ public function invoice(Request $request): JsonResponse
 ```
 
 **Issues:**
+
 - ❌ Status `PAID` (sukses) → ✅ **Handled**
 - ❌ Status `EXPIRED` → ✅ **Handled**
 - ❌ Status `FAILED` → ❌ **NOT Handled**
@@ -85,16 +91,16 @@ public function invoice(Request $request): JsonResponse
 
 ### 3. **Payment Status Handling Across All Payment Methods**
 
-| Payment Method | Success Status | Failure Status | Notes |
-|---|---|---|---|
-| **Invoice** | `PAID` ✅ | ❌ Not handled | Most common for Xendit |
-| **FVA** | `payment_id` ✅ | ❌ Not handled | Virtual account |
-| **Retail Outlet** | `PAID` ✅ | ❌ Not handled | OTC payment |
-| **E-Wallet** | `COMPLETED` ✅ | ❌ Not handled | OVO, Dana, dll |
-| **Paylater** | `COMPLETED` ✅ | ❌ Not handled | Kredivo, Akulaku |
-| **Direct Debit** | `payment_completed` ✅ | ❌ Not handled | EDC/BRI |
-| **QR Code** | `COMPLETED` ✅ | ❌ Not handled | QRIS |
-| **Payment Session** | `payment_session.completed` ✅ | ❌ Not handled | SDK usage |
+| Payment Method      | Success Status                 | Failure Status | Notes                  |
+| ------------------- | ------------------------------ | -------------- | ---------------------- |
+| **Invoice**         | `PAID` ✅                      | ❌ Not handled | Most common for Xendit |
+| **FVA**             | `payment_id` ✅                | ❌ Not handled | Virtual account        |
+| **Retail Outlet**   | `PAID` ✅                      | ❌ Not handled | OTC payment            |
+| **E-Wallet**        | `COMPLETED` ✅                 | ❌ Not handled | OVO, Dana, dll         |
+| **Paylater**        | `COMPLETED` ✅                 | ❌ Not handled | Kredivo, Akulaku       |
+| **Direct Debit**    | `payment_completed` ✅         | ❌ Not handled | EDC/BRI                |
+| **QR Code**         | `COMPLETED` ✅                 | ❌ Not handled | QRIS                   |
+| **Payment Session** | `payment_session.completed` ✅ | ❌ Not handled | SDK usage              |
 
 **All methods:** ✅ Success handling | ❌ Failure handling
 
@@ -103,6 +109,7 @@ public function invoice(Request $request): JsonResponse
 ### 4. **Helper Methods**
 
 **Mark Paid:**
+
 ```php
 private function markOrderPaid(?Order $order, array $payload): void
 {
@@ -120,6 +127,7 @@ private function markOrderPaid(?Order $order, array $payload): void
 ```
 
 **Mark Expired:**
+
 ```php
 private function markOrderExpired(?Order $order, array $payload): void
 {
@@ -137,6 +145,7 @@ private function markOrderExpired(?Order $order, array $payload): void
 ```
 
 **Missing:**
+
 ```php
 // ❌ TIDAK ADA
 private function markOrderFailed(?Order $order, array $payload): void { }
@@ -149,6 +158,7 @@ private function markOrderRefunded(?Order $order, array $payload): void { }
 ### 5. **Token Verification**
 
 ✅ **Already implemented correctly:**
+
 ```php
 private function verifyToken(Request $request): bool
 {
@@ -164,6 +174,7 @@ private function verifyToken(Request $request): bool
 ```
 
 **Configuration:** [config/services.php](./config/services.php#L50-L53)
+
 ```php
 'xendit' => [
     'secret_key' => env('XENDIT_SECRET_KEY'),
@@ -195,10 +206,12 @@ Route::prefix('webhooks/xendit')->group(function () {
 ## ⚠️ Critical Issues Found
 
 ### Issue #1: Missing Failure Status Handling
+
 **Severity:** HIGH  
 **Impact:** Jika pembayaran gagal, order tidak akan ter-update statusnya
 
 **Scenario:**
+
 ```
 User → Xendit Payment Failed → Webhook dikirim status 'FAILED'
   → WebhookController::invoice() menerima event
@@ -209,6 +222,7 @@ User → Xendit Payment Failed → Webhook dikirim status 'FAILED'
 ```
 
 ### Issue #2: Missing Database Status Values
+
 **Severity:** HIGH  
 **Impact:** Tidak ada kolom untuk menyimpan status failure
 
@@ -222,6 +236,7 @@ User → Xendit Payment Failed → Webhook dikirim status 'FAILED'
 ```
 
 ### Issue #3: Incomplete Event Handling
+
 **Severity:** MEDIUM  
 **Impact:** Banyak webhook event yang di-ignore
 
@@ -234,6 +249,7 @@ return response()->json(['success' => true, 'message' => 'Invoice event ignored'
 ```
 
 ### Issue #4: No Refund Handling
+
 **Severity:** MEDIUM  
 **Impact:** Jika ada refund, tidak tercatat di order
 
@@ -256,6 +272,7 @@ return response()->json(['success' => true, 'message' => 'Invoice event ignored'
 ### Fix #1: Add Missing Payment Statuses
 
 **Migration:**
+
 ```php
 Schema::table('orders', function (Blueprint $table) {
     // payment_status: pending, paid, expired, failed, cancelled, refunded
@@ -266,6 +283,7 @@ Schema::table('orders', function (Blueprint $table) {
 ### Fix #2: Implement Failure Handling
 
 **Controller changes needed:**
+
 ```php
 // Invoice endpoint
 if ($payload['status'] ?? '' === 'FAILED') {
@@ -285,7 +303,7 @@ private function markOrderFailed(?Order $order, array $payload): void
 
     $order->update(['payment_status' => 'failed']);
     Log::info("Xendit Webhook — order {$order->booking_code} marked as failed");
-    
+
     // Optional: Send notification ke customer
 }
 ```
@@ -331,21 +349,22 @@ Overall:                      ████████░░░░░░░░�
 
 ## 🎯 Recommendations Priority
 
-| Priority | Issue | Effort | Impact |
-|----------|-------|--------|--------|
-| 🔴 HIGH | Add `failed` status handling | Low | Critical for UX |
-| 🔴 HIGH | Add database migration for new statuses | Low | Needed for persistence |
-| 🟡 MEDIUM | Add `refunded` status support | Low | Handle refunds properly |
-| 🟡 MEDIUM | Add `cancelled` status support | Low | Handle cancellations |
-| 🟡 MEDIUM | Improve error logging | Low | Better debugging |
-| 🟢 LOW | Add customer notifications | Medium | Improve UX |
-| 🟢 LOW | Add retry logic for failed orders | Medium | Better reliability |
+| Priority  | Issue                                   | Effort | Impact                  |
+| --------- | --------------------------------------- | ------ | ----------------------- |
+| 🔴 HIGH   | Add `failed` status handling            | Low    | Critical for UX         |
+| 🔴 HIGH   | Add database migration for new statuses | Low    | Needed for persistence  |
+| 🟡 MEDIUM | Add `refunded` status support           | Low    | Handle refunds properly |
+| 🟡 MEDIUM | Add `cancelled` status support          | Low    | Handle cancellations    |
+| 🟡 MEDIUM | Improve error logging                   | Low    | Better debugging        |
+| 🟢 LOW    | Add customer notifications              | Medium | Improve UX              |
+| 🟢 LOW    | Add retry logic for failed orders       | Medium | Better reliability      |
 
 ---
 
 ## 📝 Summary
 
 **Kesimpulannya:**
+
 - ✅ Pembayaran **SUKSES** sudah ditangani dengan baik (status `PAID`)
 - ✅ Pembayaran **KADALUARSA** sudah ditangani (status `EXPIRED`)
 - ❌ Pembayaran **GAGAL** belum ditangani (NO `failed` status handler)
@@ -353,6 +372,7 @@ Overall:                      ████████░░░░░░░░�
 - ❌ Tidak ada database migration untuk new statuses
 
 **Action Items:**
+
 1. Add migration untuk `failed`, `cancelled`, `refunded` status
 2. Implement `markOrderFailed()` method di WebhookController
 3. Update semua payment method endpoints untuk handle failure status

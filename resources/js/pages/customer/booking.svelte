@@ -417,7 +417,7 @@
     <Header />
 
     <!-- Page Header -->
-    <section class="page-header">
+    <!-- <section class="page-header">
         <div class="page-header__bg"></div>
         <div class="page-header__shape-one"></div>
         <div class="page-header__shape-two"></div>
@@ -430,12 +430,12 @@
                 <li><span>Book a Transfer</span></li>
             </ul>
         </div>
-    </section>
+    </section> -->
 
     <!-- Main Booking Section -->
     <section
         class="booking-main"
-        style="padding: 60px 0 100px; background: #f4f7f9;"
+        style="padding: 60px 0 10px; background: #f4f7f9;"
     >
         <div class="container">
             <!-- SECTION A: Route Form -->
@@ -892,7 +892,7 @@
     </section>
 
     <!-- Track Booking + Order History Section -->
-    <section style="padding: 0 0 100px; background: #f4f7f9;">
+    <section style="padding: 10px 0 100px; background: #f4f7f9;">
         <div class="container">
             <div class="track-history-grid">
                 <!-- Track Booking Card -->
@@ -1025,57 +1025,62 @@
                 <div class="history-shortcut-card">
                     {#if authCustomer}
                         <div class="history-card history-card--loggedin">
-                            <div class="history-card__avatar">
-                                {authCustomer.name.charAt(0).toUpperCase()}
+                            <div class="booking-card__header">
+
+                                <div class="history-card__info">
+                                    <p class="history-card__greeting">
+                                        Hello, <strong
+                                            >{authCustomer.name.split(
+                                                ' ',
+                                            )[0]}</strong
+                                        > 👋
+                                    </p>
+                                    <p class="history-card__sub">
+                                        View all your past and upcoming rides in one
+                                        place.
+                                    </p>
+                                </div>
                             </div>
-                            <div class="history-card__info">
-                                <p class="history-card__greeting">
-                                    Hello, <strong
-                                        >{authCustomer.name.split(
-                                            ' ',
-                                        )[0]}</strong
-                                    > 👋
-                                </p>
-                                <p class="history-card__sub">
-                                    View all your past and upcoming rides in one
-                                    place.
-                                </p>
+                            <div class="booking-card__body"> 
+                                <a
+                                    href="/customer/profile"
+                                    class="history-card__btn"
+                                >
+                                    <i class="fas fa-history"></i> My Order History
+                                </a>
                             </div>
-                            <a
-                                href="/customer/profile"
-                                class="history-card__btn"
-                            >
-                                <i class="fas fa-history"></i> My Order History
-                            </a>
                         </div>
                     {:else}
                         <div class="history-card history-card--guest">
-                            <div class="history-card__icon">
-                                <i class="fas fa-clipboard-list"></i>
+                            <div class="booking-card__header">
+                                <div class="track-icon-badge">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </div>
+                                <div>
+                                    <h4 class="booking-card__title">
+                                        Track all your rides
+                                    </h4>
+                                    <p class="booking-card__subtitle">
+                                        Log in to your account to access your full
+                                    order history.
+                                    </p>
+                                </div>
                             </div>
-                            <div class="history-card__info">
-                                <h5 class="history-card__title">
-                                    Track all your rides
-                                </h5>
-                                <p class="history-card__sub">
-                                    Log in to your account to access your full
-                                    order history, download receipts, and manage
-                                    your bookings anytime.
-                                </p>
-                            </div>
-                            <div class="history-card__actions">
-                                <a
-                                    href="/customer/login"
-                                    class="history-btn history-btn--primary"
-                                >
-                                    <i class="fas fa-sign-in-alt"></i> Log In
-                                </a>
-                                <a
-                                    href="/customer/register"
-                                    class="history-btn history-btn--secondary"
-                                >
-                                    <i class="fas fa-user-plus"></i> Register
-                                </a>
+                            <div class="booking-card__body"> 
+                                <div class="history-card__actions">
+                                    <a
+                                        href="/customer/login"
+                                        class="history-btn history-btn--primary"
+                                    >
+                                        <i class="fas fa-sign-in-alt"></i> Log In
+                                    </a>
+                                    <a
+                                        href="/customer/register"
+                                        class="history-btn history-btn--secondary"
+                                    >
+                                        <i class="fas fa-user-plus"></i> Register
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     {/if}
@@ -1097,6 +1102,7 @@
         overflow: visible;
     }
     .booking-card__header {
+        width: 100%;
         display: flex;
         align-items: center;
         gap: 16px;
@@ -1972,11 +1978,11 @@
         border-radius: 16px;
         border: 1px solid #eaeef2;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-        padding: 28px;
+        /* padding: 28px; */
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 20px;
+        /* gap: 20px; */
         height: 100%;
     }
 
@@ -2059,6 +2065,7 @@
         font-size: 14px;
         color: #64748b;
         margin: 0;
+        margin-top: -10px !important;
         line-height: 1.6;
     }
     .history-card__actions {

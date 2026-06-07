@@ -76,7 +76,7 @@
 <div class="page-wrapper">
     <Header />
 
-    <section class="page-header">
+    <!-- <section class="page-header">
         <div class="page-header__bg"></div>
         <div class="page-header__shape-one"></div>
         <div class="page-header__shape-two"></div>
@@ -87,7 +87,7 @@
                 <li><span>Dashboard</span></li>
             </ul>
         </div>
-    </section>
+    </section> -->
 
     <!-- Dashboard Content -->
     <section class="dashboard-section">

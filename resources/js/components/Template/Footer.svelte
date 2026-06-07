@@ -8,8 +8,8 @@
         class="main-footer__shape-one"
         style="background-image: url(/assets/images/shapes/footer-shape-1.png);"
     ></div>
-    <div class="container">
-        <div class="main-footer__top wow fadeInUp" data-wow-delay="100ms">
+    <div class="container" style="padding-top: 50px;">
+        <!-- <div class="main-footer__top wow fadeInUp" data-wow-delay="100ms">
             <div class="main-footer__top__dot"></div>
             <div
                 style="display: flex; justify-content: space-between; align-items: center; width: 100%;"
@@ -46,7 +46,7 @@
                 </div>
             </div>
             <div class="mc-form__response"></div>
-        </div>
+        </div> -->
         <div class="row">
             <div class="col-md-6 col-xl-4 wow fadeInUp" data-wow-delay="00ms">
                 <div class="footer-widget footer-widget--about">

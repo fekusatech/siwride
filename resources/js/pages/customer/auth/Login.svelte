@@ -87,7 +87,7 @@
     <Header />
 
     <!-- Page Header -->
-    <section class="page-header">
+    <!-- <section class="page-header">
         <div class="page-header__bg"></div>
         <div class="page-header__shape-one"></div>
         <div class="page-header__shape-two"></div>
@@ -98,7 +98,7 @@
                 <li><span>Login</span></li>
             </ul>
         </div>
-    </section>
+    </section> -->
 
     <section
         class="contact-page"
