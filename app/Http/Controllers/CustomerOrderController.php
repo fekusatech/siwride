@@ -59,14 +59,40 @@ class CustomerOrderController extends Controller
 
     /**
      * Display checkout page — multi-step form after vehicle selection.
+     *
+     * If the logged-in customer has a recent pending order for the same route,
+     * redirect them to the booking detail / payment-waiting page instead.
      */
-    public function checkout(Request $request): Response
+    public function checkout(Request $request): Response|SymfonyResponse
     {
         $vehicleCategoryId = $request->input('vehicle_category_id');
         $vehicleCategory = null;
 
         if ($vehicleCategoryId) {
             $vehicleCategory = VehicleCategory::find($vehicleCategoryId);
+        }
+
+        // Check if logged-in customer has a pending unpaid order matching this booking
+        $customer = Auth::guard('customer')->user();
+        if ($customer) {
+            $pickup = $request->input('pickup', '');
+            $dropoff = $request->input('dropoff', '');
+            $date = $request->input('date', '');
+
+            $pendingOrder = Order::where('customer_id', $customer->id)
+                ->where('status', 'pending')
+                ->where('payment_status', 'pending')
+                ->when($pickup, fn ($q) => $q->where('pickup_address', 'LIKE', '%'.$pickup.'%'))
+                ->when($dropoff, fn ($q) => $q->where('dropoff_address', 'LIKE', '%'.$dropoff.'%'))
+                ->when($date, fn ($q) => $q->whereDate('date', $date))
+                ->when($vehicleCategoryId, fn ($q) => $q->where('vehicle_category_id', $vehicleCategoryId))
+                ->where('created_at', '>=', now()->subHours(24))
+                ->latest()
+                ->first();
+
+            if ($pendingOrder) {
+                return redirect()->route('booking.show', $pendingOrder->booking_code);
+            }
         }
 
         return Inertia::render('customer/checkout', [
@@ -78,6 +104,11 @@ class CustomerOrderController extends Controller
                 'passengers' => $request->input('passengers', '1'),
             ],
             'vehicleCategory' => $vehicleCategory,
+            'customer' => $customer ? [
+                'name' => $customer->name,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+            ] : null,
         ]);
     }
 
@@ -406,8 +437,9 @@ class CustomerOrderController extends Controller
 
             return redirect($redirectUrl);
         } catch (\Exception $e) {
-            // If payment generation fails, redirect back to checkout with error
-            return redirect()->back()->withErrors(['payment_method' => 'Failed to create payment invoice: '.$e->getMessage()]);
+            // Payment generation failed — redirect to booking detail page so user can retry
+            return redirect()->route('booking.show', $order->booking_code)
+                ->with('error', 'Failed to create payment invoice: '.$e->getMessage());
         }
     }
 
@@ -416,7 +448,9 @@ class CustomerOrderController extends Controller
      */
     private function generateXenditPayment(Order $order): string
     {
-        Configuration::setXenditKey(config('services.xendit.secret_key'));
+        Configuration::setXenditKey(
+            \App\Models\Setting::getValue('xendit_secret_key') ?? config('services.xendit.secret_key')
+        );
 
         $paymentReference = null;
         $expiry = now()->addHours(24);
@@ -514,6 +548,27 @@ class CustomerOrderController extends Controller
         return response()->json([
             'message' => 'Failed to cancel order.',
         ], 500);
+    }
+
+    /**
+     * Retry payment for a pending order that failed to generate a Xendit invoice.
+     */
+    public function retryPayment(string $bookingCode): JsonResponse
+    {
+        $order = Order::where('booking_code', $bookingCode)
+            ->where('status', 'pending')
+            ->where('payment_status', 'pending')
+            ->firstOrFail();
+
+        try {
+            $redirectUrl = $this->generateXenditPayment($order);
+
+            return response()->json(['payment_url' => $redirectUrl]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create payment: '.$e->getMessage(),
+            ], 422);
+        }
     }
 
     /**

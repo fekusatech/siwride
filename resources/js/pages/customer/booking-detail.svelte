@@ -11,6 +11,7 @@
     const { order } = $props();
 
     let isCancelling = $state(false);
+    let isRetrying = $state(false);
     let cancellationMessage = $state<string | null>(null);
     let cancellationError = $state<string | null>(null);
 
@@ -194,6 +195,40 @@
             console.error('Cancellation error:', error);
         } finally {
             isCancelling = false;
+        }
+    };
+
+    const handleRetryPayment = async () => {
+        isRetrying = true;
+        cancellationError = null;
+
+        try {
+            const response = await fetch(
+                `/booking/${order.booking_code}/retry-payment`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token':
+                            document
+                                .querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') || '',
+                    },
+                },
+            );
+
+            const data = await response.json();
+
+            if (response.ok && data.payment_url) {
+                window.location.href = data.payment_url;
+            } else {
+                cancellationError = data.message || 'Failed to create payment. Please check Xendit API key in admin settings.';
+                isRetrying = false;
+            }
+        } catch (error) {
+            cancellationError = 'An error occurred while retrying payment.';
+            console.error('Retry payment error:', error);
+            isRetrying = false;
         }
     };
 </script>
@@ -574,6 +609,18 @@
                                                 class="fas fa-external-link-alt ml-1"
                                             ></i>
                                         </a>
+                                    {:else}
+                                        <button
+                                            onclick={handleRetryPayment}
+                                            disabled={isRetrying}
+                                            style="background:var(--travhub-base); color:white; padding:10px 20px; border-radius:8px; border:none; font-weight:700; cursor:{isRetrying ? 'not-allowed' : 'pointer'}; opacity:{isRetrying ? 0.7 : 1};"
+                                        >
+                                            {#if isRetrying}
+                                                <i class="fas fa-spinner fa-spin mr-1"></i>Processing...
+                                            {:else}
+                                                <i class="fas fa-redo mr-1"></i>Retry Payment
+                                            {/if}
+                                        </button>
                                     {/if}
                                     {#if canCancelOrder}
                                         <button

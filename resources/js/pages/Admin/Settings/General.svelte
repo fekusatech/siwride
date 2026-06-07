@@ -13,6 +13,10 @@
         recaptcha_enabled: setting.recaptcha_enabled === '1',
         recaptcha_site_key: setting.recaptcha_site_key ?? '',
         recaptcha_secret_key: setting.recaptcha_secret_key ?? '',
+        xendit_enabled: setting.xendit_enabled === '1',
+        xendit_secret_key: setting.xendit_secret_key ?? '',
+        xendit_public_key: setting.xendit_public_key ?? '',
+        xendit_webhook_token: setting.xendit_webhook_token ?? '',
     });
 
     let logoPreview = $state<string | null>(null);
@@ -270,8 +274,100 @@
                                 </div>
                             </div>
 
+                            <hr class="my-4 opacity-50" />
+
+                            <!-- Xendit Payment Gateway -->
+                            <div class="mb-4">
+                                <div
+                                    class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3"
+                                >
+                                    <div>
+                                        <div class="form-label fw-bold mb-1">
+                                            Xendit Payment Gateway
+                                        </div>
+                                        <div class="text-muted small">
+                                            Enable Xendit for invoice payments. Get your keys from the Xendit Dashboard.
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input
+                                            id="xendit_enabled"
+                                            name="xendit_enabled"
+                                            type="checkbox"
+                                            class="form-check-input"
+                                            bind:checked={form.xendit_enabled}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label
+                                            for="xendit_secret_key"
+                                            class="form-label fw-bold"
+                                            >Secret Key</label
+                                        >
+                                        <input
+                                            id="xendit_secret_key"
+                                            name="xendit_secret_key"
+                                            type="text"
+                                            class="form-control"
+                                            bind:value={form.xendit_secret_key}
+                                            placeholder="xnd_production_..."
+                                        />
+                                        {#if form.errors.xendit_secret_key}
+                                            <div class="text-danger small mt-1">
+                                                {form.errors.xendit_secret_key}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <div class="col-12">
+                                        <label
+                                            for="xendit_public_key"
+                                            class="form-label fw-bold"
+                                            >Public Key</label
+                                        >
+                                        <input
+                                            id="xendit_public_key"
+                                            name="xendit_public_key"
+                                            type="text"
+                                            class="form-control"
+                                            bind:value={form.xendit_public_key}
+                                            placeholder="xnd_public_production_..."
+                                        />
+                                        {#if form.errors.xendit_public_key}
+                                            <div class="text-danger small mt-1">
+                                                {form.errors.xendit_public_key}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <div class="col-12">
+                                        <label
+                                            for="xendit_webhook_token"
+                                            class="form-label fw-bold"
+                                            >Webhook Verification Token</label
+                                        >
+                                        <input
+                                            id="xendit_webhook_token"
+                                            name="xendit_webhook_token"
+                                            type="text"
+                                            class="form-control"
+                                            bind:value={form.xendit_webhook_token}
+                                            placeholder="Enter Xendit webhook callback token"
+                                        />
+                                        {#if form.errors.xendit_webhook_token}
+                                            <div class="text-danger small mt-1">
+                                                {form.errors.xendit_webhook_token}
+                                            </div>
+                                        {/if}
+                                        <small class="text-muted mt-1 d-block">
+                                            Found in Xendit Dashboard → Settings → Webhooks → Verification Token
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div
-                                class="mt-5 boarder-top pt-3 d-flex justify-content-end"
                             >
                                 <button
                                     type="submit"
