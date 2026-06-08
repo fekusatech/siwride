@@ -754,9 +754,8 @@
 
     .map-controls {
         position: absolute;
-        top: 12px;
+        bottom: 12px;
         left: 12px;
-        right: 12px;
         z-index: 10;
         pointer-events: none;
     }
@@ -805,6 +804,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
+        max-width: calc(100% - 60px);
     }
     @media (min-width: 600px) {
         .map-drawing-bar {
