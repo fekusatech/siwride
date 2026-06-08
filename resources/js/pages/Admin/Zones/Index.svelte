@@ -111,6 +111,15 @@
         zones.forEach((zone: any) => {
             if (!zone.coordinates || zone.coordinates.length === 0) return;
 
+            // Skip the zone currently being edited (its editable polygon is managed separately)
+            if (isEditing && form.id === zone.id) {
+                zone.coordinates.forEach((coord: any) => {
+                    bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
+                    hasValidCoords = true;
+                });
+                return;
+            }
+
             const polygon = new google.maps.Polygon({
                 paths: zone.coordinates,
                 strokeColor: zone.is_active ? '#3b82f6' : '#9ca3af',
@@ -225,6 +234,9 @@
         // Clear previous selected polygon if any
         if (selectedPolygon) selectedPolygon.setMap(null);
 
+        // Re-render zones to remove the non-editable version of this zone
+        renderZones();
+
         // Create an editable polygon for this zone
         selectedPolygon = new google.maps.Polygon({
             paths: zone.coordinates,
@@ -296,9 +308,10 @@
         initMap();
     });
 
-    // Re-render when zones change
+    // Re-render when zones or editing state change
     $effect(() => {
         if (map && zones) {
+            void isEditing;
             renderZones();
         }
     });
