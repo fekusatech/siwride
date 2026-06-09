@@ -3961,8 +3961,8 @@ h6 {
   background-color: transparent;
   padding: 2px 0px 2px 0px;
   font-family: var(--travhub-font);
-  font-weight: 400;
-  font-size: 17px;
+  font-weight: 500;
+  font-size: 15px;
   line-height: normal;
   color: var(--travhub-black);
   border: 1px solid transparent !important;
@@ -3972,8 +3972,8 @@ h6 {
 .banner-form .banner-form__control .bootstrap-select > .dropdown-toggle::-moz-placeholder, .banner-form .banner-form__control input[type=text]::-moz-placeholder, .banner-form .banner-form__control input[type=number]::-moz-placeholder, .banner-form .banner-form__control input[type=email]::-moz-placeholder {
   line-height: normal;
   font-style: normal;
-  font-weight: 400;
-  font-size: 18px;
+  font-weight: 500;
+  font-size: 15px;
   color: var(--travhub-black);
 }
 .banner-form .banner-form__control .bootstrap-select > .dropdown-toggle::placeholder,
@@ -3982,9 +3982,9 @@ h6 {
 .banner-form .banner-form__control input[type=email]::placeholder {
   line-height: normal;
   font-style: normal;
-  font-weight: 400;
-  font-size: 18px;
-  color: var(--travhub-black);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--travhub-text2);
 }
 .banner-form .banner-form__control .bootstrap-select > .dropdown-toggle:active, .banner-form .banner-form__control .bootstrap-select > .dropdown-toggle:focus,
 .banner-form .banner-form__control input[type=text]:active,
