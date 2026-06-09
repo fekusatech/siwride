@@ -3,6 +3,7 @@
     import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import LocationSearchInput from '@/components/LocationSearchInput.svelte';
+    import RideSharingLocationSearchInput from '@/components/RideSharingLocationSearchInput.svelte';
     import DatePicker from '@/components/DatePicker.svelte';
     import TimePicker from '@/components/TimePicker.svelte';
     import { getMinPickupTime, formatEarliestTime } from '@/lib/pickupTime';
@@ -24,22 +25,16 @@
     let rsDate = $state('');
     let rsPickupLocationId = $state('');
     let rsDropoffLocationId = $state('');
-    let rsScheduleId = $state('');
+
     let rsPassengers = $state(1);
 
     let {
         vehicleCategories = [],
         rideSharingLocations = [],
-        rideSharingSchedules = [],
         services = [],
     } = $props<{
         vehicleCategories: any[];
-        rideSharingLocations: { id: number; name: string; area: string }[];
-        rideSharingSchedules: {
-            id: number;
-            departure_time: string;
-            label: string;
-        }[];
+        rideSharingLocations: { id: number; name: string }[];
         services?: any[];
     }>();
 
@@ -313,22 +308,14 @@
                             <div class="banner-form__control">
                                 <i class="icon icon-pin-2"></i>
                                 <label for="rs_pickup">Pickup Location *</label>
-                                <select
+                                <RideSharingLocationSearchInput
                                     id="rs_pickup"
                                     name="pickup_location_id"
                                     bind:value={rsPickupLocationId}
+                                    locations={rideSharingLocations}
+                                    placeholder="Search departure city..."
                                     required
-                                    class="rs-select"
-                                >
-                                    <option value="" disabled
-                                        >Select pickup location</option
-                                    >
-                                    {#each rideSharingLocations as loc}
-                                        <option value={loc.id}
-                                            >{loc.name} — {loc.area}</option
-                                        >
-                                    {/each}
-                                </select>
+                                />
                             </div>
 
                             <!-- Dropoff Location -->
@@ -337,22 +324,14 @@
                                 <label for="rs_dropoff"
                                     >Dropoff Location *</label
                                 >
-                                <select
+                                <RideSharingLocationSearchInput
                                     id="rs_dropoff"
                                     name="dropoff_location_id"
                                     bind:value={rsDropoffLocationId}
+                                    locations={rideSharingLocations}
+                                    placeholder="Search destination city..."
                                     required
-                                    class="rs-select"
-                                >
-                                    <option value="" disabled
-                                        >Select dropoff location</option
-                                    >
-                                    {#each rideSharingLocations as loc}
-                                        <option value={loc.id}
-                                            >{loc.name} — {loc.area}</option
-                                        >
-                                    {/each}
-                                </select>
+                                />
                             </div>
 
                             <!-- Passengers -->

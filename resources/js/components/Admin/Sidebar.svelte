@@ -190,6 +190,24 @@
                 </Link>
             </li>
 
+            <li class="side-nav-title mt-2">Ride Sharing</li>
+            
+            <li class="side-nav-item">
+                <Link href="/admin/rs-cities" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-building"></i></span>
+                    <span class="menu-text"> Cities </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
+                <Link href="/admin/rs-routes" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-route"></i></span>
+                    <span class="menu-text"> Routes </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-title mt-2">Airport Transfer</li>
+
             <li class="side-nav-item">
                 <Link href="/admin/zones" class="side-nav-link">
                     <span class="menu-icon"><i class="ti ti-map-pin"></i></span>

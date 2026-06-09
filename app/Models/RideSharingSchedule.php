@@ -2,34 +2,38 @@
 
 namespace App\Models;
 
-use Database\Factories\RideSharingScheduleFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RideSharingSchedule extends Model
 {
-    /** @use HasFactory<RideSharingScheduleFactory> */
     use HasFactory;
 
-    /**
-     * @var list<string>
-     */
-    protected $fillable = ['departure_time', 'label', 'is_active', 'sort_order'];
+    protected $table = 'rs_schedules';
 
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $fillable = [
+        'route_id',
+        'vehicle_category_id',
+        'days',
+        'departure_times',
+        'quota',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'days' => 'array',
+        'departure_times' => 'array',
+    ];
+
+    public function route(): BelongsTo
     {
-        return [
-            'is_active' => 'boolean',
-        ];
+        return $this->belongsTo(RideSharingRoute::class, 'route_id');
     }
 
-    /** Scope to only return active schedules ordered by sort_order. */
-    public function scopeActive(Builder $query): Builder
+    public function vehicleCategory(): BelongsTo
     {
-        return $query->where('is_active', true)->orderBy('sort_order');
+        return $this->belongsTo(VehicleCategory::class, 'vehicle_category_id');
     }
 }

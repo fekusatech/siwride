@@ -3,25 +3,22 @@
 use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
 use App\Http\Controllers\RideSharingController;
-use App\Models\RideSharingLocation;
-use App\Models\RideSharingSchedule;
-use App\Models\VehicleCategory;
 use App\Models\Service;
+use App\Models\VehicleCategory;
+use App\Models\RideSharingCity;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
     $vehicleCategories = VehicleCategory::orderBy('id')->get();
-    $locations = RideSharingLocation::orderBy('area')->orderBy('name')->get();
-    $schedules = RideSharingSchedule::orderBy('departure_time')->get();
+    $locations = RideSharingCity::orderBy('name')->get();
     $services = Service::where('is_active', true)->orderBy('id')->get();
 
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'vehicleCategories' => $vehicleCategories,
         'rideSharingLocations' => $locations,
-        'rideSharingSchedules' => $schedules,
         'services' => $services,
     ]);
 })->name('home');
@@ -80,6 +77,11 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/customer/register', [CustomerAuthController::class, 'register']);
 });
 
+use App\Http\Controllers\Admin\RideSharing\CityController;
+use App\Http\Controllers\Admin\RideSharing\RouteController;
+use App\Http\Controllers\Admin\RideSharing\RoutePathController;
+use App\Http\Controllers\Admin\RideSharing\RoutePriceController;
+use App\Http\Controllers\Admin\RideSharing\ScheduleController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CustomerProfileController;
@@ -134,6 +136,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('admin/vehicles', VehicleController::class)->names('admin.vehicles');
     Route::resource('admin/vehicle-categories', VehicleCategoryController::class)->names('admin.vehicle-categories');
     Route::resource('admin/services', ServiceController::class)->names('admin.services');
+
+    Route::resource('admin/rs-cities', CityController::class)->names('admin.rs-cities');
+    Route::resource('admin/rs-routes', RouteController::class)->names('admin.rs-routes');
+    Route::put('admin/rs-routes/{rs_route}/paths', [RoutePathController::class, 'updatePaths'])->name('admin.rs-routes.paths.update');
+    Route::put('admin/rs-routes/{rs_route}/prices', [RoutePriceController::class, 'updatePrices'])->name('admin.rs-routes.prices.update');
+    Route::post('admin/rs-schedules', [ScheduleController::class, 'store'])->name('admin.rs-schedules.store');
+    Route::put('admin/rs-schedules/{rs_schedule}', [ScheduleController::class, 'update'])->name('admin.rs-schedules.update');
+    Route::delete('admin/rs-schedules/{rs_schedule}', [ScheduleController::class, 'destroy'])->name('admin.rs-schedules.destroy');
 
     Route::get('admin/zones/boundary-suggestions', [ZoneController::class, 'boundarySuggestions'])->name('admin.zones.boundary-suggestions');
     Route::post('admin/zones/validate', [ZoneController::class, 'validatePoint'])->name('admin.zones.validate');
