@@ -1,7 +1,7 @@
 <script lang="ts">
     import SearchableSelect from '@/components/SearchableSelect.svelte';
     import Flatpickr from '@/components/Flatpickr.svelte';
-    import { useForm } from '@inertiajs/svelte';
+    import { useForm, page } from '@inertiajs/svelte';
     import { onMount } from 'svelte';
 
     declare const google: any;
@@ -182,17 +182,27 @@
     function setupAutocomplete() {
         if (!pickupInput || !dropoffInput) return;
 
-        // Define Bali bounds to restrict autocomplete suggestions
-        const baliBounds = new google.maps.LatLngBounds(
-            new google.maps.LatLng(-8.9472, 114.4173), // South West
-            new google.maps.LatLng(-8.0583, 115.7118), // North East
-        );
+        const activeZonesBounds = (page.props as any).active_zones_bounds;
+        let bounds;
+
+        if (activeZonesBounds) {
+            bounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(activeZonesBounds.south, activeZonesBounds.west),
+                new google.maps.LatLng(activeZonesBounds.north, activeZonesBounds.east),
+            );
+        } else {
+            // Fallback to Bali bounds
+            bounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(-8.9472, 114.4173), // South West
+                new google.maps.LatLng(-8.0583, 115.7118), // North East
+            );
+        }
 
         const autocompleteOptions = {
             types: ['geocode', 'establishment'],
-            bounds: baliBounds,
-            componentRestrictions: { country: 'id' }, // Optional: restrict to Indonesia
-            strictBounds: true, // Set to true if you want to ONLY show results inside Bali
+            bounds: bounds,
+            componentRestrictions: { country: 'id' },
+            strictBounds: !!activeZonesBounds, // Set to true if you want to ONLY show results inside zones
         };
 
         const pickupAutocomplete = new google.maps.places.Autocomplete(

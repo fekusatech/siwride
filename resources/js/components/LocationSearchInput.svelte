@@ -49,6 +49,7 @@
     }: Props = $props();
 
     const googleMapsApiKey = $derived((page.props as any).google_maps_api_key);
+    const activeZonesBounds = $derived((page.props as any).active_zones_bounds);
 
     let suggestions = $state<Suggestion[]>([]);
     let isOpen = $state(false);
@@ -132,15 +133,24 @@
 
         // Try Google Maps AutocompleteService first if available
         if (sharedAutocompleteService) {
-            const baliBounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(-8.9472, 114.4173),
-                new google.maps.LatLng(-8.0583, 115.7118),
-            );
+            let bounds;
+            if (activeZonesBounds) {
+                bounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(activeZonesBounds.south, activeZonesBounds.west),
+                    new google.maps.LatLng(activeZonesBounds.north, activeZonesBounds.east),
+                );
+            } else {
+                // Fallback to Bali bounds
+                bounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(-8.9472, 114.4173),
+                    new google.maps.LatLng(-8.0583, 115.7118),
+                );
+            }
 
             sharedAutocompleteService.getPlacePredictions(
                 {
                     input: q,
-                    locationRestriction: baliBounds,
+                    locationRestriction: bounds,
                     componentRestrictions: { country: 'id' },
                 },
                 (predictions: any, status: any) => {

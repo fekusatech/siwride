@@ -102,4 +102,32 @@ class Zone extends Model
             ->whereRaw("ST_Contains(coordinates, ST_GeomFromText('POINT($lat $lng)'))")
             ->first();
     }
+
+    /**
+     * Get the bounding box of all active zones.
+     */
+    public static function getActiveBounds(): ?array
+    {
+        $result = DB::select('SELECT ST_AsText(ST_Envelope(ST_Union(coordinates))) as bounds FROM zones WHERE is_active = 1');
+        $bounds = $result[0]->bounds ?? null;
+
+        if (! $bounds) {
+            return null;
+        }
+
+        preg_match_all('/([-\d.]+)\s+([-\d.]+)/', $bounds, $matches);
+        if (count($matches[0]) === 0) {
+            return null;
+        }
+
+        $lats = $matches[1];
+        $lngs = $matches[2];
+
+        return [
+            'south' => (float) min($lats),
+            'west' => (float) min($lngs),
+            'north' => (float) max($lats),
+            'east' => (float) max($lngs),
+        ];
+    }
 }

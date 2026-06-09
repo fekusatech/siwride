@@ -263,10 +263,12 @@ class LocationSearchController extends Controller
      */
     private function searchWithGooglePlaces(string $query, string $apiKey, array $activeZones): JsonResponse
     {
-        // Use Bali center
-        $centerLat = -8.4095;
-        $centerLng = 115.1889;
-        $radius = 70000; // 70km covers most of Bali from center
+        $bounds = $this->computeBoundingBox($activeZones);
+
+        // Fallback to Bali center if no zones
+        $centerLat = $bounds['centerLat'] ?? -8.4095;
+        $centerLng = $bounds['centerLng'] ?? 115.1889;
+        $radius = $bounds['radiusMeters'] ?? 70000;
 
         try {
             $response = Http::timeout(5)->get('https://maps.googleapis.com/maps/api/place/autocomplete/json', [
@@ -275,7 +277,7 @@ class LocationSearchController extends Controller
                 'components' => 'country:id',
                 'location' => "{$centerLat},{$centerLng}",
                 'radius' => $radius,
-                'strictbounds' => 'true',
+                'strictbounds' => $bounds ? 'true' : 'false',
                 'language' => 'id',
                 'types' => 'establishment|geocode',
             ]);
