@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
+use App\Http\Controllers\RideSharingController;
+use App\Models\RideSharingLocation;
+use App\Models\RideSharingSchedule;
 use App\Models\VehicleCategory;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,8 +14,12 @@ Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'vehicleCategories' => VehicleCategory::all(),
+        'rideSharingLocations' => RideSharingLocation::active()->get(['id', 'name', 'area']),
+        'rideSharingSchedules' => RideSharingSchedule::active()->get(['id', 'departure_time', 'label']),
     ]);
 })->name('home');
+
+Route::get('/ride-sharing', [RideSharingController::class, 'index'])->name('ride-sharing');
 
 Route::get('/dokumentasi', function () {
     return view('api-docs');

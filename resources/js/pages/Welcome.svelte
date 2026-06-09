@@ -17,8 +17,20 @@
 
     let passengerCount = $state(1);
 
-    let { vehicleCategories = [] } = $props<{
+    // --- Service Tab ---
+    let activeTab = $state<'point-to-point' | 'ride-sharing'>('point-to-point');
+
+    // --- Ride Sharing form state ---
+    let rsDate = $state('');
+    let rsPickupLocationId = $state('');
+    let rsDropoffLocationId = $state('');
+    let rsScheduleId = $state('');
+    let rsPassengers = $state(1);
+
+    let { vehicleCategories = [], rideSharingLocations = [], rideSharingSchedules = [] } = $props<{
         vehicleCategories: any[];
+        rideSharingLocations: { id: number; name: string; area: string }[];
+        rideSharingSchedules: { id: number; departure_time: string; label: string }[];
     }>();
 
     const settings = $derived(page.props.settings as any);
@@ -113,125 +125,207 @@
                 data-wow-duration="1500ms"
                 data-wow-delay="300ms"
             >
-                <form
-                    class="banner-form__wrapper"
-                    action="/booking"
-                    method="GET"
-                >
-                    <div class="banner-form row gutter-x-30 align-items-center">
-                        <div class="banner-form__control banner-form__col--1">
-                            <i class="icon icon-pin-2"></i>
-                            <label for="hero_pickup">Pick-up *</label>
-                            <!-- Hidden input carries value to the GET form submission -->
-                            <input
-                                type="hidden"
-                                name="pickup"
-                                value={heroPickup}
-                            />
-                            <LocationSearchInput
-                                id="hero_pickup"
-                                bind:value={heroPickup}
-                                placeholder="Hotel, airport, area..."
-                                required
-                            />
-                        </div>
-                        <div class="banner-form__control banner-form__col--2">
-                            <i class="icon icon-pin-2"></i>
-                            <label for="hero_dropoff">Drop-off *</label>
-                            <input
-                                type="hidden"
-                                name="dropoff"
-                                value={heroDropoff}
-                            />
-                            <LocationSearchInput
-                                id="hero_dropoff"
-                                bind:value={heroDropoff}
-                                placeholder="Beach, temple, area..."
-                                required
-                            />
-                        </div>
-                        <div
-                            class="banner-form__control banner-form__control--date banner-form__col--3"
-                        >
-                            <i class="icon icon-calendar-1"></i>
-                            <label for="hero_date">Pick-up Date *</label>
-                            <!-- Hidden inputs carry ISO values to GET form submission -->
-                            <input type="hidden" name="date" value={heroDate} />
-                            <input type="hidden" name="time" value={heroTime} />
-                            <DatePicker
-                                id="hero_date"
-                                bind:value={heroDate}
-                                placeholder="Select pickup date"
-                                required
-                                hideIcon
-                                hideChevron
-                            />
-                            <!-- Time picker row, shown after a date is selected -->
-                            <!-- <div class="hero-time-row">
-                                <i class="fas fa-clock hero-time-icon"></i>
-                                <TimePicker
-                                    id="hero_time"
-                                    bind:value={heroTime}
-                                    placeholder="Select pickup time"
-                                    minTime={heroMinTime}
+                <!-- Service Tabs -->
+                <div class="hero-service-tabs">
+                    <button
+                        type="button"
+                        class="hero-tab-btn {activeTab === 'point-to-point' ? 'hero-tab-btn--active' : ''}"
+                        onclick={() => (activeTab = 'point-to-point')}
+                    >
+                        <i class="icon-pin-2"></i>
+                        Point-to-Point
+                    </button>
+                    <button
+                        type="button"
+                        class="hero-tab-btn {activeTab === 'ride-sharing' ? 'hero-tab-btn--active' : ''}"
+                        onclick={() => (activeTab = 'ride-sharing')}
+                    >
+                        <i class="fas fa-car"></i>
+                        Ride Sharing
+                    </button>
+                </div>
+
+                <!-- Point-to-Point Form -->
+                {#if activeTab === 'point-to-point'}
+                    <form
+                        class="banner-form__wrapper"
+                        action="/booking"
+                        method="GET"
+                    >
+                        <div class="banner-form hf-flex align-items-center">
+                            <!-- Pickup -->
+                            <div class="banner-form__control">
+                                <i class="icon icon-pin-2"></i>
+                                <label for="hero_pickup">Pick-up *</label>
+                                <input type="hidden" name="pickup" value={heroPickup} />
+                                <LocationSearchInput
+                                    id="hero_pickup"
+                                    bind:value={heroPickup}
+                                    placeholder="Hotel, airport, area..."
+                                    required
                                 />
                             </div>
-                            {#if heroMinTime}
-                                <p class="hero-time-notice">
-                                    <i class="fas fa-info-circle"></i>
-                                    Earliest pickup today: <strong>{formatEarliestTime(heroDate)}</strong>
-                                </p>
-                            {/if} -->
-                        </div>
-                        <div class="banner-form__control banner-form__col--4">
-                            <i class="icon icon-traveler-with-a-suitcase-1"></i>
-                            <label for="passengers">Passengers</label>
-                            <div
-                                class="passenger-counter"
-                                style="display: flex; align-items: center; width: 40%;justify-content: space-between; padding-top: 3px;"
-                            >
-                                <button
-                                    type="button"
-                                    onclick={() => {
-                                        if (passengerCount > 1)
-                                            passengerCount--;
-                                    }}
-                                    style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
-                                    >-</button
-                                >
-                                <span
-                                    style="font-size: 16px; font-weight: 500; min-width: 30px; text-align: center;"
-                                    >{passengerCount}</span
-                                >
-                                <input
-                                    type="hidden"
-                                    name="passengers"
-                                    value={passengerCount}
-                                    id="passengers"
+
+                            <!-- Dropoff -->
+                            <div class="banner-form__control">
+                                <i class="icon icon-pin-2"></i>
+                                <label for="hero_dropoff">Drop-off *</label>
+                                <input type="hidden" name="dropoff" value={heroDropoff} />
+                                <LocationSearchInput
+                                    id="hero_dropoff"
+                                    bind:value={heroDropoff}
+                                    placeholder="Beach, temple, area..."
+                                    required
                                 />
-                                <button
-                                    type="button"
-                                    onclick={() => passengerCount++}
-                                    style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
-                                    >+</button
-                                >
+                            </div>
+
+                            <!-- Date -->
+                            <div class="banner-form__control banner-form__control--date">
+                                <i class="icon icon-calendar-1"></i>
+                                <label for="hero_date">Pick-up Date *</label>
+                                <input type="hidden" name="date" value={heroDate} />
+                                <input type="hidden" name="time" value={heroTime} />
+                                <DatePicker
+                                    id="hero_date"
+                                    bind:value={heroDate}
+                                    placeholder="Select pickup date"
+                                    required
+                                    hideIcon
+                                    hideChevron
+                                />
+                            </div>
+
+                            <!-- Passengers -->
+                            <div class="banner-form__control">
+                                <i class="icon icon-traveler-with-a-suitcase-1"></i>
+                                <label for="passengers">Passengers</label>
+                                <div class="passenger-counter" style="display: flex; align-items: center; gap: 10px; padding-top: 3px;">
+                                    <button
+                                        type="button"
+                                        onclick={() => { if (passengerCount > 1) passengerCount--; }}
+                                        style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
+                                    >−</button>
+                                    <span style="font-size: 16px; font-weight: 500; min-width: 30px; text-align: center;">{passengerCount}</span>
+                                    <input type="hidden" name="passengers" value={passengerCount} id="passengers" />
+                                    <button
+                                        type="button"
+                                        onclick={() => passengerCount++}
+                                        style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
+                                    >+</button>
+                                </div>
+                            </div>
+
+                            <!-- Submit -->
+                            <div class="banner-form__control banner-form__button">
+                                <button class="travhub-btn" type="submit">
+                                    <span>Choose Vehicle</span>
+                                </button>
                             </div>
                         </div>
-                        <div
-                            class="banner-form__control banner-form__button banner-form__col--5"
-                        >
-                            <button class="travhub-btn" type="submit"
-                                ><span> Choose Vehicle</span></button
-                            >
+                    </form>
+                {/if}
+
+                <!-- Ride Sharing Form -->
+                {#if activeTab === 'ride-sharing'}
+                    <!-- <div class="rs-info-badge">
+                        <i class="fas fa-users"></i>
+                        <span>Predefined routes &amp; schedules by the operator. You are booking a <strong>seat in a shared ride</strong> — not a private trip.</span>
+                    </div> -->
+                    <form
+                        class="banner-form__wrapper"
+                        action="/ride-sharing"
+                        method="GET"
+                    >
+                        <div class="banner-form hf-flex align-items-center">
+                            <!-- Departure Date -->
+                            <div class="banner-form__control banner-form__control--date">
+                                <i class="icon icon-calendar-1"></i>
+                                <label for="rs_date">Departure Date *</label>
+                                <input type="hidden" name="date" value={rsDate} />
+                                <DatePicker
+                                    id="rs_date"
+                                    bind:value={rsDate}
+                                    placeholder="Select travel date"
+                                    required
+                                    hideIcon
+                                    hideChevron
+                                />
+                            </div>
+
+                            <!-- Pickup Location -->
+                            <div class="banner-form__control">
+                                <i class="icon icon-pin-2"></i>
+                                <label for="rs_pickup">Pickup Location *</label>
+                                <select
+                                    id="rs_pickup"
+                                    name="pickup_location_id"
+                                    bind:value={rsPickupLocationId}
+                                    required
+                                    class="rs-select"
+                                >
+                                    <option value="" disabled>Select pickup location</option>
+                                    {#each rideSharingLocations as loc}
+                                        <option value={loc.id}>{loc.name} — {loc.area}</option>
+                                    {/each}
+                                </select>
+                            </div>
+
+                            <!-- Dropoff Location -->
+                            <div class="banner-form__control">
+                                <i class="icon icon-pin-2"></i>
+                                <label for="rs_dropoff">Dropoff Location *</label>
+                                <select
+                                    id="rs_dropoff"
+                                    name="dropoff_location_id"
+                                    bind:value={rsDropoffLocationId}
+                                    required
+                                    class="rs-select"
+                                >
+                                    <option value="" disabled>Select dropoff location</option>
+                                    {#each rideSharingLocations as loc}
+                                        <option value={loc.id}>{loc.name} — {loc.area}</option>
+                                    {/each}
+                                </select>
+                             </div>
+
+                            <!-- Passengers -->
+                            <div class="banner-form__control">
+                                <i class="icon icon-traveler-with-a-suitcase-1"></i>
+                                <label for="rs_passengers">Passengers</label>
+                                <div class="passenger-counter" style="display: flex; align-items: center; gap: 10px; padding-top: 3px;">
+                                    <button
+                                        type="button"
+                                        onclick={() => { if (rsPassengers > 1) rsPassengers--; }}
+                                        style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
+                                    >−</button>
+                                    <span style="font-size: 16px; font-weight: 500; min-width: 30px; text-align: center;">{rsPassengers}</span>
+                                    <input type="hidden" name="passengers" value={rsPassengers} id="rs_passengers" />
+                                    <button
+                                        type="button"
+                                        onclick={() => rsPassengers++}
+                                        style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
+                                    >+</button>
+                                </div>
+                            </div>
+
+                            <!-- Submit -->
+                            <div class="banner-form__control banner-form__button">
+                                <button class="travhub-btn" type="submit">
+                                    <span>Book Ride Sharing</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                {/if}
+
             </div>
         </div>
+
         <div
             class="hero-one__shape-one"
             style="background-image: url(/assets/images/shapes/group-1-1.png);"
         ></div>
+
         <!-- <div class="hero-one__image">
             <div
                 class="hero-one__image-one travhub-splax"
@@ -1148,4 +1242,215 @@
     }
     :global(.hero-time-notice i) { color: #d97706; font-size: 11px; }
     :global(.hero-time-notice strong) { font-weight: 800; color: #78350f; }
+
+    /* ────────────────────────────────────────────────────────────
+       Hero Form (hf-flex) — responsive layout
+       Berjajar ke samping, jika width tidak cukup maka ke bawah.
+    ──────────────────────────────────────────────────────────── */
+    :global(.hero-one__form .banner-form.hf-flex) {
+        display: grid;
+        /* Default: grid columns adjust automatically based on available width */
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        align-items: center;
+        gap: 15px 25px;
+    }
+
+    :global(.hero-one__form .banner-form.hf-flex .banner-form__control) {
+        position: relative;
+        padding-left: 0 !important;
+        margin-bottom: 0 !important;
+        width: 100% !important; /* Ensure it fills its grid cell */
+    }
+
+    /* Dashed border for gaps between inputs (except the submit button) */
+    @media (min-width: 576px) {
+        :global(.hero-one__form .banner-form.hf-flex .banner-form__control:not(.banner-form__button)::after) {
+            content: "";
+            position: absolute;
+            right: -12.5px; /* Half of the 25px gap */
+            top: 15%;
+            height: 70%;
+            border-right: 1px dashed rgba(0,0,0,0.15); /* Thin line */
+        }
+        /* On tablet size, when grid wraps, hide the right border on the 3rd element which is at edge */
+        /* Since auto-fit dynamically places them, we hide borders if they overflow visually */
+    }
+
+    /* Stretch button to ignore parent padding vertically and touch edges */
+    @media (min-width: 1070px) {
+        :global(.hero-one__form .banner-form.hf-flex .banner-form__button) {
+            align-self: stretch;
+            margin-top: -20px !important;
+            margin-bottom: -20px !important;
+        }
+        :global(.hero-one__form .banner-form.hf-flex .banner-form__button button) {
+            height: 100%;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+    }
+
+    @media (max-width: 575px) {
+        :global(.hero-one__form .banner-form.hf-flex) {
+            grid-template-columns: 1fr; /* Stack vertically on mobile */
+            gap: 15px;
+        }
+    }
+
+    /* ── Ride Sharing select dropdowns (Original Theme Styles) ── */
+    :global(.rs-select) {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: inherit;
+        font-size: 15px;
+        font-family: inherit;
+        padding: 3px 0;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+    :global(.rs-select option) {
+        color: #333;
+        background: #fff;
+    }
+    :global(.rs-select option:disabled) {
+        color: #aaa;
+    }
+
+    /* ── Hero service tabs ── */
+
+    /* Force the outer banner-form container to be a column so tabs
+       always sit ABOVE the white form card, never beside it. */
+    :global(.hero-one__form .banner-form) {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    :global(.hero-service-tabs) {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 0;
+        padding: 0;
+        /* Ensure the tab row always stacks ABOVE the form card,
+           never beside it — achieved by forcing full width */
+        width: 100%;
+        flex-shrink: 0;
+    }
+    :global(.hero-tab-btn) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 24px;
+        font-size: 14px;
+        font-weight: 700;
+        /* Dark semi-opaque pill — visible on ANY hero background */
+        background: rgba(15, 15, 20, 0.55);
+        color: rgba(255, 255, 255, 0.85);
+        border: 1.5px solid rgba(255, 255, 255, 0.22);
+        border-bottom: none;
+        border-radius: 10px 10px 0 0;
+        cursor: pointer;
+        transition: background 0.22s, color 0.22s, border-color 0.22s, box-shadow 0.22s;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+        min-width: 150px;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+    :global(.hero-tab-btn:hover) {
+        background: rgba(15, 15, 20, 0.75);
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+    :global(.hero-tab-btn--active) {
+        background: #ffffff !important;
+        color: var(--travhub-base, #e52029) !important;
+        border-color: #ffffff !important;
+        border-bottom: none !important;
+        box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.18);
+    }
+    :global(.hero-tab-btn--active:hover) {
+        background: #fff !important;
+        color: var(--travhub-base, #e52029) !important;
+    }
+    :global(.hero-tab-btn i) {
+        font-size: 16px;
+    }
+
+    /* Mobile: tabs go full-width and pill-shaped for better touch targets */
+    @media (max-width: 575px) {
+        :global(.hero-service-tabs) {
+            gap: 8px;
+        }
+        :global(.hero-tab-btn) {
+            flex: 1;
+            min-width: 0;
+            border-radius: 10px 10px 0 0;
+            padding: 10px 14px;
+            font-size: 13px;
+        }
+    }
+
+    /* ── Ride Sharing info badge ── */
+    :global(.rs-info-badge) {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 16px;
+        background: rgba(251, 191, 36, 0.12);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        border-radius: 8px;
+        margin: 12px 0 0;
+        font-size: 13px;
+        color: #fff;
+        line-height: 1.5;
+    }
+    :global(.rs-info-badge i) {
+        margin-top: 2px;
+        color: #fbbf24;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+    :global(.rs-info-badge strong) {
+        color: #fbbf24;
+    }
+
+    /* ── Ride Sharing select dropdowns ── */
+    :global(.rs-select) {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: inherit;
+        font-size: 15px;
+        font-family: inherit;
+        padding: 3px 0;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+    :global(.rs-select option) {
+        color: #333;
+        background: #fff;
+    }
+    :global(.rs-select option:disabled) {
+        color: #aaa;
+    }
+
+    /* "Book Ride Sharing" button accent */
+    :global(.travhub-btn--rs) {
+        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
+    }
+    :global(.travhub-btn--rs:hover) {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+    }
+
 </style>
