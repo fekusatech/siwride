@@ -368,7 +368,8 @@
         position: absolute;
         top: calc(100% + 6px);
         left: 0;
-        width: 100%;
+        width: 200%;
+        max-width: calc(100vw - 30px); /* Limit width on mobile so it doesn't overflow the screen */
         min-width: 280px;
         background: #fff;
         border: 1px solid #e8ecef;
