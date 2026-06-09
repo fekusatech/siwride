@@ -108,26 +108,54 @@ class Zone extends Model
      */
     public static function getActiveBounds(): ?array
     {
-        $result = DB::select('SELECT ST_AsText(ST_Envelope(ST_Union(coordinates))) as bounds FROM zones WHERE is_active = 1');
-        $bounds = $result[0]->bounds ?? null;
+        // MySQL's ST_Union is not an aggregate function, so we calculate bounds in PHP
+        $zones = self::active()
+            ->selectRaw('ST_AsText(coordinates) as wkt')
+            ->get();
 
-        if (! $bounds) {
+        if ($zones->isEmpty()) {
             return null;
         }
 
-        preg_match_all('/([-\d.]+)\s+([-\d.]+)/', $bounds, $matches);
-        if (count($matches[0]) === 0) {
-            return null;
+        $minLat = null;
+        $maxLat = null;
+        $minLng = null;
+        $maxLng = null;
+
+        foreach ($zones as $zone) {
+            if (empty($zone->wkt)) {
+                continue;
+            }
+
+            preg_match_all('/([-\d.]+)\s+([-\d.]+)/', $zone->wkt, $matches);
+
+            if (count($matches[0]) === 0) {
+                continue;
+            }
+
+            $lats = $matches[1];
+            $lngs = $matches[2];
+
+            $zoneMinLat = min($lats);
+            $zoneMaxLat = max($lats);
+            $zoneMinLng = min($lngs);
+            $zoneMaxLng = max($lngs);
+
+            $minLat = $minLat === null ? $zoneMinLat : min($minLat, $zoneMinLat);
+            $maxLat = $maxLat === null ? $zoneMaxLat : max($maxLat, $zoneMaxLat);
+            $minLng = $minLng === null ? $zoneMinLng : min($minLng, $zoneMinLng);
+            $maxLng = $maxLng === null ? $zoneMaxLng : max($maxLng, $zoneMaxLng);
         }
 
-        $lats = $matches[1];
-        $lngs = $matches[2];
+        if ($minLat === null) {
+            return null;
+        }
 
         return [
-            'south' => (float) min($lats),
-            'west' => (float) min($lngs),
-            'north' => (float) max($lats),
-            'east' => (float) max($lngs),
+            'south' => (float) $minLat,
+            'west' => (float) $minLng,
+            'north' => (float) $maxLat,
+            'east' => (float) $maxLng,
         ];
     }
 }
