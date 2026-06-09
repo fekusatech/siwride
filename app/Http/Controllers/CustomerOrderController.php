@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCustomerOrderRequest;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Service;
+use App\Models\Setting;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
 use App\Models\ZonePricingRule;
@@ -26,6 +28,21 @@ use Xendit\Invoice\InvoiceApi;
 
 class CustomerOrderController extends Controller
 {
+    /**
+     * Display the service selection page — lets customers choose between
+     * Airport Transfer, Tour, Sharing Ride, or Hourly Service.
+     */
+    public function services(): Response
+    {
+        $services = Service::where('is_active', true)
+            ->orderBy('id')
+            ->get();
+
+        return Inertia::render('customer/booking-services', [
+            'services' => $services,
+        ]);
+    }
+
     /**
      * Display booking page — shows route form + route info + vehicle categories.
      */
@@ -54,6 +71,28 @@ class CustomerOrderController extends Controller
             ],
             'vehicleCategories' => $vehicleCategories,
             'allVehicleCategories' => VehicleCategory::orderBy('price_per_km')->get(),
+        ]);
+    }
+
+    /**
+     * Display the tour booking page.
+     */
+    public function tourIndex(): Response
+    {
+        return Inertia::render('customer/booking-tour', [
+            'tours' => [],
+        ]);
+    }
+
+    /**
+     * Display the hourly service booking page.
+     */
+    public function hourlyIndex(): Response
+    {
+        $vehicleCategories = VehicleCategory::orderBy('base_price')->get();
+
+        return Inertia::render('customer/booking-hourly', [
+            'vehicleCategories' => $vehicleCategories,
         ]);
     }
 
@@ -449,7 +488,7 @@ class CustomerOrderController extends Controller
     private function generateXenditPayment(Order $order): string
     {
         Configuration::setXenditKey(
-            \App\Models\Setting::getValue('xendit_secret_key') ?? config('services.xendit.secret_key')
+            Setting::getValue('xendit_secret_key') ?? config('services.xendit.secret_key')
         );
 
         $paymentReference = null;

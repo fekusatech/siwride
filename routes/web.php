@@ -6,16 +6,23 @@ use App\Http\Controllers\RideSharingController;
 use App\Models\RideSharingLocation;
 use App\Models\RideSharingSchedule;
 use App\Models\VehicleCategory;
+use App\Models\Service;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
+    $vehicleCategories = VehicleCategory::orderBy('id')->get();
+    $locations = RideSharingLocation::orderBy('area')->orderBy('name')->get();
+    $schedules = RideSharingSchedule::orderBy('departure_time')->get();
+    $services = Service::where('is_active', true)->orderBy('id')->get();
+
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
-        'vehicleCategories' => VehicleCategory::all(),
-        'rideSharingLocations' => RideSharingLocation::active()->get(['id', 'name', 'area']),
-        'rideSharingSchedules' => RideSharingSchedule::active()->get(['id', 'departure_time', 'label']),
+        'vehicleCategories' => $vehicleCategories,
+        'rideSharingLocations' => $locations,
+        'rideSharingSchedules' => $schedules,
+        'services' => $services,
     ]);
 })->name('home');
 
@@ -73,6 +80,7 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/customer/register', [CustomerAuthController::class, 'register']);
 });
 
+use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CustomerProfileController;
 
@@ -83,7 +91,11 @@ Route::middleware('auth:customer')->group(function () {
 });
 
 Route::get('/locations/search', [LocationSearchController::class, 'search'])->name('locations.search');
-Route::get('/booking', [CustomerOrderController::class, 'index'])->name('booking');
+Route::get('/booking', [CustomerOrderController::class, 'services'])->name('booking');
+Route::get('/booking/airport-transfer', [CustomerOrderController::class, 'index'])->name('booking.airport-transfer');
+Route::get('/booking/tour', [CustomerOrderController::class, 'tourIndex'])->name('booking.tour');
+Route::get('/booking/sharing-ride', [RideSharingController::class, 'index'])->name('booking.sharing-ride');
+Route::get('/booking/hourly', [CustomerOrderController::class, 'hourlyIndex'])->name('booking.hourly');
 Route::get('/booking/checkout', [CustomerOrderController::class, 'checkout'])->name('booking.checkout');
 Route::get('/booking/payment-success', [CustomerOrderController::class, 'paymentSuccess'])->name('booking.payment-success');
 Route::post('/booking/validate-email', [CustomerOrderController::class, 'validateEmail'])->name('booking.validate-email');
@@ -121,6 +133,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('admin/vehicles', VehicleController::class)->names('admin.vehicles');
     Route::resource('admin/vehicle-categories', VehicleCategoryController::class)->names('admin.vehicle-categories');
+    Route::resource('admin/services', ServiceController::class)->names('admin.services');
 
     Route::get('admin/zones/boundary-suggestions', [ZoneController::class, 'boundarySuggestions'])->name('admin.zones.boundary-suggestions');
     Route::post('admin/zones/validate', [ZoneController::class, 'validatePoint'])->name('admin.zones.validate');

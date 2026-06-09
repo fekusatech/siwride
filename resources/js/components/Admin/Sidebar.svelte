@@ -184,6 +184,13 @@
             </li>
 
             <li class="side-nav-item">
+                <Link href="/admin/services" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-briefcase"></i></span>
+                    <span class="menu-text"> Services </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
                 <Link href="/admin/zones" class="side-nav-link">
                     <span class="menu-icon"><i class="ti ti-map-pin"></i></span>
                     <span class="menu-text"> Zones </span>

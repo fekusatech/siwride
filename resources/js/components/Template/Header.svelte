@@ -147,8 +147,25 @@
                             </li>
                         </ul>
                     </li>
-                    <li class:current={isActive('/booking', true)}>
+                    <li
+                        class="dropdown"
+                        class:current={isActive('/booking')}
+                    >
                         <Link href="/booking">Booking</Link>
+                        <ul>
+                            <li class:current={isActive('/booking/airport-transfer', true)}>
+                                <Link href="/booking/airport-transfer">Airport Transfer</Link>
+                            </li>
+                            <li class:current={isActive('/booking/tour', true)}>
+                                <Link href="/booking/tour">Tour Package</Link>
+                            </li>
+                            <li class:current={isActive('/booking/sharing-ride', true)}>
+                                <Link href="/booking/sharing-ride">Sharing Ride</Link>
+                            </li>
+                            <li class:current={isActive('/booking/hourly', true)}>
+                                <Link href="/booking/hourly">Hourly Service</Link>
+                            </li>
+                        </ul>
                     </li>
                     <li class:current={isActive('/contact', true)}>
                         <Link href="/contact">Contact</Link>
@@ -315,10 +332,44 @@
                         </li>
                     </ul>
                 </li>
-                <li class:current={isActive('/booking', true)}>
-                    <a href="/booking" onclick={() => (mobileNavOpen = false)}
-                        >Booking</a
-                    >
+                <li
+                    class="dropdown"
+                    class:current={isActive('/booking')}
+                >
+                    <!-- svelte-ignore a11y_invalid_attribute -->
+                    <a href="#" onclick={toggleSubMenu}>
+                        Booking <i class="fa fa-angle-down"></i>
+                    </a>
+                    <ul>
+                        <li class:current={isActive('/booking/airport-transfer', true)}>
+                            <a
+                                href="/booking/airport-transfer"
+                                onclick={() => (mobileNavOpen = false)}
+                                >Airport Transfer</a
+                            >
+                        </li>
+                        <li class:current={isActive('/booking/tour', true)}>
+                            <a
+                                href="/booking/tour"
+                                onclick={() => (mobileNavOpen = false)}
+                                >Tour Package</a
+                            >
+                        </li>
+                        <li class:current={isActive('/booking/sharing-ride', true)}>
+                            <a
+                                href="/booking/sharing-ride"
+                                onclick={() => (mobileNavOpen = false)}
+                                >Sharing Ride</a
+                            >
+                        </li>
+                        <li class:current={isActive('/booking/hourly', true)}>
+                            <a
+                                href="/booking/hourly"
+                                onclick={() => (mobileNavOpen = false)}
+                                >Hourly Service</a
+                            >
+                        </li>
+                    </ul>
                 </li>
                 <li class:current={isActive('/contact', true)}>
                     <a href="/contact" onclick={() => (mobileNavOpen = false)}

@@ -31,14 +31,6 @@ class FrontendSettingController extends Controller
             'hero_title' => 'nullable|string',
             'hero_subtitle' => 'nullable|string',
 
-            'services_title' => 'nullable|string',
-            'services_subtitle' => 'nullable|string',
-            'our_services' => 'nullable|array',
-            'our_services.*.title' => 'required|string',
-            'our_services.*.description' => 'required|string',
-            'our_services.*.icon' => 'nullable|string',
-            'our_services.*.img' => 'nullable', // can be string (existing) or File
-
             'coverage_area_title' => 'nullable|string',
             'coverage_area_image' => 'nullable', // can be File or string
 
@@ -86,7 +78,6 @@ class FrontendSettingController extends Controller
             Setting::setValue('coverage_area_image', '/storage/'.$path);
         }
 
-        $this->saveArraySetting('our_services', $validated['our_services'] ?? [], 'img');
         $this->saveArraySetting('popular_destinations', $validated['popular_destinations'] ?? [], 'img');
         $this->saveArraySetting('why_choose_us_features', $validated['why_choose_us_features'] ?? []);
         $this->saveArraySetting('customer_testimonials', $validated['customer_testimonials'] ?? [], 'img');
@@ -102,7 +93,6 @@ class FrontendSettingController extends Controller
             'company_phone', 'company_email', 'company_address',
             'company_facebook', 'company_twitter', 'company_instagram', 'company_linkedin',
             'hero_welcome_text', 'hero_title', 'hero_subtitle',
-            'services_title', 'services_subtitle',
             'coverage_area_title',
             'destinations_title', 'destinations_subtitle',
             'why_choose_us_title', 'why_choose_us_subtitle', 'why_choose_us_text', 'why_choose_us_passenger_count',

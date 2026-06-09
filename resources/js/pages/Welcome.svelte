@@ -27,15 +27,24 @@
     let rsScheduleId = $state('');
     let rsPassengers = $state(1);
 
-    let { vehicleCategories = [], rideSharingLocations = [], rideSharingSchedules = [] } = $props<{
+    let {
+        vehicleCategories = [],
+        rideSharingLocations = [],
+        rideSharingSchedules = [],
+        services = [],
+    } = $props<{
         vehicleCategories: any[];
         rideSharingLocations: { id: number; name: string; area: string }[];
-        rideSharingSchedules: { id: number; departure_time: string; label: string }[];
+        rideSharingSchedules: {
+            id: number;
+            departure_time: string;
+            label: string;
+        }[];
+        services?: any[];
     }>();
 
     const settings = $derived(page.props.settings as any);
 
-    const ourServices = $derived(settings.our_services || []);
     const popularDestinations = $derived(settings.popular_destinations || []);
     const customerTestimonials = $derived(settings.customer_testimonials || []);
 
@@ -115,7 +124,8 @@
                     {settings.hero_title || 'Hassle-Free Bali Travels'}
                 </h2>
                 <p class="hero-one__text sub-title bw-split-in-left">
-                    {settings.hero_subtitle || 'Book your professional driver in advance.'}
+                    {settings.hero_subtitle ||
+                        'Book your professional driver in advance.'}
                 </p>
             </div>
         </div>
@@ -129,15 +139,19 @@
                 <div class="hero-service-tabs">
                     <button
                         type="button"
-                        class="hero-tab-btn {activeTab === 'point-to-point' ? 'hero-tab-btn--active' : ''}"
+                        class="hero-tab-btn {activeTab === 'point-to-point'
+                            ? 'hero-tab-btn--active'
+                            : ''}"
                         onclick={() => (activeTab = 'point-to-point')}
                     >
                         <i class="icon-pin-2"></i>
-                        Point-to-Point
+                        Airport Transfer
                     </button>
                     <button
                         type="button"
-                        class="hero-tab-btn {activeTab === 'ride-sharing' ? 'hero-tab-btn--active' : ''}"
+                        class="hero-tab-btn {activeTab === 'ride-sharing'
+                            ? 'hero-tab-btn--active'
+                            : ''}"
                         onclick={() => (activeTab = 'ride-sharing')}
                     >
                         <i class="fas fa-car"></i>
@@ -157,7 +171,11 @@
                             <div class="banner-form__control">
                                 <i class="icon icon-pin-2"></i>
                                 <label for="hero_pickup">Pick-up *</label>
-                                <input type="hidden" name="pickup" value={heroPickup} />
+                                <input
+                                    type="hidden"
+                                    name="pickup"
+                                    value={heroPickup}
+                                />
                                 <LocationSearchInput
                                     id="hero_pickup"
                                     bind:value={heroPickup}
@@ -170,7 +188,11 @@
                             <div class="banner-form__control">
                                 <i class="icon icon-pin-2"></i>
                                 <label for="hero_dropoff">Drop-off *</label>
-                                <input type="hidden" name="dropoff" value={heroDropoff} />
+                                <input
+                                    type="hidden"
+                                    name="dropoff"
+                                    value={heroDropoff}
+                                />
                                 <LocationSearchInput
                                     id="hero_dropoff"
                                     bind:value={heroDropoff}
@@ -180,11 +202,21 @@
                             </div>
 
                             <!-- Date -->
-                            <div class="banner-form__control banner-form__control--date">
+                            <div
+                                class="banner-form__control banner-form__control--date"
+                            >
                                 <i class="icon icon-calendar-1"></i>
                                 <label for="hero_date">Pick-up Date *</label>
-                                <input type="hidden" name="date" value={heroDate} />
-                                <input type="hidden" name="time" value={heroTime} />
+                                <input
+                                    type="hidden"
+                                    name="date"
+                                    value={heroDate}
+                                />
+                                <input
+                                    type="hidden"
+                                    name="time"
+                                    value={heroTime}
+                                />
                                 <DatePicker
                                     id="hero_date"
                                     bind:value={heroDate}
@@ -197,26 +229,45 @@
 
                             <!-- Passengers -->
                             <div class="banner-form__control">
-                                <i class="icon icon-traveler-with-a-suitcase-1"></i>
+                                <i class="icon icon-traveler-with-a-suitcase-1"
+                                ></i>
                                 <label for="passengers">Passengers</label>
-                                <div class="passenger-counter" style="display: flex; align-items: center; gap: 10px; padding-top: 3px;">
+                                <div
+                                    class="passenger-counter"
+                                    style="display: flex; align-items: center; gap: 10px; padding-top: 3px;"
+                                >
                                     <button
                                         type="button"
-                                        onclick={() => { if (passengerCount > 1) passengerCount--; }}
+                                        onclick={() => {
+                                            if (passengerCount > 1)
+                                                passengerCount--;
+                                        }}
                                         style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
-                                    >−</button>
-                                    <span style="font-size: 16px; font-weight: 500; min-width: 30px; text-align: center;">{passengerCount}</span>
-                                    <input type="hidden" name="passengers" value={passengerCount} id="passengers" />
+                                        >−</button
+                                    >
+                                    <span
+                                        style="font-size: 16px; font-weight: 500; min-width: 30px; text-align: center;"
+                                        >{passengerCount}</span
+                                    >
+                                    <input
+                                        type="hidden"
+                                        name="passengers"
+                                        value={passengerCount}
+                                        id="passengers"
+                                    />
                                     <button
                                         type="button"
                                         onclick={() => passengerCount++}
                                         style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
-                                    >+</button>
+                                        >+</button
+                                    >
                                 </div>
                             </div>
 
                             <!-- Submit -->
-                            <div class="banner-form__control banner-form__button">
+                            <div
+                                class="banner-form__control banner-form__button"
+                            >
                                 <button class="travhub-btn" type="submit">
                                     <span>Choose Vehicle</span>
                                 </button>
@@ -238,10 +289,16 @@
                     >
                         <div class="banner-form hf-flex align-items-center">
                             <!-- Departure Date -->
-                            <div class="banner-form__control banner-form__control--date">
+                            <div
+                                class="banner-form__control banner-form__control--date"
+                            >
                                 <i class="icon icon-calendar-1"></i>
                                 <label for="rs_date">Departure Date *</label>
-                                <input type="hidden" name="date" value={rsDate} />
+                                <input
+                                    type="hidden"
+                                    name="date"
+                                    value={rsDate}
+                                />
                                 <DatePicker
                                     id="rs_date"
                                     bind:value={rsDate}
@@ -263,9 +320,13 @@
                                     required
                                     class="rs-select"
                                 >
-                                    <option value="" disabled>Select pickup location</option>
+                                    <option value="" disabled
+                                        >Select pickup location</option
+                                    >
                                     {#each rideSharingLocations as loc}
-                                        <option value={loc.id}>{loc.name} — {loc.area}</option>
+                                        <option value={loc.id}
+                                            >{loc.name} — {loc.area}</option
+                                        >
                                     {/each}
                                 </select>
                             </div>
@@ -273,7 +334,9 @@
                             <!-- Dropoff Location -->
                             <div class="banner-form__control">
                                 <i class="icon icon-pin-2"></i>
-                                <label for="rs_dropoff">Dropoff Location *</label>
+                                <label for="rs_dropoff"
+                                    >Dropoff Location *</label
+                                >
                                 <select
                                     id="rs_dropoff"
                                     name="dropoff_location_id"
@@ -281,35 +344,58 @@
                                     required
                                     class="rs-select"
                                 >
-                                    <option value="" disabled>Select dropoff location</option>
+                                    <option value="" disabled
+                                        >Select dropoff location</option
+                                    >
                                     {#each rideSharingLocations as loc}
-                                        <option value={loc.id}>{loc.name} — {loc.area}</option>
+                                        <option value={loc.id}
+                                            >{loc.name} — {loc.area}</option
+                                        >
                                     {/each}
                                 </select>
-                             </div>
+                            </div>
 
                             <!-- Passengers -->
                             <div class="banner-form__control">
-                                <i class="icon icon-traveler-with-a-suitcase-1"></i>
+                                <i class="icon icon-traveler-with-a-suitcase-1"
+                                ></i>
                                 <label for="rs_passengers">Passengers</label>
-                                <div class="passenger-counter" style="display: flex; align-items: center; gap: 10px; padding-top: 3px;">
+                                <div
+                                    class="passenger-counter"
+                                    style="display: flex; align-items: center; gap: 10px; padding-top: 3px;"
+                                >
                                     <button
                                         type="button"
-                                        onclick={() => { if (rsPassengers > 1) rsPassengers--; }}
+                                        onclick={() => {
+                                            if (rsPassengers > 1)
+                                                rsPassengers--;
+                                        }}
                                         style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
-                                    >−</button>
-                                    <span style="font-size: 16px; font-weight: 500; min-width: 30px; text-align: center;">{rsPassengers}</span>
-                                    <input type="hidden" name="passengers" value={rsPassengers} id="rs_passengers" />
+                                        >−</button
+                                    >
+                                    <span
+                                        style="font-size: 16px; font-weight: 500; min-width: 30px; text-align: center;"
+                                        >{rsPassengers}</span
+                                    >
+                                    <input
+                                        type="hidden"
+                                        name="passengers"
+                                        value={rsPassengers}
+                                        id="rs_passengers"
+                                    />
                                     <button
                                         type="button"
                                         onclick={() => rsPassengers++}
                                         style="background: transparent; border: 1px solid currentColor; opacity: 0.6; color: inherit; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 18px; padding-bottom: 2px;"
-                                    >+</button>
+                                        >+</button
+                                    >
                                 </div>
                             </div>
 
                             <!-- Submit -->
-                            <div class="banner-form__control banner-form__button">
+                            <div
+                                class="banner-form__control banner-form__button"
+                            >
                                 <button class="travhub-btn" type="submit">
                                     <span>Book Ride Sharing</span>
                                 </button>
@@ -317,7 +403,6 @@
                         </div>
                     </form>
                 {/if}
-
             </div>
         </div>
 
@@ -402,6 +487,99 @@
                         SWABC123)
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <section
+        class="our-services"
+        style="padding: 100px 0; background-color: #f0f0f0;"
+    >
+        <div class="container">
+            <div class="sec-title text-center">
+                <div class="sec-title__tagline bw-split-in-right">
+                    What We Offer<img
+                        src="/assets/images/shapes/sec-title-shape.png"
+                        alt="Siwride"
+                    />
+                </div>
+                <h3 class="sec-title__title bw-split-in-left">
+                    Our Premium Services
+                </h3>
+                <p
+                    class="sec-title__text bw-split-in-up-fast"
+                    style="max-width: 600px; margin: 15px auto 0;"
+                >
+                    From quick trips to full-day explorations, we provide a variety of reliable transportation solutions tailored for your needs.
+                </p>
+            </div>
+
+            <div class="row gutter-y-30 justify-content-center">
+                {#each services as service, index}
+                    <div
+                        class="col-lg-3 col-md-6 wow fadeInUp"
+                        data-wow-duration="1500ms"
+                        data-wow-delay={index * 100 + 'ms'}
+                    >
+                        <a
+                            href={service.href || '#/'}
+                            class="service-card d-block"
+                            style="text-decoration: none; color: inherit; background: #fff; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; display: flex; flex-direction: column;"
+                            role="presentation"
+                            onmouseenter={(e) =>
+                                (e.currentTarget.style.transform =
+                                    'translateY(-10px)')}
+                            onmouseleave={(e) =>
+                                (e.currentTarget.style.transform =
+                                    'translateY(0)')}
+                        >
+                            <div
+                                class="service-card__img"
+                                style="height: 220px; overflow: hidden; position: relative;"
+                            >
+                                <img
+                                    src={service.image_url}
+                                    alt={service.title}
+                                    style="width: 100%; height: 100%; object-fit: cover; transition: 0.5s;"
+                                    role="presentation"
+                                    onmouseenter={(e) =>
+                                        (e.currentTarget.style.transform =
+                                            'scale(1.1)')}
+                                    onmouseleave={(e) =>
+                                        (e.currentTarget.style.transform =
+                                            'scale(1)')}
+                                />
+                            </div>
+                            <div
+                                class="service-card__content"
+                                style="padding: 25px 20px 25px; position: relative; z-index: 1;"
+                            >
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px;">
+                                    <h4
+                                        style="font-size: 18px; font-weight: 700; margin-bottom: 0; line-height: 1.3;"
+                                    >
+                                        <span
+                                            style="color: inherit; text-decoration: none;"
+                                            >{service.title}</span
+                                        >
+                                    </h4>
+                                    <span
+                                        style="display: inline-flex; align-items: center; color: var(--travhub-base, #e52029); font-weight: 700; font-size: 14px; transition: 0.3s; white-space: nowrap;"
+                                        onmouseenter={(e) => (e.currentTarget.style.transform = 'translateX(3px)')}
+                                        onmouseleave={(e) => (e.currentTarget.style.transform = 'translateX(0)')}
+                                    >
+                                        Book <i class="ti ti-arrow-right ms-1"></i>
+                                    </span>
+                                </div>
+                                <p
+                                    style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 0;"
+                                >
+                                    {service.description}
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                {/each}
             </div>
         </div>
     </section>
@@ -595,22 +773,26 @@
                     <div class="why-choose-one__content">
                         <div class="sec-title">
                             <div class="sec-title__tagline bw-split-in-right">
-                                {settings.why_choose_us_title || 'Why Siwride?'}<img
+                                {settings.why_choose_us_title ||
+                                    'Why Siwride?'}<img
                                     src="/assets/images/shapes/sec-title-shape.png"
                                     alt="Siwride"
                                 />
                             </div>
                             <h3 class="sec-title__title bw-split-in-left">
-                                {settings.why_choose_us_subtitle || 'Your Premium Ride Partner'}
+                                {settings.why_choose_us_subtitle ||
+                                    'Your Premium Ride Partner'}
                             </h3>
                             <p class="sec-title__text bw-split-in-up-fast">
-                                {settings.why_choose_us_text || 'Experience hassle-free, comfortable, and safe transportation across Bali with our highly-rated drivers and diverse fleet. We prioritize your comfort above all else.'}
+                                {settings.why_choose_us_text ||
+                                    'Experience hassle-free, comfortable, and safe transportation across Bali with our highly-rated drivers and diverse fleet. We prioritize your comfort above all else.'}
                             </p>
                         </div>
                         {#each settings.why_choose_us_features || [] as feature}
                             <div class="why-choose-one__box">
                                 <div class="why-choose-one__box__icon">
-                                    <i class="{feature.icon || 'flaticon-check'}"></i>
+                                    <i class={feature.icon || 'flaticon-check'}
+                                    ></i>
                                 </div>
                                 <h5 class="why-choose-one__box__title">
                                     {feature.title}
@@ -650,7 +832,8 @@
                                 </div>
                             </div>
                             <h5 class="why-choose-one__count ms-1">
-                                {settings.why_choose_us_passenger_count || '10k+'}<span>Happy Passengers</span>
+                                {settings.why_choose_us_passenger_count ||
+                                    '10k+'}<span>Happy Passengers</span>
                             </h5>
                         </div>
                     </div>
@@ -780,97 +963,7 @@
         </div>
     </section>
 
-    <section
-        class="our-services"
-        style="padding: 100px 0; background-color: #f4f6f8;"
-    >
-        <div class="container">
-            <div class="sec-title text-center">
-                <div class="sec-title__tagline bw-split-in-right">
-                    What We Offer<img
-                        src="/assets/images/shapes/sec-title-shape.png"
-                        alt="Siwride"
-                    />
-                </div>
-                <h3 class="sec-title__title bw-split-in-left">
-                    {settings.services_title || 'Our Premium Services'}
-                </h3>
-                <p
-                    class="sec-title__text bw-split-in-up-fast"
-                    style="max-width: 600px; margin: 15px auto 0;"
-                >
-                    {settings.services_subtitle || 'From quick trips to full-day explorations, we provide a variety of reliable transportation solutions tailored for your needs.'}
-                </p>
-            </div>
-
-            <div class="row gutter-y-30 justify-content-center">
-                {#each ourServices as service, index}
-                    <div
-                        class="col-lg-4 col-md-6 wow fadeInUp"
-                        data-wow-duration="1500ms"
-                        data-wow-delay={index * 100 + 'ms'}
-                    >
-                        <div
-                            class="service-card"
-                            style="background: #fff; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s;"
-                            role="presentation"
-                            onmouseenter={(e) =>
-                                (e.currentTarget.style.transform =
-                                    'translateY(-10px)')}
-                            onmouseleave={(e) =>
-                                (e.currentTarget.style.transform =
-                                    'translateY(0)')}
-                        >
-                            <div
-                                class="service-card__img"
-                                style="height: 220px; overflow: hidden; position: relative;"
-                            >
-                                <img
-                                    src={service.img}
-                                    alt={service.title}
-                                    style="width: 100%; height: 100%; object-fit: cover; transition: 0.5s;"
-                                    role="presentation"
-                                    onmouseenter={(e) =>
-                                        (e.currentTarget.style.transform =
-                                            'scale(1.1)')}
-                                    onmouseleave={(e) =>
-                                        (e.currentTarget.style.transform =
-                                            'scale(1)')}
-                                />
-                            </div>
-                            <div
-                                class="service-card__content"
-                                style="padding: 35px 30px 30px; position: relative; z-index: 1;"
-                            >
-                                <div
-                                    style="position: absolute; top: -30px; right: 30px; width: 60px; height: 60px; background: var(--travhub-base, #e52029); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 4px solid #fff; z-index: 2; box-shadow: 0 5px 15px rgba(0,0,0,0.1);"
-                                >
-                                    <i class={service.icon}></i>
-                                </div>
-                                <h4
-                                    style="font-size: 22px; font-weight: 700; margin-bottom: 15px;"
-                                >
-                                    <a
-                                        href="#/"
-                                        style="color: inherit; text-decoration: none;"
-                                        >{service.title}</a
-                                    >
-                                </h4>
-                                <p
-                                    style="color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 20px;"
-                                >
-                                    {service.description}
-                                </p>
-                                <!-- <a href="#/" style="display: inline-flex; align-items: center; color: var(--travhub-base, #e52029); font-weight: 600; text-decoration: none; font-size: 15px; transition: 0.3s;" role="presentation" onmouseenter={(e) => e.currentTarget.style.letterSpacing = '1px'} onmouseleave={(e) => e.currentTarget.style.letterSpacing = '0'}>
-                                Read More <i class="icon-right-arrow" style="margin-left: 8px; font-size: 12px;"></i>
-                            </a> -->
-                            </div>
-                        </div>
-                    </div>
-                {/each}
-            </div>
-        </div>
-    </section>
+    
 
     <section class="service-area" style="padding: 100px 0; background: #fff;">
         <div class="container">
@@ -904,14 +997,17 @@
                                 >
                                     Illustration Map of Bali
                                 </h4>
-                                <p style="color: #888; font-size: 15px; margin: 0;">
-                                    (This area is reserved for a static map image of
-                                    Bali)
+                                <p
+                                    style="color: #888; font-size: 15px; margin: 0;"
+                                >
+                                    (This area is reserved for a static map
+                                    image of Bali)
                                 </p>
                             </div>
                         {/if}
                         <img
-                            src={settings.coverage_area_image || 'https://placehold.co/1200x500/e9ecef/e9ecef'}
+                            src={settings.coverage_area_image ||
+                                'https://placehold.co/1200x500/e9ecef/e9ecef'}
                             alt="Bali Map Placeholder"
                             style="width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 0;"
                         />
@@ -940,7 +1036,8 @@
                     class="sec-title__text bw-split-in-up-fast"
                     style="max-width: 600px; margin: 15px auto 0;"
                 >
-                    {settings.destinations_subtitle || 'Discover the most frequently visited and breathtaking locations in Bali. Book a ride with us and travel there in comfort.'}
+                    {settings.destinations_subtitle ||
+                        'Discover the most frequently visited and breathtaking locations in Bali. Book a ride with us and travel there in comfort.'}
                 </p>
             </div>
 
@@ -1195,7 +1292,7 @@
     :global(.banner-form, .banner-form__wrapper, .banner-form__control) {
         overflow: visible !important;
     }
-    
+
     /* Fix stacking context so active input's dropdown goes over subsequent columns */
     :global(.banner-form__control:focus-within) {
         z-index: 999 !important;
@@ -1240,8 +1337,14 @@
         gap: 6px;
         font-weight: 500;
     }
-    :global(.hero-time-notice i) { color: #d97706; font-size: 11px; }
-    :global(.hero-time-notice strong) { font-weight: 800; color: #78350f; }
+    :global(.hero-time-notice i) {
+        color: #d97706;
+        font-size: 11px;
+    }
+    :global(.hero-time-notice strong) {
+        font-weight: 800;
+        color: #78350f;
+    }
 
     /* ────────────────────────────────────────────────────────────
        Hero Form (hf-flex) — responsive layout
@@ -1264,13 +1367,17 @@
 
     /* Dashed border for gaps between inputs (except the submit button) */
     @media (min-width: 576px) {
-        :global(.hero-one__form .banner-form.hf-flex .banner-form__control:not(.banner-form__button)::after) {
-            content: "";
+        :global(
+            .hero-one__form
+                .banner-form.hf-flex
+                .banner-form__control:not(.banner-form__button)::after
+        ) {
+            content: '';
             position: absolute;
             right: -12.5px; /* Half of the 25px gap */
             top: 15%;
             height: 70%;
-            border-right: 1px dashed rgba(0,0,0,0.15); /* Thin line */
+            border-right: 1px dashed rgba(0, 0, 0, 0.15); /* Thin line */
         }
         /* On tablet size, when grid wraps, hide the right border on the 3rd element which is at edge */
         /* Since auto-fit dynamically places them, we hide borders if they overflow visually */
@@ -1283,7 +1390,9 @@
             margin-top: -20px !important;
             margin-bottom: -20px !important;
         }
-        :global(.hero-one__form .banner-form.hf-flex .banner-form__button button) {
+        :global(
+            .hero-one__form .banner-form.hf-flex .banner-form__button button
+        ) {
             height: 100%;
             width: 100%;
             align-items: center;
@@ -1352,13 +1461,17 @@
         font-size: 14px;
         font-weight: 700;
         /* Dark semi-opaque pill — visible on ANY hero background */
-        background: rgba(15, 15, 20, 0.55);
-        color: rgba(255, 255, 255, 0.85);
+        background: rgba(223, 221, 221, 0.55);
+        color: rgba(95, 95, 95, 0.85);
         border: 1.5px solid rgba(255, 255, 255, 0.22);
         border-bottom: none;
         border-radius: 10px 10px 0 0;
         cursor: pointer;
-        transition: background 0.22s, color 0.22s, border-color 0.22s, box-shadow 0.22s;
+        transition:
+            background 0.22s,
+            color 0.22s,
+            border-color 0.22s,
+            box-shadow 0.22s;
         letter-spacing: 0.4px;
         white-space: nowrap;
         min-width: 150px;
@@ -1447,10 +1560,17 @@
 
     /* "Book Ride Sharing" button accent */
     :global(.travhub-btn--rs) {
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
+        background: linear-gradient(
+            135deg,
+            #1e40af 0%,
+            #2563eb 100%
+        ) !important;
     }
     :global(.travhub-btn--rs:hover) {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+        background: linear-gradient(
+            135deg,
+            #1e3a8a 0%,
+            #1e40af 100%
+        ) !important;
     }
-
 </style>

@@ -23,10 +23,6 @@
         hero_title: settings.hero_title || '',
         hero_subtitle: settings.hero_subtitle || '',
 
-        services_title: settings.services_title || '',
-        services_subtitle: settings.services_subtitle || '',
-        our_services: JSON.parse(JSON.stringify(settings.our_services || [])),
-
         coverage_area_title: settings.coverage_area_title || '',
         coverage_area_image: null as File | string | null,
 
@@ -127,9 +123,6 @@
                         <button class="nav-link {activeTab === 'hero' ? 'active' : ''} py-3" onclick={(e) => { e.preventDefault(); activeTab = 'hero'; }}>Hero Section</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link {activeTab === 'services' ? 'active' : ''} py-3" onclick={(e) => { e.preventDefault(); activeTab = 'services'; }}>Premium Services</button>
-                    </li>
-                    <li class="nav-item">
                         <button class="nav-link {activeTab === 'destinations' ? 'active' : ''} py-3" onclick={(e) => { e.preventDefault(); activeTab = 'destinations'; }}>Destinations</button>
                     </li>
                     <li class="nav-item">
@@ -205,60 +198,6 @@
                                 <label class="form-label">Subtitle / Description</label>
                                 <textarea class="form-control" rows="3" bind:value={form.hero_subtitle}></textarea>
                             </div>
-                        </div>
-                    {/if}
-
-                    <!-- SERVICES -->
-                    {#if activeTab === 'services'}
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">Section Title</label>
-                                <input type="text" class="form-control" bind:value={form.services_title} />
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Section Subtitle</label>
-                                <input type="text" class="form-control" bind:value={form.services_subtitle} />
-                            </div>
-                        </div>
-                        <hr />
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Service List</h5>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick={() => addItem('our_services', {title: '', description: '', icon: 'icon-pin-2', img: null})}>+ Add Service</button>
-                        </div>
-                        <div class="row g-4">
-                            {#each form.our_services as service, i}
-                                <div class="col-md-6">
-                                    <div class="card border mb-0">
-                                        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
-                                            <span class="fw-bold">Service {i + 1}</span>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick={() => removeItem('our_services', i)}>Remove</button>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="mb-2">
-                                                <label class="form-label fs-12">Title</label>
-                                                <input type="text" class="form-control form-control-sm" bind:value={service.title} />
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label fs-12">Description</label>
-                                                <textarea class="form-control form-control-sm" rows="2" bind:value={service.description}></textarea>
-                                            </div>
-                                            <div class="row g-2">
-                                                <div class="col-6">
-                                                    <label class="form-label fs-12">Icon Class</label>
-                                                    <input type="text" class="form-control form-control-sm" bind:value={service.icon} placeholder="e.g. icon-pin-2" />
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="form-label fs-12">Image</label>
-                                                    <input type="file" class="form-control form-control-sm" accept="image/*" onchange={(e) => handleArrayImage(e, 'our_services', i)} />
-                                                    {#if typeof service.img === 'string' && service.img}
-                                                        <small class="text-muted d-block mt-1 text-truncate">Current: {service.img.split('/').pop()}</small>
-                                                    {/if}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {/each}
                         </div>
                     {/if}
 
