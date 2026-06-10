@@ -230,7 +230,6 @@
                                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
                                     <h5 class="mb-0 text-white"><i class="ti ti-route me-2"></i> {route.name}</h5>
                                     <div class="d-flex align-items-center gap-3">
-                                    <div class="d-flex align-items-center gap-3">
                                         <span class="badge bg-white text-primary rounded-pill px-3 py-2 fs-6">
                                             Rp {new Intl.NumberFormat('id-ID').format(route.price)} / seat
                                         </span>
