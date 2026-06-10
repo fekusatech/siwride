@@ -7,7 +7,7 @@
     import DatePicker from '@/components/DatePicker.svelte';
 
     type Location = { id: number; name: string };
-    type Schedule = { id: number; departure_time: string; days: string; quota: number; specific_departure_time?: string; estimated_minutes?: number; vehicle_category?: { title: string, passenger_capacity: number } };
+    type Schedule = { id: number; departure_time: string; days: string; quota: number; specific_departure_time?: string; estimated_minutes?: number; vehicle_category?: { title: string, capacity: string, passenger_capacity: number } };
     function isDayAvailable(daysString: string) {
         if (!date) return true; // If no date selected, show all
         const selectedDate = new Date(date);
@@ -259,7 +259,9 @@
                                                                 <i class="ti ti-car text-primary"></i>
                                                                 <div class="small lh-1">
                                                                     <div class="fw-bold text-dark">{schedule.vehicle_category.title}</div>
-                                                                    <div class="text-muted" style="font-size: 0.8em;">{schedule.vehicle_category.passenger_capacity} Seats Capacity</div>
+                                                                    <div class="text-muted" style="font-size: 0.8em;">
+                                                                        {schedule.vehicle_category.capacity || `${schedule.vehicle_category.passenger_capacity} Seats Capacity`}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         {/if}
