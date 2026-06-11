@@ -14,10 +14,15 @@ class RideSharingRoutePrice extends Model
 
     protected $fillable = [
         'route_id',
+        'schedule_id',
         'from_city_id',
         'to_city_id',
         'price',
-        'estimated_minutes',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function route(): BelongsTo
@@ -33,5 +38,10 @@ class RideSharingRoutePrice extends Model
     public function toCity(): BelongsTo
     {
         return $this->belongsTo(RideSharingCity::class, 'to_city_id');
+    }
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(RideSharingSchedule::class, 'schedule_id');
     }
 }

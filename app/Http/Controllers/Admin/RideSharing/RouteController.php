@@ -35,6 +35,7 @@ class RouteController extends Controller
     public function create()
     {
         $cities = RideSharingCity::orderBy('name')->get();
+
         return Inertia::render('Admin/RideSharing/Routes/Create', [
             'cities' => $cities,
         ]);
@@ -53,16 +54,16 @@ class RouteController extends Controller
 
         $route = RideSharingRoute::create([
             'name' => "{$startCity->name} - {$endCity->name}",
-            'is_active' => $request->boolean('is_active', true)
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         $route->paths()->create([
             'city_id' => $startCity->id,
-            'sequence' => 1
+            'sequence' => 1,
         ]);
         $route->paths()->create([
             'city_id' => $endCity->id,
-            'sequence' => 2
+            'sequence' => 2,
         ]);
 
         return redirect()->route('admin.rs-routes.edit', $route->id)
@@ -74,7 +75,7 @@ class RouteController extends Controller
         // Load relationships for the detail/tabbed view
         $rs_route->load([
             'paths.city',
-            'prices',
+            'schedules.prices',
             'schedules.vehicleCategory',
         ]);
 

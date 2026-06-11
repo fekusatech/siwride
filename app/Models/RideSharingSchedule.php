@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RideSharingSchedule extends Model
 {
@@ -35,5 +36,10 @@ class RideSharingSchedule extends Model
     public function vehicleCategory(): BelongsTo
     {
         return $this->belongsTo(VehicleCategory::class, 'vehicle_category_id');
+    }
+
+    public function prices(): HasMany
+    {
+        return $this->hasMany(RideSharingRoutePrice::class, 'schedule_id');
     }
 }

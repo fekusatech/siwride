@@ -66,45 +66,29 @@
         pathsForm.put(`/admin/rs-routes/${routeData.id}/paths`);
     }
 
-    // -- PRICES TAB --
-    // We dynamically generate the matrix based on SAVED paths.
-    // Combinations where From Index < To Index.
-    let pricesForm = useForm({
-        prices: [] as any[]
-    });
+    // -- PRICES --
+    // We dynamically generate the matrix based on SAVED paths to display inside the schedule form.
+    function generateEmptyMatrix() {
+        const savedPaths = routeData.paths; // Use saved paths from DB
+        const matrix = [];
+        for (let i = 0; i < savedPaths.length; i++) {
+            for (let j = i + 1; j < savedPaths.length; j++) {
+                const fromCityId = savedPaths[i].city_id;
+                const toCityId = savedPaths[j].city_id;
 
-    // Populate pricesForm on load
-    $effect(() => {
-        if (activeTab === 'prices') {
-            const savedPaths = routeData.paths; // Use saved paths from DB
-            const matrix = [];
-            for (let i = 0; i < savedPaths.length; i++) {
-                for (let j = i + 1; j < savedPaths.length; j++) {
-                    const fromCityId = savedPaths[i].city_id;
-                    const toCityId = savedPaths[j].city_id;
-                    
-                    // Find existing price
-                    const existing = routeData.prices.find(
-                        (p: any) => p.from_city_id == fromCityId && p.to_city_id == toCityId
-                    );
-
-                    matrix.push({
-                        from_city_id: fromCityId,
-                        from_name: savedPaths[i].city.name,
-                        to_city_id: toCityId,
-                        to_name: savedPaths[j].city.name,
-                        price: existing ? existing.price : '',
-                        estimated_minutes: existing ? existing.estimated_minutes : ''
-                    });
-                }
+                matrix.push({
+                    from_city_id: fromCityId,
+                    from_name: savedPaths[i].city.name,
+                    from_address: savedPaths[i].city.address,
+                    to_city_id: toCityId,
+                    to_name: savedPaths[j].city.name,
+                    to_address: savedPaths[j].city.address,
+                    price: '',
+                    is_active: true
+                });
             }
-            pricesForm.prices = matrix;
         }
-    });
-
-    function savePrices(e: Event) {
-        e.preventDefault();
-        pricesForm.put(`/admin/rs-routes/${routeData.id}/prices`);
+        return matrix;
     }
 
     // -- SCHEDULES TAB --
@@ -128,6 +112,7 @@
         departure_times: {} as Record<string, string>,
         quota: 12,
         is_active: true,
+        prices: generateEmptyMatrix()
     });
 
     let editingScheduleId = $state<number | null>(null);
@@ -138,6 +123,19 @@
         schedulesForm.days = [...schedule.days];
         schedulesForm.departure_times = { ...schedule.departure_times };
         schedulesForm.quota = schedule.quota;
+        
+        // Populate existing prices for this schedule
+        const matrix = generateEmptyMatrix();
+        if (schedule.prices) {
+            matrix.forEach((item, index) => {
+                const existing = schedule.prices.find((p: any) => p.from_city_id == item.from_city_id && p.to_city_id == item.to_city_id);
+                if (existing) {
+                    matrix[index].price = existing.price;
+                    matrix[index].is_active = existing.is_active;
+                }
+            });
+        }
+        schedulesForm.prices = matrix;
     }
 
     function cancelEditSchedule() {
@@ -145,6 +143,7 @@
         schedulesForm.reset('quota', 'vehicle_category_id');
         schedulesForm.days = [];
         schedulesForm.departure_times = { ...defaultTimes };
+        schedulesForm.prices = generateEmptyMatrix();
         schedulesForm.clearErrors();
     }
 
@@ -197,13 +196,8 @@
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link {activeTab === 'prices' ? 'active' : ''}" onclick={() => activeTab = 'prices'}>
-                            <i class="ti ti-currency-dollar me-1"></i> Pricing Matrix
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
                         <button class="nav-link {activeTab === 'schedules' ? 'active' : ''}" onclick={() => activeTab = 'schedules'}>
-                            <i class="ti ti-clock me-1"></i> Schedules
+                            <i class="ti ti-clock me-1"></i> Schedules & Prices
                         </button>
                     </li>
                 </ul>
@@ -288,88 +282,17 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="alert alert-warning">
-                                <strong>Important:</strong> After updating the paths, you MUST check the Pricing Matrix tab. Modifying paths may reset prices for removed cities.
+                                <strong>Important:</strong> After updating the paths, you MUST verify the pricing inside the Schedules tab.
                             </div>
                         </div>
                     </div>
                 {/if}
 
-                {#if activeTab === 'prices'}
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <h5 class="mb-3">Manual Pricing Matrix</h5>
-                            {#if routeData.paths.length < 2}
-                                <div class="alert alert-warning">You must define at least 2 cities in the <strong>Paths</strong> tab before you can set prices.</div>
-                            {:else}
-                                <form onsubmit={savePrices}>
-                                    <div class="table-responsive mb-4">
-                                        <table class="table table-bordered text-center align-middle">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th>From / To</th>
-                                                    {#each routeData.paths as toPath, j}
-                                                        <!-- Skip the first one because nobody goes to the origin -->
-                                                        {#if j > 0}
-                                                            <th>
-                                                                {toPath.city.name}
-                                                                {#if toPath.city.address}
-                                                                    <br><small class="text-muted fw-normal" style="font-size: 0.75em;">{toPath.city.address}</small>
-                                                                {/if}
-                                                            </th>
-                                                        {/if}
-                                                    {/each}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {#each routeData.paths as fromPath, i}
-                                                    <!-- Skip the last one because nobody departs from the final destination -->
-                                                    {#if i < routeData.paths.length - 1}
-                                                        <tr>
-                                                            <th class="bg-light text-end pe-3">
-                                                                {fromPath.city.name}
-                                                                {#if fromPath.city.address}
-                                                                    <br><small class="text-muted fw-normal" style="font-size: 0.75em;">{fromPath.city.address}</small>
-                                                                {/if}
-                                                            </th>
-                                                            
-                                                            {#each routeData.paths as toPath, j}
-                                                                {#if j > 0}
-                                                                    <td>
-                                                                        {#if i < j && fromPath.city.name !== toPath.city.name}
-                                                                            <!-- Valid Combination -->
-                                                                            {@const matrixItem = pricesForm.prices.find(p => p.from_city_id == fromPath.city_id && p.to_city_id == toPath.city_id)}
-                                                                            {#if matrixItem}
-                                                                                <div class="input-group input-group-sm">
-                                                                                    <span class="input-group-text" style="width: 50px;">Rp</span>
-                                                                                    <input type="number" class="form-control text-center" bind:value={matrixItem.price} placeholder="Price" min="0" />
-                                                                                </div>
-                                                                            {/if}
-                                                                        {:else}
-                                                                            <!-- Invalid Combination (Backwards travel) -->
-                                                                            <span class="text-muted">-</span>
-                                                                        {/if}
-                                                                    </td>
-                                                                {/if}
-                                                            {/each}
-                                                        </tr>
-                                                    {/if}
-                                                {/each}
-                                            </tbody>
-                                        </table>
-                                    </div>
 
-                                    <button type="submit" class="btn btn-primary" disabled={pricesForm.processing}>
-                                        <i class="ti ti-device-floppy"></i> {pricesForm.processing ? 'Saving...' : 'Save Pricing Matrix'}
-                                    </button>
-                                </form>
-                            {/if}
-                        </div>
-                    </div>
-                {/if}
 
                 {#if activeTab === 'schedules'}
                     <div class="row">
-                        <div class="col-lg-5">
+                        <div class="col-lg-7">
                             <h5 class="mb-3">{editingScheduleId ? 'Edit Schedule' : 'Add New Schedule'}</h5>
                             <form onsubmit={saveSchedule} class="bg-light p-3 rounded border">
                                 <div class="mb-3">
@@ -419,6 +342,59 @@
                                         <label class="form-label" for="quota">Quota (Seats)</label>
                                         <input type="number" class="form-control" id="quota" bind:value={schedulesForm.quota} min="1" required />
                                     </div>
+
+                                    <div class="mb-4">
+                                        <label class="form-label d-block border-bottom pb-2">Pricing per City Pair <span class="text-danger">*</span></label>
+                                        {#if schedulesForm.prices.length === 0}
+                                            <div class="text-muted small">No city combinations available.</div>
+                                        {:else}
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-bordered align-middle mb-0">
+                                                    <thead class="bg-light">
+                                                        <tr>
+                                                            <th style="width: 40px;" class="text-center">Active</th>
+                                                            <th>From</th>
+                                                            <th>To</th>
+                                                            <th style="width: 150px;">Price (Rp)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {#each schedulesForm.prices as priceItem}
+                                                            <tr>
+                                                                <td class="text-center">
+                                                                    <div class="form-check form-switch d-flex justify-content-center m-0">
+                                                                        <input class="form-check-input" type="checkbox" bind:checked={priceItem.is_active} />
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="small fw-bold {priceItem.is_active ? '' : 'text-muted'}">{priceItem.from_name}</div>
+                                                                    {#if priceItem.from_address}
+                                                                        <div class="text-muted" style="font-size: 0.7em;">{priceItem.from_address}</div>
+                                                                    {/if}
+                                                                </td>
+                                                                <td>
+                                                                    <div class="small fw-bold {priceItem.is_active ? '' : 'text-muted'}">{priceItem.to_name}</div>
+                                                                    {#if priceItem.to_address}
+                                                                        <div class="text-muted" style="font-size: 0.7em;">{priceItem.to_address}</div>
+                                                                    {/if}
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control form-control-sm text-end" 
+                                                                        value={priceItem.price ? new Intl.NumberFormat('id-ID').format(priceItem.price) : ''}
+                                                                        oninput={(e) => {
+                                                                            const raw = e.currentTarget.value.replace(/\D/g, '');
+                                                                            priceItem.price = raw ? parseInt(raw, 10) : '';
+                                                                            e.currentTarget.value = raw ? new Intl.NumberFormat('id-ID').format(parseInt(raw, 10)) : '';
+                                                                        }}
+                                                                        placeholder="0" required={priceItem.is_active} disabled={!priceItem.is_active} />
+                                                                </td>
+                                                            </tr>
+                                                        {/each}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        {/if}
+                                    </div>
                                 {/if}
                                 <div class="d-flex gap-2">
                                     <button type="submit" class="btn btn-success flex-grow-1" disabled={schedulesForm.processing || routeData.paths.length === 0}>
@@ -431,7 +407,7 @@
                             </form>
                         </div>
 
-                        <div class="col-lg-7">
+                        <div class="col-lg-5">
                             <h5 class="mb-3">Existing Schedules</h5>
                             {#if routeData.schedules.length === 0}
                                 <div class="alert alert-info">No schedules added yet.</div>
@@ -442,7 +418,7 @@
                                             <tr>
                                                 <th>Times</th>
                                                 <th>Days</th>
-                                                <th>Quota</th>
+                                                <th>Quota & Price</th>
                                                 <th class="text-center">Action</th>
                                             </tr>
                                         </thead>
@@ -471,7 +447,27 @@
                                                             <div><small class="text-muted"><i class="ti ti-car"></i> {schedule.vehicle_category.title}</small></div>
                                                         {/if}
                                                     </td>
-                                                    <td>{schedule.quota} seats</td>
+                                                    <td>
+                                                        <div class="mb-1">{schedule.quota} seats</div>
+                                                        {#if schedule.prices}
+                                                            {@const activePrices = schedule.prices.filter((p: any) => p.is_active)}
+                                                            {#if activePrices.length > 0}
+                                                                <div class="small text-muted">
+                                                                    {#if activePrices.length === 1}
+                                                                        Rp {activePrices[0].price.toLocaleString('id-ID')}
+                                                                    {:else}
+                                                                        {@const minPrice = Math.min(...activePrices.map((p: any) => p.price))}
+                                                                        {@const maxPrice = Math.max(...activePrices.map((p: any) => p.price))}
+                                                                        Rp {minPrice.toLocaleString('id-ID')} - Rp {maxPrice.toLocaleString('id-ID')}
+                                                                    {/if}
+                                                                </div>
+                                                            {:else}
+                                                                <span class="badge bg-danger">No active prices</span>
+                                                            {/if}
+                                                        {:else}
+                                                            <span class="badge bg-danger">No active prices</span>
+                                                        {/if}
+                                                    </td>
                                                     <td class="text-center">
                                                         <button class="btn btn-sm btn-icon btn-primary me-1" onclick={() => editSchedule(schedule)}>
                                                             <i class="ti ti-pencil"></i>

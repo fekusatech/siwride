@@ -46,23 +46,16 @@
 <div class="page-wrapper">
     <Header />
 
-    <!-- ==================== Page Header ==================== -->
-    <section class="page-header">
-        <div class="page-header__bg"></div>
-        <div class="page-header__shape-one"></div>
-        <div class="page-header__shape-two"></div>
+    <!-- ==================== Simple Service Header ==================== -->
+    <div class="service-simple-header" style="padding: 40px 0 10px; background: #f7f9fa; border-bottom: 1px solid #eaeef2;">
         <div class="container">
-            <h2 class="page-header__title bw-split-in-right">Hourly Service</h2>
-            <ul class="travhub-breadcrumb list-unstyled">
-                <li><a href="/">Home</a></li>
-                <li><a href="/booking">Booking</a></li>
-                <li>Hourly Service</li>
-            </ul>
+            <h2 style="font-size: 26px; font-weight: 800; color: #1e293b; margin: 0;">Hourly Service Booking</h2>
+            <p style="color: #64748b; margin: 6px 0 0; font-size: 15px;">Rent a car with a professional driver by the hour.</p>
         </div>
-    </section>
+    </div>
 
     <!-- ==================== Hourly Content ==================== -->
-    <section style="padding: 80px 0 100px; background: #f7f9fa;">
+    <section style="padding: 40px 0 100px; background: #f7f9fa;">
         <div class="container">
             <!-- Info Banner -->
             <div
