@@ -7,7 +7,7 @@
     import DatePicker from '@/components/DatePicker.svelte';
 
     type Location = { id: number; name: string };
-    type Schedule = { id: number; departure_time: string; days: string; quota: number; specific_departure_time?: string; estimated_minutes?: number; vehicle_category?: { title: string, passenger_capacity: number } };
+    type Schedule = { id: number; departure_time: string; days: string; quota: number; specific_departure_time?: string; estimated_minutes?: number; vehicle_category?: { title: string, capacity: string, passenger_capacity: number } };
     function isDayAvailable(daysString: string) {
         if (!date) return true; // If no date selected, show all
         const selectedDate = new Date(date);
@@ -230,7 +230,6 @@
                                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
                                     <h5 class="mb-0 text-white"><i class="ti ti-route me-2"></i> {route.name}</h5>
                                     <div class="d-flex align-items-center gap-3">
-                                    <div class="d-flex align-items-center gap-3">
                                         <span class="badge bg-white text-primary rounded-pill px-3 py-2 fs-6">
                                             Rp {new Intl.NumberFormat('id-ID').format(route.price)} / seat
                                         </span>
@@ -260,7 +259,9 @@
                                                                 <i class="ti ti-car text-primary"></i>
                                                                 <div class="small lh-1">
                                                                     <div class="fw-bold text-dark">{schedule.vehicle_category.title}</div>
-                                                                    <div class="text-muted" style="font-size: 0.8em;">{schedule.vehicle_category.passenger_capacity} Seats Capacity</div>
+                                                                    <div class="text-muted" style="font-size: 0.8em;">
+                                                                        {schedule.vehicle_category.capacity || `${schedule.vehicle_category.passenger_capacity} Seats Capacity`}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         {/if}

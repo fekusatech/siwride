@@ -110,6 +110,29 @@
                             </div>
                         </div>
 
+                        <!-- Capacity Label -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="capacity" class="form-label text-uppercase fs-12 fw-bold text-muted"
+                                    >Capacity Label (Display)</label
+                                >
+                                <input
+                                    type="text"
+                                    id="capacity"
+                                    class="form-control"
+                                    bind:value={form.capacity}
+                                    disabled={form.processing}
+                                    maxlength="100"
+                                    placeholder="e.g. 1-4 passengers, Up to 6 pax"
+                                />
+                                {#if form.errors.capacity}<div
+                                        class="text-danger small mt-1"
+                                    >
+                                        {form.errors.capacity}
+                                    </div>{/if}
+                            </div>
+                        </div>
+
                         <!-- Passenger Capacity (Number) -->
                         <div class="col-md-6">
                             <div class="mb-3">
