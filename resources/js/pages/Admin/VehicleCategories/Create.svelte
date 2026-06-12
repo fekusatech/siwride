@@ -96,7 +96,9 @@
                                     required
                                     disabled={form.processing}
                                 >
-                                    <option value="economy">Economy (e.g. Standard/Minivan)</option>
+                                    <option value="economy">Economy (e.g. Standard/Sedan)</option>
+                                    <option value="suv">SUV / MPV</option>
+                                    <option value="minibus">Minibus</option>
                                     <option value="premium">Premium</option>
                                     <option value="van">Van</option>
                                     <option value="bus">Bus</option>
