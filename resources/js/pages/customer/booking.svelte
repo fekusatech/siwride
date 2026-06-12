@@ -303,7 +303,7 @@
         }
         // Re-fetch page with new params to filter vehicles
         router.get(
-            '/booking',
+            '/booking/airport-transfer',
             {
                 pickup,
                 dropoff,

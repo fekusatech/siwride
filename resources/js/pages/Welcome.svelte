@@ -158,7 +158,7 @@
                 {#if activeTab === 'point-to-point'}
                     <form
                         class="banner-form__wrapper"
-                        action="/booking"
+                        action="/booking/airport-transfer"
                         method="GET"
                     >
                         <div class="banner-form hf-flex align-items-center">
