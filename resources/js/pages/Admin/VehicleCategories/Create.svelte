@@ -22,7 +22,7 @@
     });
 
     function addAdvantage() {
-        if (form.advantages.length < 3) {
+        if (form.advantages.length < 10) {
             form.advantages = [...form.advantages, ''];
         }
     }
@@ -322,7 +322,7 @@
                                         </div>
                                     {/each}
                                 </div>
-                                {#if form.advantages.length < 3}
+                                {#if form.advantages.length < 10}
                                     <button
                                         type="button"
                                         class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
@@ -332,7 +332,7 @@
                                         <i class="ti ti-plus fs-14"></i> Add Feature
                                     </button>
                                 {:else}
-                                    <div class="text-muted small mt-1"><i class="ti ti-info-circle"></i> Maximum of 3 features reached.</div>
+                                    <div class="text-muted small mt-1"><i class="ti ti-info-circle"></i> Maximum of 10 features reached.</div>
                                 {/if}
                                 {#if form.errors.advantages}<div
                                         class="text-danger small mt-1"
