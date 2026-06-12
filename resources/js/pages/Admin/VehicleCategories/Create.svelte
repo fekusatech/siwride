@@ -1,7 +1,7 @@
 <script lang="ts">
     import AdminLayout from '@/layouts/AdminLayout.svelte';
     import AppHead from '@/components/AppHead.svelte';
-    import { useForm, Link } from '@inertiajs/svelte';
+    import { useForm, Link, page } from '@inertiajs/svelte';
 
     let { category = null } = $props();
 
@@ -22,7 +22,7 @@
     });
 
     function addAdvantage() {
-        if (form.advantages.length < 3) {
+        if (form.advantages.length < 10) {
             form.advantages = [...form.advantages, ''];
         }
     }
@@ -54,6 +54,22 @@
             </Link>
             <h4 class="mb-0">{category ? 'Edit Vehicle Category' : 'Add Vehicle Category'}</h4>
         </div>
+
+        {#if (page.props as any).flash?.success}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="ti ti-circle-check me-2"></i>
+                {(page.props as any).flash.success}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {/if}
+
+        {#if (page.props as any).flash?.error}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="ti ti-alert-triangle me-2"></i>
+                {(page.props as any).flash.error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {/if}
 
         <div class="card">
             <div class="card-body">
@@ -96,7 +112,9 @@
                                     required
                                     disabled={form.processing}
                                 >
-                                    <option value="economy">Economy (e.g. Standard/Minivan)</option>
+                                    <option value="economy">Economy (e.g. Standard/Sedan)</option>
+                                    <option value="suv">SUV / MPV</option>
+                                    <option value="minibus">Minibus</option>
                                     <option value="premium">Premium</option>
                                     <option value="van">Van</option>
                                     <option value="bus">Bus</option>
@@ -304,7 +322,7 @@
                                         </div>
                                     {/each}
                                 </div>
-                                {#if form.advantages.length < 3}
+                                {#if form.advantages.length < 10}
                                     <button
                                         type="button"
                                         class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
@@ -314,7 +332,7 @@
                                         <i class="ti ti-plus fs-14"></i> Add Feature
                                     </button>
                                 {:else}
-                                    <div class="text-muted small mt-1"><i class="ti ti-info-circle"></i> Maximum of 3 features reached.</div>
+                                    <div class="text-muted small mt-1"><i class="ti ti-info-circle"></i> Maximum of 10 features reached.</div>
                                 {/if}
                                 {#if form.errors.advantages}<div
                                         class="text-danger small mt-1"
