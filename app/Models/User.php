@@ -21,7 +21,7 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
-    protected $appends = ['driver_id', 'vehicle'];
+    protected $appends = ['name', 'driver_id', 'vehicle'];
 
     public function driver(): HasOne
     {
@@ -51,7 +51,7 @@ class User extends Authenticatable
     /**
      * Get the user's full name.
      */
-    public function name(): string
+    public function getNameAttribute(): string
     {
         return "{$this->firstname} {$this->lastname}";
     }
