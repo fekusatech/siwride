@@ -139,7 +139,7 @@ class VehicleCategoryController extends Controller
 
         $vehicleCategory->update($validated);
 
-        return redirect()->route('admin.vehicle-categories.index')
+        return redirect()->back()
             ->with('success', 'Vehicle Category updated successfully.');
     }
 

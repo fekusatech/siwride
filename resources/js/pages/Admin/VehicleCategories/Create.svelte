@@ -1,7 +1,7 @@
 <script lang="ts">
     import AdminLayout from '@/layouts/AdminLayout.svelte';
     import AppHead from '@/components/AppHead.svelte';
-    import { useForm, Link } from '@inertiajs/svelte';
+    import { useForm, Link, page } from '@inertiajs/svelte';
 
     let { category = null } = $props();
 
@@ -54,6 +54,22 @@
             </Link>
             <h4 class="mb-0">{category ? 'Edit Vehicle Category' : 'Add Vehicle Category'}</h4>
         </div>
+
+        {#if (page.props as any).flash?.success}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="ti ti-circle-check me-2"></i>
+                {(page.props as any).flash.success}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {/if}
+
+        {#if (page.props as any).flash?.error}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="ti ti-alert-triangle me-2"></i>
+                {(page.props as any).flash.error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {/if}
 
         <div class="card">
             <div class="card-body">
