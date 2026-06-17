@@ -68,6 +68,9 @@ class CustomerOrderController extends Controller
                 'date' => $request->input('date', ''),
                 'time' => $request->input('time', ''),
                 'passengers' => $request->input('passengers', '1'),
+                'trip_type' => $request->input('trip_type', 'one_way'),
+                'return_date' => $request->input('return_date', ''),
+                'return_time' => $request->input('return_time', ''),
             ],
             'vehicleCategories' => $vehicleCategories,
             'allVehicleCategories' => VehicleCategory::orderBy('price_per_km')->get(),
@@ -141,6 +144,9 @@ class CustomerOrderController extends Controller
                 'date' => $request->input('date', ''),
                 'time' => $request->input('time', ''),
                 'passengers' => $request->input('passengers', '1'),
+                'trip_type' => $request->input('trip_type', 'one_way'),
+                'return_date' => $request->input('return_date', ''),
+                'return_time' => $request->input('return_time', ''),
             ],
             'vehicleCategory' => $vehicleCategory,
             'customer' => $customer ? [
@@ -387,14 +393,7 @@ class CustomerOrderController extends Controller
             $vehicleCategory = VehicleCategory::find($validated['vehicle_category_id']);
         }
 
-        // ── Calculate total price ─────────────────────────────────────────────
-        //
-        // Primary path: look up the zone pair from the order's lat/lng, then
-        // use ZonePricingRule::calculate($vehicle) which applies the formula:
-        //   price = max(minimum_price, base_price + distance_km × vehicle.price_per_km)
-        //
-        // Fallback: if no zone rule exists for this route, use the vehicle's
-        // base_price directly so the booking still goes through.
+        // ── Calculate base price for one leg ────────────────────────────────
         $basePrice = 0.0;
 
         if ($vehicleCategory) {
@@ -433,8 +432,16 @@ class CustomerOrderController extends Controller
         foreach ($extras as $extra) {
             $extrasTotal += (float) ($extra['price'] ?? 0);
         }
-        $totalPrice = $basePrice + $extrasTotal;
 
+        $tripType = $validated['trip_type'] ?? 'one_way';
+        $isRoundTrip = $tripType === 'round_trip';
+
+        // One-way total (outbound leg)
+        $oneLegTotal = $basePrice + $extrasTotal;
+        // Grand total — round-trip doubles both the base price and the extras
+        $totalPrice = $isRoundTrip ? ($basePrice * 2 + $extrasTotal * 2) : $oneLegTotal;
+
+        // ── Create outbound order ────────────────────────────────────────────
         $order = Order::create([
             'booking_code' => $bookingCode,
             'order_number' => $orderNumber,
@@ -455,11 +462,53 @@ class CustomerOrderController extends Controller
             'notes' => $validated['notes'] ?? null,
             'extras' => $extras ?: null,
             'vehicle_category_id' => $vehicleCategory?->id,
-            'price' => $totalPrice,
+            'price' => $oneLegTotal,
             'parking_gas_fee' => 0,
             'status' => 'pending',
             'is_shared' => true,
+            'trip_type' => $tripType,
+            'is_return_trip' => false,
         ]);
+
+        // ── Create return order when round-trip ──────────────────────────────
+        if ($isRoundTrip) {
+            $returnBookingCode = $this->generateUniqueBookingCode();
+            $returnOrderNumber = 'ORD'.date('Ymd').strtoupper(Str::random(4));
+
+            $returnOrder = Order::create([
+                'booking_code' => $returnBookingCode,
+                'order_number' => $returnOrderNumber,
+                'customer_id' => $customer->id,
+                'customer_name' => $validated['customer_name'],
+                'customer_phone' => $validated['customer_phone'] ?? null,
+                'customer_email' => $validated['email'],
+                // Return trip: date/time from return fields
+                'date' => $validated['return_date'],
+                'time' => $validated['return_time'],
+                // Route is reversed
+                'pickup_address' => $validated['dropoff_address'],
+                'pickup_latitude' => $validated['dropoff_latitude'] ?? null,
+                'pickup_longitude' => $validated['dropoff_longitude'] ?? null,
+                'dropoff_address' => $validated['pickup_address'],
+                'dropoff_latitude' => $validated['pickup_latitude'] ?? null,
+                'dropoff_longitude' => $validated['pickup_longitude'] ?? null,
+                'distance_km' => $validated['exact_distance_km'] ?? null,
+                'passengers' => $validated['passengers'],
+                'notes' => $validated['notes'] ?? null,
+                'extras' => $extras ?: null, // extras are charged on return order too
+                'vehicle_category_id' => $vehicleCategory?->id,
+                'price' => $oneLegTotal, // return leg price includes extras
+                'parking_gas_fee' => 0,
+                'status' => 'pending',
+                'is_shared' => true,
+                'trip_type' => 'round_trip',
+                'is_return_trip' => true,
+                'linked_order_id' => $order->id,
+            ]);
+
+            // Link parent order back to return order
+            $order->update(['linked_order_id' => $returnOrder->id]);
+        }
 
         // Auto-login customer if they just created an account
         if ($request->boolean('create_account')) {
@@ -501,9 +550,18 @@ class CustomerOrderController extends Controller
 
         $apiInstance = new InvoiceApi($guzzleClient);
 
+        $invoiceAmount = (float) $order->price;
+
+        if ($order->trip_type === 'round_trip' && $order->linked_order_id && !$order->is_return_trip) {
+            $linkedOrder = Order::find($order->linked_order_id);
+            if ($linkedOrder) {
+                $invoiceAmount += (float) $linkedOrder->price;
+            }
+        }
+
         $req = new CreateInvoiceRequest([
             'external_id' => $order->booking_code.'_'.time(),
-            'amount' => (float) $order->price,
+            'amount' => $invoiceAmount,
             'payer_email' => $order->customer_email,
             'description' => 'Payment for Booking '.$order->booking_code,
         ]);
@@ -613,9 +671,16 @@ class CustomerOrderController extends Controller
     /**
      * Display customer booking details.
      */
-    public function show($bookingCode): Response
+    public function show($bookingCode): Response|SymfonyResponse
     {
-        $order = Order::with(['customer', 'driver', 'vehicleCategory'])->where('booking_code', $bookingCode)->firstOrFail();
+        $order = Order::with(['customer', 'driver', 'vehicleCategory', 'linkedOrder.driver', 'linkedOrder.vehicleCategory'])
+            ->where('booking_code', $bookingCode)
+            ->firstOrFail();
+
+        // If accessed the return trip directly, redirect to the parent outbound trip instead
+        if ($order->is_return_trip && $order->linkedOrder) {
+            return redirect()->route('booking.show', $order->linkedOrder->booking_code);
+        }
 
         // Automatically cancel order if it's eligible
         $cancellationService = new OrderCancellationService;

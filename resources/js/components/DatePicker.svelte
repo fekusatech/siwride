@@ -30,13 +30,20 @@
         'July', 'August', 'September', 'October', 'November', 'December',
     ];
 
-    // Today in local time
+    // Tomorrow in local time (minimum allowed date for bookings)
+    const tomorrowStr = $derived(() => {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    });
+
+    // Today in local time (used only to highlight the current day cell in the calendar)
     const todayStr = $derived(() => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     });
 
-    const minDateStr = $derived(minDate || todayStr());
+    const minDateStr = $derived(minDate || tomorrowStr());
 
     /** Human-readable display value */
     const displayValue = $derived(() => {
@@ -221,16 +228,10 @@
                 {/each}
             </div>
 
-            <!-- Footer: today shortcut -->
+            <!-- Footer -->
             <div class="dp-footer">
-                <button type="button" class="dp-today-btn" onclick={() => {
-                    const t = todayStr();
-                    if (t >= minDateStr) { value = t; close(); }
-                }}>
-                    Today
-                </button>
                 <button type="button" class="dp-clear-btn" onclick={() => { value = ''; close(); }}>
-                    Clear
+                    Clear Selection
                 </button>
             </div>
         </div>
@@ -452,12 +453,12 @@
     .dp-footer {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         padding: 10px 16px 14px;
         border-top: 1px solid #f1f5f9;
         background: #fafbfc;
     }
-    .dp-today-btn, .dp-clear-btn {
+    .dp-clear-btn {
         padding: 6px 16px;
         border: none;
         border-radius: 20px;
@@ -466,11 +467,7 @@
         cursor: pointer;
         transition: all 0.15s;
     }
-    .dp-today-btn {
-        background: var(--travhub-base, #e52029);
-        color: #fff;
-    }
-    .dp-today-btn:hover { background: #c0151b; }
+
     .dp-clear-btn {
         background: #f1f5f9;
         color: #64748b;

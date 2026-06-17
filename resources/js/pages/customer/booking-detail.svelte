@@ -119,6 +119,14 @@
 
     const statusInfo = $derived(formatStatus(order.status));
 
+    const ordersToDisplay = $derived(
+        order.linked_order ? [order, order.linked_order] : (order.linkedOrder ? [order, order.linkedOrder] : [order])
+    );
+
+    const grandTotal = $derived(
+        ordersToDisplay.reduce((sum, o) => sum + Number(o.price || 0), 0)
+    );
+
     // Check if order is pending and unpaid
     const isPendingAndUnpaid = $derived(
         order.status === 'pending' && order.payment_status !== 'paid',
@@ -265,10 +273,12 @@
             <div class="checkout-layout">
                 <div class="main-content">
                     <!-- Elegant Ticket Card -->
-                    <div class="ticket-card premium-shadow">
+                    {#each ordersToDisplay as tripOrder, index}
+                        <div class="ticket-card premium-shadow" style={index > 0 ? "margin-top: 24px;" : ""}>
+                            
                         <div
                             class="ticket-header"
-                            style="background-color: {statusInfo.bg}; border-bottom: 2px dashed #e2e8f0;"
+                            style="background-color: {formatStatus(tripOrder.status).bg}; border-bottom: 2px dashed #e2e8f0;"
                         >
                             <div
                                 class="d-flex justify-content-between align-items-center"
@@ -277,7 +287,7 @@
                                     <h4
                                         style="margin: 0; font-weight: 800; color: #1e293b;"
                                     >
-                                        {order.booking_code}
+                                        {tripOrder.booking_code}
                                     </h4>
                                     <p
                                         style="margin: 0; font-size: 14px; color: #64748b;"
@@ -287,10 +297,10 @@
                                 </div>
                                 <div
                                     class="status-badge"
-                                    style="color: {statusInfo.color}; border: 1px solid {statusInfo.color}; padding: 6px 16px; border-radius: 20px; font-weight: 700; background: rgba(255,255,255,0.5);"
+                                    style="color: {formatStatus(tripOrder.status).color}; border: 1px solid {formatStatus(tripOrder.status).color}; padding: 6px 16px; border-radius: 20px; font-weight: 700; background: rgba(255,255,255,0.5);"
                                 >
-                                    <i class="fas {statusInfo.icon} mr-1"></i>
-                                    {statusInfo.text}
+                                    <i class="fas {formatStatus(tripOrder.status).icon} mr-1"></i>
+                                    {formatStatus(tripOrder.status).text}
                                 </div>
                             </div>
                         </div>
@@ -320,13 +330,13 @@
                                                 >{pickupAddress.detail}</small
                                             >
                                         {/if}
-                                        {#if order.pickup_notes}
+                                        {#if tripOrder.pickup_notes}
                                             <small
                                                 class="route-full-address text-muted"
                                                 style="margin-top: 2px; color:var(--travhub-base) !important;"
                                                 ><i class="fas fa-info-circle"
                                                 ></i>
-                                                {order.pickup_notes}</small
+                                                {tripOrder.pickup_notes}</small
                                             >
                                         {/if}
                                     </div>
@@ -353,13 +363,13 @@
                                                 >{dropoffAddress.detail}</small
                                             >
                                         {/if}
-                                        {#if order.dropoff_notes}
+                                        {#if tripOrder.dropoff_notes}
                                             <small
                                                 class="route-full-address text-muted"
                                                 style="margin-top: 2px; color:var(--travhub-base) !important;"
                                                 ><i class="fas fa-info-circle"
                                                 ></i>
-                                                {order.dropoff_notes}</small
+                                                {tripOrder.dropoff_notes}</small
                                             >
                                         {/if}
                                     </div>
@@ -380,7 +390,7 @@
                                             >Date</span
                                         >
                                         <span class="sidebar-info-value"
-                                            >{formatDate(order.date)}</span
+                                            >{formatDate(tripOrder.date)}</span
                                         >
                                     </div>
                                 </div>
@@ -391,7 +401,7 @@
                                             >Pickup Time</span
                                         >
                                         <span class="sidebar-info-value"
-                                            >{formatTime12(order.time)}</span
+                                            >{formatTime12(tripOrder.time)}</span
                                         >
                                     </div>
                                 </div>
@@ -402,7 +412,7 @@
                                             >Passengers</span
                                         >
                                         <span class="sidebar-info-value"
-                                            >{order.passengers} Pax</span
+                                            >{tripOrder.passengers} Pax</span
                                         >
                                     </div>
                                 </div>
@@ -428,21 +438,21 @@
                                     <p class="detail-text">
                                         <i class="fas fa-user text-muted mr-2"
                                         ></i>
-                                        {order.customer_name || 'Guest'}
+                                        {tripOrder.customer_name || 'Guest'}
                                     </p>
                                     <p class="detail-text">
                                         <i
                                             class="fas fa-envelope text-muted mr-2"
                                         ></i>
-                                        {order.customer_email ||
+                                        {tripOrder.customer_email ||
                                             'No email provided'}
                                     </p>
-                                    {#if order.customer_phone}
+                                    {#if tripOrder.customer_phone}
                                         <p class="detail-text">
                                             <i
                                                 class="fas fa-phone-alt text-muted mr-2"
                                             ></i>
-                                            {order.customer_phone}
+                                            {tripOrder.customer_phone}
                                         </p>
                                     {/if}
                                 </div>
@@ -450,16 +460,16 @@
                                     <div class="sidebar-section-title">
                                         Additional Info
                                     </div>
-                                    {#if order.notes}
+                                    {#if tripOrder.notes}
                                         <div
                                             class="detail-text"
                                             style="background: #f1f5f9; padding: 12px; border-radius: 8px;"
                                         >
                                             <strong>Notes:</strong><br />
-                                            {order.notes}
+                                            {tripOrder.notes}
                                         </div>
                                     {/if}
-                                    {#if order.flight_number}
+                                    {#if tripOrder.flight_number}
                                         <div
                                             class="detail-text"
                                             style="background: #e0f2fe; padding: 12px; border-radius: 8px; margin-top: 10px;"
@@ -468,13 +478,13 @@
                                                 ><i class="fas fa-plane-arrival"
                                                 ></i> Flight:</strong
                                             >
-                                            {order.flight_number}
+                                            {tripOrder.flight_number}
                                         </div>
                                     {/if}
                                 </div>
                             </div>
 
-                            {#if order.driver}
+                            {#if tripOrder.driver}
                                 <!-- Driver Info if assigned -->
                                 <div class="driver-info mt-4 pt-4 border-top">
                                     <h6 class="section-title mb-3">
@@ -495,10 +505,10 @@
                                                 class="mb-1"
                                                 style="font-size: 16px; font-weight: 700;"
                                             >
-                                                {order.driver.name}
+                                                {tripOrder.driver.name}
                                             </h5>
                                             <a
-                                                href="https://wa.me/{order.driver.phone.replace(
+                                                href="https://wa.me/{tripOrder.driver.phone.replace(
                                                     /[^0-9]/g,
                                                     '',
                                                 )}"
@@ -516,7 +526,10 @@
                             {/if}
                         </div>
 
-                        <!-- Automatic Cancellation Warning (for pending unpaid orders) -->
+                        
+                            {#if index === ordersToDisplay.length - 1}
+                                <!-- Inserted warnings back here -->
+                                <!-- Automatic Cancellation Warning (for pending unpaid orders) -->
                         {#if isPendingAndUnpaid}
                             <div
                                 class="warning-banner"
@@ -654,8 +667,10 @@
                                 ><span>Back to Dashboard</span></Link
                             >
                         </div>
+                            {/if}
+                        </div>
+                    {/each}
                     </div>
-                </div>
 
                 <!-- Sidebar for Order Summary -->
                 <div class="checkout-sidebar">
@@ -716,7 +731,7 @@
                         <div class="sidebar-divider"></div>
                         <div class="sidebar-total">
                             <span>Total</span>
-                            <span>{formatRupiah(order.price)}</span>
+                            <span>{formatRupiah(grandTotal)}</span>
                         </div>
 
                         {#if order.payment_method}

@@ -36,6 +36,9 @@
             date: string;
             time: string;
             passengers: string;
+            trip_type?: string;
+            return_date?: string;
+            return_time?: string;
         };
         vehicleCategory: VehicleCategory | null;
     }>();
@@ -91,7 +94,12 @@
         create_account: false,
         password_confirmation: '',
         'g-recaptcha-response': '',
+        trip_type: (transfer?.trip_type || 'one_way') as string,
+        return_date: transfer?.return_date || '',
+        return_time: transfer?.return_time || '',
     });
+
+    const isRoundTrip = $derived(form.trip_type === 'round_trip');
 
     // Sync extras into form
     $effect(() => {
@@ -328,7 +336,15 @@
               ? parseFloat(vehicleCategory.price_per_km) * 40 // rough avg until API responds
               : 0,
     );
-    let totalPrice = $derived(basePrice + extrasTotal);
+    /**
+     * Compute final price:
+     * - One-way: basePrice + extrasTotal
+     * - Round-trip: (basePrice + extrasTotal) x 2
+     */
+    const totalPrice = $derived.by(() => {
+        const basePrice = estimatedBasePrice || 0;
+        return isRoundTrip ? (basePrice + extrasTotal) * 2 : basePrice + extrasTotal;
+    });
 
     /** Reactive clock — ticks every minute so the earliest-time notice stays fresh. */
     let now = $state(new Date());
@@ -337,6 +353,41 @@
 
     /** Minimum pickup time — recalculates every minute via the `now` clock. */
     const minTime = $derived(getMinPickupTime(form.date, now));
+
+    const timeError = $derived.by(() => {
+        if (form.time && !isPickupTimeValid(form.date, form.time, now)) {
+            return `Please select a pickup time at least 30 minutes from now. Earliest available: ${formatEarliestTime(form.date, now)}`;
+        }
+        return null;
+    });
+
+    const returnDateError = $derived.by(() => {
+        if (isRoundTrip && form.date && form.return_date && form.return_date < form.date) {
+            return 'Return date cannot be before departure date.';
+        }
+        return null;
+    });
+
+    const returnMinTime = $derived.by(() => {
+        if (!isRoundTrip || !form.date || !form.time || !form.return_date) return '';
+        if (form.return_date === form.date) {
+            const gapHours = 3;
+            const [hours, minutes] = form.time.split(':').map(Number);
+            const returnHours = hours + gapHours;
+            if (returnHours >= 24) return '23:59';
+            return `${String(returnHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+        return '';
+    });
+
+    const returnTimeError = $derived.by(() => {
+        if (isRoundTrip && form.date && form.return_date === form.date && form.time && form.return_time) {
+            if (returnMinTime && form.return_time < returnMinTime) {
+                return `Return time must be at least ${returnMinTime}`;
+            }
+        }
+        return null;
+    });
 
     // Default route info
     const routeInfo = { distance: '0 km', travelTime: '0 min' };
@@ -387,6 +438,18 @@
     async function nextStep() {
         stepError = '';
         if (currentStep === 1) {
+            if (timeError) {
+                stepError = timeError;
+                return;
+            }
+            if (returnDateError) {
+                stepError = returnDateError;
+                return;
+            }
+            if (returnTimeError) {
+                stepError = returnTimeError;
+                return;
+            }
             if (!form.pickup_address) {
                 stepError = 'Please provide a pickup location.';
                 return;
@@ -401,10 +464,6 @@
             }
             if (!form.time) {
                 stepError = 'Please select a pickup time.';
-                return;
-            }
-            if (!isPickupTimeValid(form.date, form.time, now)) {
-                stepError = `Your selected time is too early. Earliest pickup for today is ${formatEarliestTime(form.date, now)}.`;
                 return;
             }
             currentStep = 2;
@@ -721,6 +780,17 @@
                                     </p>
                                 </div>
                                 <div class="step-card__body">
+                                    <!-- Hidden round-trip fields -->
+                                    <input type="hidden" bind:value={form.trip_type} />
+                                    <input type="hidden" bind:value={form.return_date} />
+                                    <input type="hidden" bind:value={form.return_time} />
+
+                                    {#if isRoundTrip}
+                                        <div class="co-round-trip-badge">
+                                            <i class="fas fa-exchange-alt"></i>
+                                            <span><strong>Round-Trip Booking</strong> — Outbound + Return included in this order</span>
+                                        </div>
+                                    {/if}
                                     <div class="helper-notice">
                                         <i class="fas fa-info-circle"></i>
                                         Please check your actual address. If you see
@@ -757,7 +827,7 @@
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label class="form-label"
-                                                >Transfer Date *</label
+                                                >Departure Date *</label
                                             >
                                             <DatePicker
                                                 id="co_date"
@@ -768,7 +838,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label"
-                                                >Pickup Time *</label
+                                                >Departure Time *</label
                                             >
                                             <TimePicker
                                                 id="co_time"
@@ -794,8 +864,51 @@
                                                     >
                                                 </p>
                                             {/if}
+                                            {#if timeError}
+                                                <p style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><i class="fas fa-exclamation-circle"></i> {timeError}</p>
+                                            {/if}
                                         </div>
                                     </div>
+                                    {#if isRoundTrip}
+                                        <div class="co-return-trip-section">
+                                            <div class="co-return-trip-header">
+                                                <i class="fas fa-undo-alt"></i>
+                                                Return Trip Details
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label class="form-label">Return Date *</label>
+                                                    <DatePicker
+                                                        id="co_return_date"
+                                                        bind:value={form.return_date}
+                                                        placeholder="Select return date"
+                                                        required={isRoundTrip}
+                                                        minDate={form.date}
+                                                    />
+                                                    {#if returnDateError}
+                                                        <p style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><i class="fas fa-exclamation-circle"></i> {returnDateError}</p>
+                                                    {/if}
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="form-label">Return Pickup Time *</label>
+                                                    <TimePicker
+                                                        id="co_return_time"
+                                                        bind:value={form.return_time}
+                                                        placeholder="Select return time"
+                                                        required={isRoundTrip}
+                                                        minTime={returnMinTime}
+                                                    />
+                                                    {#if returnTimeError}
+                                                        <p style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><i class="fas fa-exclamation-circle"></i> {returnTimeError}</p>
+                                                    {/if}
+                                                </div>
+                                            </div>
+                                            <p class="co-return-note">
+                                                <i class="fas fa-info-circle"></i>
+                                                Return route is automatically reversed: <strong>{form.dropoff_address || transfer?.dropoff || '—'}</strong> → <strong>{form.pickup_address || transfer?.pickup || '—'}</strong>
+                                            </p>
+                                        </div>
+                                    {/if}
                                 </div>
                             </div>
                         {/if}
@@ -1032,7 +1145,7 @@
                                                             <span
                                                                 class="extra-price"
                                                                 >+{formatRupiah(
-                                                                    extra.price,
+                                                                    isRoundTrip ? extra.price * 2 : extra.price,
                                                                 )}</span
                                                             >
                                                         {:else}
@@ -1408,10 +1521,31 @@
                                             >Transfer Type</span
                                         >
                                         <span class="sidebar-info-value"
-                                            >Private</span
-                                        >
+                                            >Private
+                                            {#if isRoundTrip}
+                                                <span class="sidebar-round-trip-tag">Round-Trip</span>
+                                            {/if}
+                                        </span>
                                     </div>
                                 </div>
+                                {#if isRoundTrip && form.return_date}
+                                    <div class="sidebar-info-item">
+                                        <i class="fas fa-undo-alt" style="color: #10b981;"></i>
+                                        <div>
+                                            <span class="sidebar-info-label">Return Date</span>
+                                            <span class="sidebar-info-value">{formatDisplayDate(form.return_date)}</span>
+                                        </div>
+                                    </div>
+                                {/if}
+                                {#if isRoundTrip && form.return_time}
+                                    <div class="sidebar-info-item">
+                                        <i class="fas fa-clock" style="color: #10b981;"></i>
+                                        <div>
+                                            <span class="sidebar-info-label">Return Time</span>
+                                            <span class="sidebar-info-value">{formatTime12(form.return_time)}</span>
+                                        </div>
+                                    </div>
+                                {/if}
                             </div>
 
                             <div class="sidebar-divider"></div>
@@ -1423,24 +1557,45 @@
                             <div class="sidebar-row">
                                 <span
                                     >Vehicle ({vehicleCategory?.title ??
-                                        'Transfer'})</span
-                                >
+                                        'Transfer'})
+                                    {#if isRoundTrip}
+                                        <span class="sidebar-row-sub">× 2 legs</span>
+                                    {/if}
+                                </span>
                                 {#if !isPricingLoaded}
                                     <span class="price-calculating"
                                         ><i class="fas fa-spinner fa-spin"></i> Calculating...</span
                                     >
+                                {:else if isRoundTrip}
+                                    <span>{formatRupiah(basePrice * 2)}</span>
                                 {:else}
                                     <span>{formatRupiah(basePrice)}</span>
                                 {/if}
                             </div>
+                            {#if isRoundTrip && isPricingLoaded && basePrice > 0}
+                                <div class="sidebar-row sidebar-row--sub">
+                                    <span style="font-size: 12px; color: #64748b;">Outbound + Return ({formatRupiah(basePrice)} each)</span>
+                                    <span style="font-size: 12px; color: #64748b;"></span>
+                                </div>
+                            {/if}
                             {#each selectedExtras as id}
                                 {@const extra = EXTRAS.find((e) => e.id === id)}
                                 {#if extra && extra.price > 0}
                                     <div class="sidebar-row">
-                                        <span>{extra.label}</span>
-                                        <span>+{formatRupiah(extra.price)}</span
-                                        >
+                                        <span
+                                            >{extra.label}
+                                            {#if isRoundTrip}
+                                                <span class="sidebar-row-sub">× 2 legs</span>
+                                            {/if}
+                                        </span>
+                                        <span>+{formatRupiah(isRoundTrip ? extra.price * 2 : extra.price)}</span>
                                     </div>
+                                    {#if isRoundTrip}
+                                        <div class="sidebar-row sidebar-row--sub" style="margin-top: -6px; margin-bottom: 8px;">
+                                            <span style="font-size: 12px; color: #64748b;">Outbound + Return ({formatRupiah(extra.price)} each)</span>
+                                            <span style="font-size: 12px; color: #64748b;"></span>
+                                        </div>
+                                    {/if}
                                 {/if}
                             {/each}
 
@@ -2459,5 +2614,71 @@
         font-size: 11px;
         letter-spacing: 0.2px;
         line-height: 1.4;
+    }
+
+    /* ── Round-Trip UI ── */
+    .co-round-trip-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border: 1px solid #6ee7b7;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        color: #065f46;
+    }
+    .co-round-trip-badge i {
+        color: #10b981;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .co-return-trip-section {
+        margin-top: 20px;
+        padding: 16px;
+        background: #f0fdf4;
+        border: 1.5px dashed #6ee7b7;
+        border-radius: 12px;
+    }
+    .co-return-trip-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #065f46;
+        margin-bottom: 14px;
+    }
+    .co-return-trip-header i {
+        color: #10b981;
+    }
+    .co-return-note {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 10px;
+        margin-bottom: 0;
+        line-height: 1.5;
+    }
+    .co-return-note i {
+        color: #10b981;
+        margin-right: 4px;
+    }
+    .sidebar-round-trip-tag {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 700;
+        background: #10b981;
+        color: #fff;
+        padding: 1px 7px;
+        border-radius: 50px;
+        margin-left: 5px;
+        vertical-align: middle;
+        letter-spacing: 0.3px;
+    }
+    .sidebar-row-sub {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-left: 4px;
     }
 </style>

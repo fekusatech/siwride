@@ -46,6 +46,11 @@ class Order extends Model
         'payment_reference',
         'payment_status',
         'payment_expiry',
+        'trip_type',
+        'return_date',
+        'return_time',
+        'is_return_trip',
+        'linked_order_id',
     ];
 
     protected $appends = [
@@ -54,6 +59,7 @@ class Order extends Model
 
     protected $casts = [
         'date' => 'date',
+        'return_date' => 'date',
         'price' => 'decimal:2',
         'parking_gas_fee' => 'decimal:2',
         'pickup_latitude' => 'decimal:8',
@@ -63,6 +69,7 @@ class Order extends Model
         'is_cash' => 'boolean',
         'is_shared' => 'boolean',
         'is_cancelled' => 'boolean',
+        'is_return_trip' => 'boolean',
         'extras' => 'array',
     ];
 
@@ -109,5 +116,21 @@ class Order extends Model
     public function claims(): HasMany
     {
         return $this->hasMany(JobClaim::class);
+    }
+
+    /**
+     * The linked order (return trip ↔ outbound trip).
+     */
+    public function linkedOrder(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'linked_order_id');
+    }
+
+    /**
+     * The return trip order that links back to this order.
+     */
+    public function returnOrder(): HasOne
+    {
+        return $this->hasOne(Order::class, 'linked_order_id')->where('is_return_trip', true);
     }
 }

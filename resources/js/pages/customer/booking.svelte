@@ -46,6 +46,9 @@
             date: string;
             time: string;
             passengers: string;
+            trip_type?: string;
+            return_date?: string;
+            return_time?: string;
         };
         vehicleCategories: VehicleCategory[];
         allVehicleCategories: VehicleCategory[];
@@ -57,12 +60,72 @@
     let date = $state(prefill?.date || '');
     let time = $state(prefill?.time || '');
     let passengerCount = $state(parseInt(prefill?.passengers || '1'));
+    let tripType = $state<'one_way' | 'round_trip'>(
+        (prefill?.trip_type as 'one_way' | 'round_trip') || 'one_way',
+    );
+    let returnDate = $state(prefill?.return_date || '');
+    let returnTime = $state(prefill?.return_time || '');
+
+    const isRoundTrip = $derived(tripType === 'round_trip');
 
     let pickupAddress = $state<string>('');
     let dropoffAddress = $state<string>('');
 
-    /** Minimum pickup time — recalculates every minute via the `now` clock. */
-    const minTime = $derived(getMinPickupTime(date, now));
+    // Compute minimum time based on current time + buffer
+    const minTime = $derived.by(() => {
+        if (!date || !now) return '';
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        
+        if (date === todayStr) {
+            // Buffer in minutes
+            const bufferMinutes = 30;
+            const target = new Date(now.getTime() + bufferMinutes * 60000);
+            return `${String(target.getHours()).padStart(2, '0')}:${String(target.getMinutes()).padStart(2, '0')}`;
+        }
+        return '';
+    });
+
+    // Compute minimum return time based on departure time + safe gap (e.g. 3 hours)
+    const returnMinTime = $derived.by(() => {
+        if (!isRoundTrip || !date || !time || !returnDate) return '';
+        
+        if (returnDate === date) {
+            // If returning on the same day, enforce a safe gap
+            const gapHours = 3;
+            const [hours, minutes] = time.split(':').map(Number);
+            const returnHours = hours + gapHours;
+            if (returnHours >= 24) {
+                // If it pushes to next day, maybe they shouldn't return same day, 
+                // but we cap it at 23:59 for safety in the picker.
+                return '23:59';
+            }
+            return `${String(returnHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+        return '';
+    });
+
+    const returnDateError = $derived.by(() => {
+        if (isRoundTrip && date && returnDate && returnDate < date) {
+            return 'Return date cannot be before departure date.';
+        }
+        return null;
+    });
+
+    const timeError = $derived.by(() => {
+        if (time && !isPickupTimeValid(date, time, now)) {
+            return `Please select a pickup time at least 30 minutes from now. Earliest available: ${formatEarliestTime(date, now)}`;
+        }
+        return null;
+    });
+
+    const returnTimeError = $derived.by(() => {
+        if (isRoundTrip && date && returnDate === date && time && returnTime) {
+            if (returnMinTime && returnTime < returnMinTime) {
+                return `Return time must be at least ${returnMinTime}`;
+            }
+        }
+        return null;
+    });
 
     // Filtered categories (reactive to passengerCount)
     let filteredCategories = $state<VehicleCategory[]>(vehicleCategories);
@@ -295,12 +358,20 @@
         e.preventDefault();
         if (!pickup || !dropoff || !date) return;
         // Validate time when today is selected
-        if (time && !isPickupTimeValid(date, time, now)) {
-            alert(
-                `Please select a pickup time at least 30 minutes from now. Earliest available: ${formatEarliestTime(date, now)}`,
-            );
+        if (timeError) {
+            alert(timeError);
             return;
         }
+        
+        if (returnDateError) {
+            alert(returnDateError);
+            return;
+        }
+        if (returnTimeError) {
+            alert(returnTimeError);
+            return;
+        }
+
         // Re-fetch page with new params to filter vehicles
         router.get(
             '/booking/airport-transfer',
@@ -310,12 +381,27 @@
                 date,
                 time,
                 passengers: String(passengerCount),
+                trip_type: tripType,
+                return_date: returnDate,
+                return_time: returnTime,
             },
             { preserveScroll: true, replace: true },
         );
     }
 
     function selectVehicle(category: VehicleCategory) {
+        if (timeError) {
+            alert(timeError);
+            return;
+        }
+        if (returnDateError) {
+            alert(returnDateError);
+            return;
+        }
+        if (returnTimeError) {
+            alert(returnTimeError);
+            return;
+        }
         router.get('/booking/checkout', {
             vehicle_category_id: String(category.id),
             pickup,
@@ -323,6 +409,9 @@
             date,
             time,
             passengers: String(passengerCount),
+            trip_type: tripType,
+            return_date: returnDate,
+            return_time: returnTime,
         });
     }
 
@@ -454,6 +543,33 @@
                             {zoneError}
                         </div>
                     {/if}
+
+                    <!-- One-Way / Round-Trip Toggle -->
+                    <div class="trip-type-toggle">
+                        <button
+                            type="button"
+                            class="trip-type-btn {tripType === 'one_way' ? 'trip-type-btn--active' : ''}"
+                            onclick={() => (tripType = 'one_way')}
+                        >
+                            <i class="fas fa-long-arrow-alt-right"></i>
+                            One-Way
+                        </button>
+                        <button
+                            type="button"
+                            class="trip-type-btn {tripType === 'round_trip' ? 'trip-type-btn--active' : ''}"
+                            onclick={() => (tripType = 'round_trip')}
+                        >
+                            <i class="fas fa-exchange-alt"></i>
+                            Round-Trip
+                        </button>
+                        {#if isRoundTrip}
+                            <span class="round-trip-info-badge">
+                                <i class="fas fa-info-circle"></i>
+                                Return route is automatically reversed
+                            </span>
+                        {/if}
+                    </div>
+
                     <form onsubmit={handleRouteSearch}>
                         <!-- Row 1: Address fields — full width each -->
                         <div class="route-form-row route-form-row--locations">
@@ -492,13 +608,13 @@
 
                         <!-- Row 2: Date | Time | Passengers | Search -->
                         <div class="route-form-row route-form-row--search">
-                            <div class="form-group">
+                            <div class="form-group form-group--date">
                                 <label class="form-label">
                                     <i
                                         class="fas fa-calendar-alt"
                                         style="color: var(--travhub-base);"
                                     ></i>
-                                    Transfer Date *
+                                    Departure Date *
                                 </label>
                                 <DatePicker
                                     id="booking_date"
@@ -507,13 +623,13 @@
                                     required
                                 />
                             </div>
-                            <div class="form-group">
+                            <div class="form-group form-group--time">
                                 <label class="form-label">
                                     <i
                                         class="fas fa-clock"
                                         style="color: var(--travhub-base);"
                                     ></i>
-                                    Pickup Time *
+                                    Departure Time *
                                 </label>
                                 <TimePicker
                                     id="booking_time"
@@ -534,7 +650,53 @@
                                         >
                                     </p>
                                 {/if}
+                                {#if timeError}
+                                    <p style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><i class="fas fa-exclamation-circle"></i> {timeError}</p>
+                                {/if}
                             </div>
+                            {#if isRoundTrip}
+                                <div class="form-group form-group--date">
+                                    <label class="form-label">
+                                        <i
+                                            class="fas fa-calendar-check"
+                                            style="color: var(--travhub-base);"
+                                        ></i>
+                                        Return Date *
+                                    </label>
+                                    <DatePicker
+                                        id="booking_return_date"
+                                        bind:value={returnDate}
+                                        placeholder="Select return date"
+                                        required={isRoundTrip}
+                                        minDate={date}
+                                    />
+                                    {#if returnDateError}
+                                        <p style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><i class="fas fa-exclamation-circle"></i> {returnDateError}</p>
+                                    {/if}
+                                </div>
+                            {/if}
+                            
+                            {#if isRoundTrip}
+                                <div class="form-group form-group--time">
+                                    <label class="form-label">
+                                        <i
+                                            class="fas fa-clock"
+                                            style="color: #10b981;"
+                                        ></i>
+                                        Return Time *
+                                    </label>
+                                    <TimePicker
+                                        id="booking_return_time"
+                                        bind:value={returnTime}
+                                        placeholder="Select return time"
+                                        required={isRoundTrip}
+                                        minTime={returnMinTime}
+                                    />
+                                    {#if returnTimeError}
+                                        <p style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><i class="fas fa-exclamation-circle"></i> {returnTimeError}</p>
+                                    {/if}
+                                </div>
+                            {/if}
                             <div class="form-group">
                                 <label class="form-label">
                                     <i
@@ -837,7 +999,11 @@
                                     </div>
                                     <div class="vehicle-card__footer">
                                         <div class="vehicle-card__price">
-                                            <span class="price-from">From</span>
+                                            {#if isRoundTrip}
+                                                <span class="price-from">Round-Trip</span>
+                                            {:else}
+                                                <span class="price-from">From</span>
+                                            {/if}
                                             {#if !isPricingLoaded}
                                                 <span
                                                     class="price-amount price-calculating"
@@ -848,9 +1014,14 @@
                                             {:else}
                                                 <span class="price-amount"
                                                     >{formatRupiah(
-                                                        getBasePrice(category),
+                                                        isRoundTrip
+                                                            ? getBasePrice(category) * 2
+                                                            : getBasePrice(category),
                                                     )}</span
                                                 >
+                                            {/if}
+                                            {#if isRoundTrip && isPricingLoaded && getBasePrice(category) > 0}
+                                                <span class="price-each-way">{formatRupiah(getBasePrice(category))} × 2</span>
                                             {/if}
                                         </div>
                                         <button
@@ -1145,18 +1316,34 @@
         margin-bottom: 16px;
     }
 
+    .form-group--time {
+        max-width: 250px;
+        flex: 1;
+    }
+    .form-group--date {
+        min-width: 250px;
+        flex: 1;
+    }
+
     /* Row 2: Date | Time | Passengers | Button (compact horizontal) */
     .route-form-row--search {
-        display: grid;
-        grid-template-columns: 1fr 1.4fr 0.7fr auto;
-        gap: 12px;
-        align-items: start;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-end; /* aligns button with inputs */
+    }
+    .route-form-row--search > .form-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    .route-form-row--search > .form-group--action {
+        flex: 0 0 auto;
     }
 
     /* Tablet: let row 2 wrap to 2 columns */
     @media (max-width: 1024px) {
-        .route-form-row--search {
-            grid-template-columns: 1fr 1fr;
+        .route-form-row--search > .form-group {
+            min-width: calc(50% - 16px);
         }
         /* .form-group--action {
             grid-column: span 2;
@@ -1172,8 +1359,9 @@
         .route-form-row--locations {
             grid-template-columns: 1fr;
         }
-        .route-form-row--search {
-            grid-template-columns: 1fr;
+        .route-form-row--search > .form-group {
+            min-width: 100%;
+            max-width: none;
         }
         .form-group--action {
             grid-column: span 1;
@@ -2092,5 +2280,55 @@
     }
     .history-btn--secondary:hover {
         background: #e2e8f0;
+    }
+
+    /* ── Trip Type Toggle ── */
+    .trip-type-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+    .trip-type-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 18px;
+        border-radius: 50px;
+        border: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .trip-type-btn:hover {
+        border-color: var(--travhub-base, #e52029);
+        color: var(--travhub-base, #e52029);
+    }
+    .trip-type-btn--active {
+        background: var(--travhub-base, #e52029);
+        border-color: var(--travhub-base, #e52029);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(229, 32, 41, 0.25);
+    }
+    .round-trip-info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: #0369a1;
+        background: #e0f2fe;
+        padding: 4px 12px;
+        border-radius: 50px;
+        border: 1px solid #bae6fd;
+    }
+    .price-each-way {
+        display: block;
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 2px;
     }
 </style>

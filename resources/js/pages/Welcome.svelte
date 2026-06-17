@@ -12,9 +12,25 @@
     let heroDropoff = $state('');
     let heroDate = $state('');
     let heroTime = $state('');
+    let heroTripType = $state<'one_way' | 'round_trip'>('one_way');
+    let heroReturnDate = $state('');
+
+    const heroReturnDateError = $derived.by(() => {
+        if (heroTripType === 'round_trip' && heroDate && heroReturnDate && heroReturnDate < heroDate) {
+            return 'Return date cannot be before departure date.';
+        }
+        return null;
+    });
 
     /** Minimum pickup time for today (empty string = no restriction for future dates). */
     const heroMinTime = $derived(getMinPickupTime(heroDate));
+
+    function handleHeroSubmit(e: Event) {
+        if (heroReturnDateError) {
+            e.preventDefault();
+            alert(heroReturnDateError);
+        }
+    }
 
     let passengerCount = $state(1);
 
@@ -157,10 +173,31 @@
                 <!-- Point-to-Point Form -->
                 {#if activeTab === 'point-to-point'}
                     <form
-                        class="banner-form__wrapper"
+                        class="banner-form__wrapper airport-transfer-wrapper"
                         action="/booking/airport-transfer"
                         method="GET"
+                        onsubmit={handleHeroSubmit}
                     >
+                        <!-- Trip Type Toggle -->
+                        <div class="hero-trip-type-toggle">
+                            <button
+                                type="button"
+                                class="hero-trip-btn {heroTripType === 'one_way' ? 'hero-trip-btn--active' : ''}"
+                                onclick={() => (heroTripType = 'one_way')}
+                            >
+                                <i class="fas fa-long-arrow-alt-right"></i>
+                                One-Way
+                            </button>
+                            <button
+                                type="button"
+                                class="hero-trip-btn {heroTripType === 'round_trip' ? 'hero-trip-btn--active' : ''}"
+                                onclick={() => (heroTripType = 'round_trip')}
+                            >
+                                <i class="fas fa-exchange-alt"></i>
+                                Round-Trip
+                            </button>
+                        </div>
+                        <input type="hidden" name="trip_type" value={heroTripType} />
                         <div class="banner-form hf-flex align-items-center">
                             <!-- Pickup -->
                             <div class="banner-form__control">
@@ -196,12 +233,12 @@
                                 />
                             </div>
 
-                            <!-- Date -->
+                            <!-- Departure Date -->
                             <div
                                 class="banner-form__control banner-form__control--date"
                             >
                                 <i class="icon icon-calendar-1"></i>
-                                <label for="hero_date">Pick-up Date *</label>
+                                <label for="hero_date">Departure Date *</label>
                                 <input
                                     type="hidden"
                                     name="date"
@@ -221,6 +258,33 @@
                                     hideChevron
                                 />
                             </div>
+
+                            <!-- Return Date (round-trip only) -->
+                            {#if heroTripType === 'round_trip'}
+                                <div
+                                    class="banner-form__control banner-form__control--date hero-return-date"
+                                >
+                                    <i class="icon icon-calendar-1"></i>
+                                    <label for="hero_return_date">Return Date *</label>
+                                    <input
+                                        type="hidden"
+                                        name="return_date"
+                                        value={heroReturnDate}
+                                    />
+                                    <DatePicker
+                                        id="hero_return_date"
+                                        bind:value={heroReturnDate}
+                                        placeholder="Select return date"
+                                        required={heroTripType === 'round_trip'}
+                                        hideIcon
+                                        hideChevron
+                                        minDate={heroDate}
+                                    />
+                                    {#if heroReturnDateError}
+                                        <p style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><i class="fas fa-exclamation-circle"></i> {heroReturnDateError}</p>
+                                    {/if}
+                                </div>
+                            {/if}
 
                             <!-- Passengers -->
                             <div class="banner-form__control">
@@ -1551,5 +1615,84 @@
             #1e3a8a 0%,
             #1e40af 100%
         ) !important;
+    }
+
+    /* ── Form Labels Spacing & Alignment ── */
+    :global(.banner-form__control label) {
+        display: inline-block;
+        vertical-align: middle;
+        margin-bottom: 8px !important;
+        line-height: 1;
+    }
+
+    :global(.banner-form__control i.icon) {
+        margin-top: -8px !important;
+    }
+
+    /* ── Trip Type Toggle (One-Way / Round-Trip) ── */
+    :global(.airport-transfer-wrapper) {
+        position: relative;
+        padding-top: 65px !important; /* space for absolute toggle */
+    }
+    :global(.hero-trip-type-toggle) {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 10;
+    }
+    :global(.hero-trip-btn) {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: 50px;
+        border: 1.5px solid #cbd5e1;
+        background: transparent;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        letter-spacing: 0.3px;
+    }
+    :global(.hero-trip-btn:hover) {
+        border-color: var(--travhub-base, #e52029);
+        color: var(--travhub-base, #e52029);
+        background: rgba(229, 32, 41, 0.05);
+    }
+    :global(.hero-trip-btn--active) {
+        background: var(--travhub-base, #e52029) !important;
+        border-color: var(--travhub-base, #e52029) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 12px rgba(229, 32, 41, 0.25);
+    }
+    
+    @media (min-width: 1070px) {
+        :global(.hero-one__form .airport-transfer-wrapper .banner-form.hf-flex .banner-form__button) {
+            align-self: stretch;
+            margin-top: -65px !important; /* override the default -20px to reach the higher top padding */
+            margin-bottom: -20px !important;
+        }
+    }
+    @media (max-width: 575px) {
+        :global(.airport-transfer-wrapper) {
+            padding-top: 80px !important;
+        }
+    }
+    :global(.hero-return-date) {
+        animation: fadeSlideIn 0.25s ease;
+    }
+    @keyframes fadeSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 </style>

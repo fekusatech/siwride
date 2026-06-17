@@ -751,6 +751,11 @@ class WebhookController extends Controller
 
         $order->update(['payment_status' => 'paid']);
 
+        if ($order->linked_order_id) {
+            Order::where('id', $order->linked_order_id)->update(['payment_status' => 'paid']);
+        }
+        Order::where('linked_order_id', $order->id)->update(['payment_status' => 'paid']);
+
         Log::info("Xendit Webhook — order {$order->booking_code} marked as paid");
     }
 
@@ -769,6 +774,11 @@ class WebhookController extends Controller
 
         $order->update(['payment_status' => 'expired']);
 
+        if ($order->linked_order_id) {
+            Order::where('id', $order->linked_order_id)->update(['payment_status' => 'expired']);
+        }
+        Order::where('linked_order_id', $order->id)->update(['payment_status' => 'expired']);
+
         Log::info("Xendit Webhook — order {$order->booking_code} marked as expired");
     }
 
@@ -786,6 +796,11 @@ class WebhookController extends Controller
         }
 
         $order->update(['payment_status' => 'failed']);
+
+        if ($order->linked_order_id) {
+            Order::where('id', $order->linked_order_id)->update(['payment_status' => 'failed']);
+        }
+        Order::where('linked_order_id', $order->id)->update(['payment_status' => 'failed']);
 
         Log::info("Xendit Webhook — order {$order->booking_code} marked as failed", [
             'reason' => $payload['failure_code'] ?? null,
@@ -807,6 +822,11 @@ class WebhookController extends Controller
         }
 
         $order->update(['payment_status' => 'cancelled']);
+
+        if ($order->linked_order_id) {
+            Order::where('id', $order->linked_order_id)->update(['payment_status' => 'cancelled']);
+        }
+        Order::where('linked_order_id', $order->id)->update(['payment_status' => 'cancelled']);
 
         Log::info("Xendit Webhook — order {$order->booking_code} marked as cancelled");
     }
