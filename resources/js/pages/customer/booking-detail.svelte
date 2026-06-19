@@ -119,9 +119,11 @@
 
     const statusInfo = $derived(formatStatus(order.status));
 
+    const linkedOrder = $derived(order.linked_order ?? order.linkedOrder ?? null);
     const ordersToDisplay = $derived(
-        order.linked_order ? [order, order.linked_order] : (order.linkedOrder ? [order, order.linkedOrder] : [order])
+        linkedOrder ? [order, linkedOrder] : [order]
     );
+    const isRoundTrip = $derived(ordersToDisplay.length > 1);
 
     const grandTotal = $derived(
         ordersToDisplay.reduce((sum, o) => sum + Number(o.price || 0), 0)
@@ -160,9 +162,6 @@
         }
         return { short: address, detail: '' };
     };
-
-    const pickupAddress = $derived(splitAddress(order.pickup_address));
-    const dropoffAddress = $derived(splitAddress(order.dropoff_address));
 
     const handleCancelOrder = async () => {
         if (!canCancelOrder) return;
@@ -274,24 +273,26 @@
                 <div class="main-content">
                     <!-- Elegant Ticket Card -->
                     {#each ordersToDisplay as tripOrder, index}
-                        <div class="ticket-card premium-shadow" style={index > 0 ? "margin-top: 24px;" : ""}>
-                            
+                        {@const tripPickup = splitAddress(tripOrder.pickup_address)}
+                        {@const tripDropoff = splitAddress(tripOrder.dropoff_address)}
+                        <div class="ticket-card premium-shadow" style={index > 0 ? 'margin-top: 24px;' : ''}>
+
                         <div
                             class="ticket-header"
                             style="background-color: {formatStatus(tripOrder.status).bg}; border-bottom: 2px dashed #e2e8f0;"
                         >
-                            <div
-                                class="d-flex justify-content-between align-items-center"
-                            >
-                                <div>
-                                    <h4
-                                        style="margin: 0; font-weight: 800; color: #1e293b;"
-                                    >
+                            <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    {#if isRoundTrip}
+                                        <span class="trip-leg-badge {index === 0 ? 'trip-leg-badge--outbound' : 'trip-leg-badge--return'}">
+                                            <i class="fas {index === 0 ? 'fa-plane-departure' : 'fa-plane-arrival'} mr-1"></i>
+                                            {index === 0 ? 'Outbound Trip' : 'Return Trip'}
+                                        </span>
+                                    {/if}
+                                    <h4 style="margin: 0; font-weight: 800; color: #1e293b;">
                                         {tripOrder.booking_code}
                                     </h4>
-                                    <p
-                                        style="margin: 0; font-size: 14px; color: #64748b;"
-                                    >
+                                    <p style="margin: 0; font-size: 14px; color: #64748b;">
                                         Booking Reference
                                     </p>
                                 </div>
@@ -309,68 +310,32 @@
                             <!-- Route Info -->
                             <div class="sidebar-section-title mt-0">Route</div>
                             <div class="sidebar-route mb-4 pb-4 border-bottom">
-                                <div
-                                    class="sidebar-route-point"
-                                    style="align-items: flex-start;"
-                                >
-                                    <span
-                                        class="sidebar-route-dot sidebar-route-dot--from"
-                                        style="margin-top: 6px;"
-                                    ></span>
-                                    <div
-                                        style="display: flex; flex-direction: column;"
-                                    >
-                                        <span class="sidebar-route-text"
-                                            >{pickupAddress.short}</span
-                                        >
-                                        {#if pickupAddress.detail && pickupAddress.detail !== pickupAddress.short}
-                                            <small
-                                                class="route-full-address text-muted"
-                                                style="margin-top: 2px;"
-                                                >{pickupAddress.detail}</small
-                                            >
+                                <div class="sidebar-route-point" style="align-items: flex-start;">
+                                    <span class="sidebar-route-dot sidebar-route-dot--from" style="margin-top: 6px;"></span>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span class="sidebar-route-text">{tripPickup.short}</span>
+                                        {#if tripPickup.detail && tripPickup.detail !== tripPickup.short}
+                                            <small class="route-full-address text-muted" style="margin-top: 2px;">{tripPickup.detail}</small>
                                         {/if}
                                         {#if tripOrder.pickup_notes}
-                                            <small
-                                                class="route-full-address text-muted"
-                                                style="margin-top: 2px; color:var(--travhub-base) !important;"
-                                                ><i class="fas fa-info-circle"
-                                                ></i>
-                                                {tripOrder.pickup_notes}</small
-                                            >
+                                            <small class="route-full-address text-muted" style="margin-top: 2px; color:var(--travhub-base) !important;">
+                                                <i class="fas fa-info-circle"></i> {tripOrder.pickup_notes}
+                                            </small>
                                         {/if}
                                     </div>
                                 </div>
                                 <div class="sidebar-route-line"></div>
-                                <div
-                                    class="sidebar-route-point"
-                                    style="align-items: flex-start;"
-                                >
-                                    <span
-                                        class="sidebar-route-dot sidebar-route-dot--to"
-                                        style="margin-top: 6px;"
-                                    ></span>
-                                    <div
-                                        style="display: flex; flex-direction: column;"
-                                    >
-                                        <span class="sidebar-route-text"
-                                            >{dropoffAddress.short}</span
-                                        >
-                                        {#if dropoffAddress.detail && dropoffAddress.detail !== dropoffAddress.short}
-                                            <small
-                                                class="route-full-address text-muted"
-                                                style="margin-top: 2px;"
-                                                >{dropoffAddress.detail}</small
-                                            >
+                                <div class="sidebar-route-point" style="align-items: flex-start;">
+                                    <span class="sidebar-route-dot sidebar-route-dot--to" style="margin-top: 6px;"></span>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span class="sidebar-route-text">{tripDropoff.short}</span>
+                                        {#if tripDropoff.detail && tripDropoff.detail !== tripDropoff.short}
+                                            <small class="route-full-address text-muted" style="margin-top: 2px;">{tripDropoff.detail}</small>
                                         {/if}
                                         {#if tripOrder.dropoff_notes}
-                                            <small
-                                                class="route-full-address text-muted"
-                                                style="margin-top: 2px; color:var(--travhub-base) !important;"
-                                                ><i class="fas fa-info-circle"
-                                                ></i>
-                                                {tripOrder.dropoff_notes}</small
-                                            >
+                                            <small class="route-full-address text-muted" style="margin-top: 2px; color:var(--travhub-base) !important;">
+                                                <i class="fas fa-info-circle"></i> {tripOrder.dropoff_notes}
+                                            </small>
                                         {/if}
                                     </div>
                                 </div>
@@ -700,37 +665,62 @@
                             Order Summary
                         </h4>
 
-                        <div class="sidebar-section-title">Price Breakdown</div>
-                        <div class="sidebar-row">
-                            <span>Vehicle</span>
-                            <span>
-                                {#if order.price > 0 && order.extras}
-                                    {formatRupiah(
-                                        order.price -
-                                            order.extras.reduce(
-                                                (sum, e) =>
-                                                    sum + (e.price || 0),
-                                                0,
-                                            ),
-                                    )}
-                                {:else}
-                                    {formatRupiah(order.price)}
-                                {/if}
-                            </span>
-                        </div>
-
-                        {#if order.extras && order.extras.length > 0}
-                            {#each order.extras as extra}
+                        {#if isRoundTrip}
+                            <!-- Round-trip: show per-leg breakdown -->
+                            {#each ordersToDisplay as legOrder, legIndex}
+                                <div class="sidebar-section-title" style="margin-top: {legIndex > 0 ? '14px' : '0'}">
+                                    <i class="fas {legIndex === 0 ? 'fa-plane-departure' : 'fa-plane-arrival'} mr-1" style="color: {legIndex === 0 ? 'var(--travhub-base)' : '#10b981'};"></i>
+                                    {legIndex === 0 ? 'Outbound' : 'Return'}
+                                </div>
                                 <div class="sidebar-row">
-                                    <span>{extra.label}</span>
-                                    <span>+{formatRupiah(extra.price)}</span>
+                                    <span>Vehicle</span>
+                                    <span>
+                                        {#if legOrder.price > 0 && legOrder.extras && legOrder.extras.length > 0}
+                                            {formatRupiah(legOrder.price - legOrder.extras.reduce((s, e) => s + (e.price || 0), 0))}
+                                        {:else}
+                                            {formatRupiah(legOrder.price)}
+                                        {/if}
+                                    </span>
+                                </div>
+                                {#if legOrder.extras && legOrder.extras.length > 0}
+                                    {#each legOrder.extras as extra}
+                                        <div class="sidebar-row">
+                                            <span>{extra.label}</span>
+                                            <span>+{formatRupiah(extra.price)}</span>
+                                        </div>
+                                    {/each}
+                                {/if}
+                                <div class="sidebar-row" style="font-weight: 700; color: #334155;">
+                                    <span>Subtotal</span>
+                                    <span>{formatRupiah(Number(legOrder.price))}</span>
                                 </div>
                             {/each}
+                        {:else}
+                            <!-- Single trip breakdown -->
+                            <div class="sidebar-section-title">Price Breakdown</div>
+                            <div class="sidebar-row">
+                                <span>Vehicle</span>
+                                <span>
+                                    {#if order.price > 0 && order.extras && order.extras.length > 0}
+                                        {formatRupiah(order.price - order.extras.reduce((s, e) => s + (e.price || 0), 0))}
+                                    {:else}
+                                        {formatRupiah(order.price)}
+                                    {/if}
+                                </span>
+                            </div>
+                            {#if order.extras && order.extras.length > 0}
+                                {#each order.extras as extra}
+                                    <div class="sidebar-row">
+                                        <span>{extra.label}</span>
+                                        <span>+{formatRupiah(extra.price)}</span>
+                                    </div>
+                                {/each}
+                            {/if}
                         {/if}
 
                         <div class="sidebar-divider"></div>
                         <div class="sidebar-total">
-                            <span>Total</span>
+                            <span>{isRoundTrip ? 'Grand Total (2 legs)' : 'Total'}</span>
                             <span>{formatRupiah(grandTotal)}</span>
                         </div>
 
@@ -760,6 +750,26 @@
         box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(0, 0, 0, 0.02);
         overflow: hidden;
+    }
+
+    .trip-leg-badge {
+        display: inline-flex;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 3px 10px;
+        border-radius: 50px;
+        width: fit-content;
+    }
+    .trip-leg-badge--outbound {
+        background: rgba(229, 32, 41, 0.1);
+        color: var(--travhub-base);
+    }
+    .trip-leg-badge--return {
+        background: rgba(16, 185, 129, 0.1);
+        color: #065f46;
     }
 
     .ticket-header {

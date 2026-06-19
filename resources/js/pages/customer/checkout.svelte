@@ -435,6 +435,19 @@
         }
     };
 
+    function editTransferDetails() {
+        router.get('/booking/airport-transfer', {
+            pickup: form.pickup_address,
+            dropoff: form.dropoff_address,
+            date: form.date,
+            time: form.time,
+            passengers: form.passengers,
+            trip_type: form.trip_type,
+            return_date: form.return_date,
+            return_time: form.return_time,
+        });
+    }
+
     async function nextStep() {
         stepError = '';
         if (currentStep === 1) {
@@ -798,29 +811,35 @@
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label class="form-label"
-                                                >Departure (Pickup) *</label
-                                            >
-                                            <LocationSearchInput
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <label class="form-label mb-0">Departure (Pickup) *</label>
+                                                <button type="button" onclick={editTransferDetails} style="background: none; border: none; color: var(--travhub-base); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; text-transform: uppercase;">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            </div>
+                                            <input
                                                 id="co_pickup"
-                                                bind:value={form.pickup_address}
-                                                placeholder="Hotel name, area, or landmark..."
-                                                variant="premium"
-                                                required
+                                                type="text"
+                                                value={form.pickup_address}
+                                                class="premium-input"
+                                                readonly
+                                                style="background-color: #f1f5f9; cursor: not-allowed; color: #475569;"
                                             />
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label"
-                                                >Destination (Drop-off) *</label
-                                            >
-                                            <LocationSearchInput
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <label class="form-label mb-0">Destination (Drop-off) *</label>
+                                                <button type="button" onclick={editTransferDetails} style="background: none; border: none; color: var(--travhub-base); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; text-transform: uppercase;">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            </div>
+                                            <input
                                                 id="co_dropoff"
-                                                bind:value={
-                                                    form.dropoff_address
-                                                }
-                                                placeholder="Beach, temple, area..."
-                                                variant="premium"
-                                                required
+                                                type="text"
+                                                value={form.dropoff_address}
+                                                class="premium-input"
+                                                readonly
+                                                style="background-color: #f1f5f9; cursor: not-allowed; color: #475569;"
                                             />
                                         </div>
                                     </div>
@@ -1279,7 +1298,7 @@
                                 </button>
                             {:else}
                                 <a
-                                    href="/booking?pickup={encodeURIComponent(
+                                    href="/booking/airport-transfer?pickup={encodeURIComponent(
                                         transfer?.pickup || '',
                                     )}&dropoff={encodeURIComponent(
                                         transfer?.dropoff || '',

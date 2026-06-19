@@ -738,7 +738,7 @@
                                 <label
                                     class="form-label form-label--hidden"
                                     id="btnlabel"
-                                    aria-hidden="true">&nbsp;</label
+                                    aria-hidden="true">&nbsp;</label 
                                 >
                                 <button type="submit" class="search-btn">
                                     <i class="fas fa-search"></i>
@@ -1330,7 +1330,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 16px;
-        align-items: flex-end; /* aligns button with inputs */
+        align-items: flex-start; /* changed from flex-end to allow errors to grow downwards */
     }
     .route-form-row--search > .form-group {
         flex: 1;

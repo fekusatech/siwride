@@ -223,7 +223,7 @@ class CustomerOrderController extends Controller
             ->first();
 
         if (! $pricingRule) {
-            return response()->json(['error' => "The route from {$pickupZone->name} to {$dropoffZone->name} is currently not available."], 422);
+            return response()->json(['error' => 'The selected route is outside our service area.'], 422);
         }
 
         $categories = VehicleCategory::all();
@@ -419,7 +419,7 @@ class CustomerOrderController extends Controller
                     ->first();
 
                 if (! $pricingRule) {
-                    throw ValidationException::withMessages(['pickup_address' => "The route from {$pickupZone->name} to {$dropoffZone->name} is not available."]);
+                    throw ValidationException::withMessages(['pickup_address' => 'The selected route is outside our service area.']);
                 }
 
                 $exactDistance = isset($validated['exact_distance_km']) ? (float) $validated['exact_distance_km'] : null;
@@ -536,9 +536,8 @@ class CustomerOrderController extends Controller
      */
     private function generateXenditPayment(Order $order): string
     {
-        Configuration::setXenditKey(
-            Setting::getValue('xendit_secret_key') ?? config('services.xendit.secret_key')
-        );
+        $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
+        Configuration::setXenditKey($xenditKey);
 
         $paymentReference = null;
         $expiry = now()->addHours(24);
@@ -552,7 +551,7 @@ class CustomerOrderController extends Controller
 
         $invoiceAmount = (float) $order->price;
 
-        if ($order->trip_type === 'round_trip' && $order->linked_order_id && !$order->is_return_trip) {
+        if ($order->trip_type === 'round_trip' && $order->linked_order_id && ! $order->is_return_trip) {
             $linkedOrder = Order::find($order->linked_order_id);
             if ($linkedOrder) {
                 $invoiceAmount += (float) $linkedOrder->price;
@@ -686,8 +685,8 @@ class CustomerOrderController extends Controller
         $cancellationService = new OrderCancellationService;
         $cancellationService->autoCancelIfEligible($order);
 
-        // Refresh order from database to get updated status
-        $order = $order->fresh();
+        // Refresh order from database to get updated status, then reload relations
+        $order = $order->fresh(['customer', 'driver', 'vehicleCategory', 'linkedOrder.driver', 'linkedOrder.vehicleCategory']);
 
         return Inertia::render('customer/booking-detail', [
             'order' => $order,
