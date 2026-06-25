@@ -224,7 +224,7 @@
                                 <div class="rs-route-card__header">
                                     <div class="rs-route-card__name">
                                         <i class="fas fa-route"></i>
-                                        <span>{route.name}</span>
+                                        <span>{selectedPickup?.name} - {selectedDropoff?.name}</span>
                                     </div>
                                 </div>
 
@@ -286,7 +286,7 @@
                                                         {/if}
                                                     </div>
 
-                                                    <form action="#" method="GET">
+                                                    <form action="/booking/sharing-ride/checkout" method="GET">
                                                         <input type="hidden" name="service" value="sharing-ride" />
                                                         <input type="hidden" name="rs_route_id" value={route.id} />
                                                         <input type="hidden" name="rs_schedule_id" value={schedule.id} />

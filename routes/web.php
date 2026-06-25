@@ -3,9 +3,9 @@
 use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
 use App\Http\Controllers\RideSharingController;
+use App\Models\RideSharingCity;
 use App\Models\Service;
 use App\Models\VehicleCategory;
-use App\Models\RideSharingCity;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -97,6 +97,8 @@ Route::get('/booking', [CustomerOrderController::class, 'services'])->name('book
 Route::get('/booking/airport-transfer', [CustomerOrderController::class, 'index'])->name('booking.airport-transfer');
 Route::get('/booking/tour', [CustomerOrderController::class, 'tourIndex'])->name('booking.tour');
 Route::get('/booking/sharing-ride', [RideSharingController::class, 'index'])->name('booking.sharing-ride');
+Route::get('/booking/sharing-ride/checkout', [RideSharingController::class, 'checkout'])->name('booking.sharing-ride.checkout');
+Route::post('/booking/sharing-ride/orders', [RideSharingController::class, 'store'])->name('booking.sharing-ride.store');
 Route::get('/booking/hourly', [CustomerOrderController::class, 'hourlyIndex'])->name('booking.hourly');
 Route::get('/booking/checkout', [CustomerOrderController::class, 'checkout'])->name('booking.checkout');
 Route::get('/booking/payment-success', [CustomerOrderController::class, 'paymentSuccess'])->name('booking.payment-success');
