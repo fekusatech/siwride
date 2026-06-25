@@ -21,16 +21,50 @@
     let showPassword = $state(false);
     let showConfirmPassword = $state(false);
 
-    const ORDERS_PER_PAGE = 2;
+    let filterStatus = $state('all');
+    let filterType = $state('all');
+
+    const ORDERS_PER_PAGE = 5;
     let currentPage = $state(1);
 
-    const totalPages = $derived(Math.ceil(orders.length / ORDERS_PER_PAGE));
+    const getOrderType = (order: any) => {
+        // Heuristics based on data since explicit 'service_type' column doesn't exist yet
+        const pickup = (order.pickup_address || '').toLowerCase();
+        const dropoff = (order.dropoff_address || '').toLowerCase();
+        
+        if (order.booking_code && order.booking_code.startsWith('AT')) return 'Airport Transfer';
+        if (order.booking_code && order.booking_code.startsWith('SR')) return 'Sharing Ride';
+        
+        // If dropoff is missing or same as pickup, it's likely hourly or tour
+        if (!order.dropoff_address || order.dropoff_address === order.pickup_address) return 'Hourly / Tour';
+        
+        // By default, since Airport Transfer is the primary feature currently being built, 
+        // we classify standard transfers as Airport Transfer.
+        // is_shared is NOT used here because it means "broadcast to all drivers", not "Sharing Ride".
+        return 'Airport Transfer';
+    };
+
+    const filteredOrders = $derived(
+        orders.filter((order: any) => {
+            const matchStatus = filterStatus === 'all' || order.status === filterStatus;
+            const matchType = filterType === 'all' || getOrderType(order) === filterType;
+            return matchStatus && matchType;
+        })
+    );
+
+    const totalPages = $derived(Math.ceil(filteredOrders.length / ORDERS_PER_PAGE));
     const paginatedOrders = $derived(
-        orders.slice(
+        filteredOrders.slice(
             (currentPage - 1) * ORDERS_PER_PAGE,
             currentPage * ORDERS_PER_PAGE,
         ),
     );
+
+    $effect(() => {
+        filterStatus;
+        filterType;
+        currentPage = 1;
+    });
 
     const goToPage = (page: number) => {
         if (page >= 1 && page <= totalPages) {
@@ -75,19 +109,6 @@
 
 <div class="page-wrapper">
     <Header />
-
-    <!-- <section class="page-header">
-        <div class="page-header__bg"></div>
-        <div class="page-header__shape-one"></div>
-        <div class="page-header__shape-two"></div>
-        <div class="container">
-            <h2 class="page-header__title bw-split-in-right">My Dashboard</h2>
-            <ul class="travhub-breadcrumb list-unstyled">
-                <li><Link href="/">Home</Link></li>
-                <li><span>Dashboard</span></li>
-            </ul>
-        </div>
-    </section> -->
 
     <!-- Dashboard Content -->
     <section class="dashboard-section">
@@ -161,17 +182,35 @@
                 <div class="col-xl-8 col-lg-7">
                     <div class="dashboard-card premium-shadow">
                         <div
-                            class="dashboard-card__header d-flex justify-content-between align-items-center"
+                            class="dashboard-card__header d-flex flex-column flex-md-row justify-content-between align-items-md-center" style="gap: 15px;"
                         >
-                            <h3 class="dashboard-title">
+                            <h3 class="dashboard-title mb-0">
                                 <i
                                     class="fas fa-history"
                                     style="color: var(--travhub-base);"
                                 ></i> Order History
                             </h3>
-                            <Link href="/booking" class="btn-new-booking"
-                                ><i class="fas fa-plus"></i> New Booking</Link
-                            >
+                            <div class="d-flex flex-wrap align-items-center" style="gap: 10px;">
+                                <select bind:value={filterType} class="premium-select">
+                                    <option value="all">All Types</option>
+                                    <option value="Airport Transfer">Airport Transfer</option>
+                                    <option value="Sharing Ride">Sharing Ride</option>
+                                    <option value="Hourly / Tour">Hourly / Tour</option>
+                                    <option value="Standard Transfer">Standard Transfer</option>
+                                </select>
+                                <select bind:value={filterStatus} class="premium-select">
+                                    <option value="all">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="otw">On The Way</option>
+                                    <option value="tiba">Arrived</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                                <Link href="/booking" class="btn-new-booking text-nowrap"
+                                    ><i class="fas fa-plus"></i> New Booking</Link
+                                >
+                            </div>
                         </div>
 
                         <div class="dashboard-card__body">
@@ -190,6 +229,19 @@
                                         class="travhub-btn mt-3"
                                         ><span>Book Now</span></Link
                                     >
+                                </div>
+                            {:else if filteredOrders.length === 0}
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i class="fas fa-search"></i>
+                                    </div>
+                                    <h4>No orders found</h4>
+                                    <p>
+                                        We couldn't find any orders matching your filters.
+                                    </p>
+                                    <button class="btn btn-outline-secondary mt-3" onclick={() => { filterStatus = 'all'; filterType = 'all'; }}>
+                                        Clear Filters
+                                    </button>
                                 </div>
                             {:else}
                                 <div class="order-list">
@@ -216,21 +268,24 @@
                                                 </div>
                                                 <div class="order-details">
                                                     <div
-                                                        class="d-flex align-items-center mb-1"
+                                                        class="d-flex align-items-center mb-1 flex-wrap" style="gap: 8px;"
                                                     >
                                                         <h5
-                                                            class="booking-code"
+                                                            class="booking-code mb-0"
                                                         >
                                                             {order.booking_code}
                                                         </h5>
+                                                        <span class="badge badge-secondary" style="font-size: 0.75rem; font-weight: normal; background-color: #e2e8f0; color: #475569;">
+                                                            {getOrderType(order)}
+                                                        </span>
                                                         <span
-                                                            class="status-badge mobile-badge d-md-none ml-2"
+                                                            class="status-badge mobile-badge d-md-none"
                                                             style="background-color: {statusInfo.bg}; color: {statusInfo.color};"
                                                         >
                                                             {statusInfo.text}
                                                         </span>
                                                     </div>
-                                                    <div class="route">
+                                                    <div class="route mt-2">
                                                         <div
                                                             class="route-point"
                                                         >
@@ -239,9 +294,11 @@
                                                             ></i>
                                                             <span
                                                                 class="text-truncate-custom"
-                                                                >{order.pickup_address}</span
+                                                                title={order.pickup_address}
+                                                                ><strong>Pickup:</strong> {order.pickup_address}</span
                                                             >
                                                         </div>
+                                                        {#if order.dropoff_address && order.dropoff_address !== order.pickup_address}
                                                         <div
                                                             class="route-arrow"
                                                         >
@@ -257,9 +314,11 @@
                                                             ></i>
                                                             <span
                                                                 class="text-truncate-custom"
-                                                                >{order.dropoff_address}</span
+                                                                title={order.dropoff_address}
+                                                                ><strong>Dropoff:</strong> {order.dropoff_address}</span
                                                             >
                                                         </div>
+                                                        {/if}
                                                     </div>
                                                     <div
                                                         class="order-meta mt-2"
@@ -277,6 +336,12 @@
                                                                 class="fas fa-users text-muted"
                                                             ></i>
                                                             {order.passengers} Pax</span
+                                                        >
+                                                        <span class="ml-3 text-success font-weight-bold"
+                                                            ><i
+                                                                class="fas fa-money-bill-wave"
+                                                            ></i>
+                                                            Rp {Number(order.price).toLocaleString('id-ID')}</span
                                                         >
                                                     </div>
                                                 </div>
@@ -321,8 +386,8 @@
                                                 ORDERS_PER_PAGE +
                                                 1}–{Math.min(
                                                 currentPage * ORDERS_PER_PAGE,
-                                                orders.length,
-                                            )} of {orders.length} orders
+                                                filteredOrders.length,
+                                            )} of {filteredOrders.length} orders
                                         </span>
                                         <div class="pagination-controls">
                                             <button
@@ -809,6 +874,28 @@
         background: #fff;
         transition: all 0.2s ease;
         flex-wrap: wrap;
+    }
+
+    .premium-select {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 32px 8px 12px;
+        font-size: 14px;
+        color: #475569;
+        background-color: #fff;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 10px 10px;
+        appearance: none;
+        outline: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .premium-select:focus {
+        border-color: var(--travhub-base);
+        box-shadow: 0 0 0 3px rgba(229, 32, 41, 0.1);
     }
 
     .order-item:hover {

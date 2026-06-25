@@ -558,11 +558,16 @@ class CustomerOrderController extends Controller
             }
         }
 
+        $successUrl = route('booking.show', $order->booking_code).'?payment=success';
+        $failureUrl = route('booking.show', $order->booking_code).'?payment=failed';
+
         $req = new CreateInvoiceRequest([
             'external_id' => $order->booking_code.'_'.time(),
             'amount' => $invoiceAmount,
             'payer_email' => $order->customer_email,
             'description' => 'Payment for Booking '.$order->booking_code,
+            'success_redirect_url' => $successUrl,
+            'failure_redirect_url' => $failureUrl,
         ]);
 
         $result = $apiInstance->createInvoice($req);
@@ -613,7 +618,8 @@ class CustomerOrderController extends Controller
      */
     public function cancelOrder(Request $request, $bookingCode): JsonResponse
     {
-        $order = Order::where('booking_code', $bookingCode)->firstOrFail();
+        $baseCode = explode('-', $bookingCode)[0];
+        $order = Order::where('booking_code', $baseCode)->firstOrFail();
 
         // Verify the user is the order owner (if authenticated) or it's a guest order
         if ($request->user('customer') && $order->customer_id !== $request->user('customer')->id) {
@@ -651,7 +657,8 @@ class CustomerOrderController extends Controller
      */
     public function retryPayment(string $bookingCode): JsonResponse
     {
-        $order = Order::where('booking_code', $bookingCode)
+        $baseCode = explode('-', $bookingCode)[0];
+        $order = Order::where('booking_code', $baseCode)
             ->where('status', 'pending')
             ->where('payment_status', 'pending')
             ->firstOrFail();
@@ -672,13 +679,29 @@ class CustomerOrderController extends Controller
      */
     public function show($bookingCode): Response|SymfonyResponse
     {
+        // Extract the base code in case the URL contains a compound code (e.g., SWABC-SWXYZ)
+        $baseCode = explode('-', $bookingCode)[0];
+
         $order = Order::with(['customer', 'driver', 'vehicleCategory', 'linkedOrder.driver', 'linkedOrder.vehicleCategory'])
-            ->where('booking_code', $bookingCode)
+            ->where('booking_code', $baseCode)
             ->firstOrFail();
 
         // If accessed the return trip directly, redirect to the parent outbound trip instead
         if ($order->is_return_trip && $order->linkedOrder) {
-            return redirect()->route('booking.show', $order->linkedOrder->booking_code);
+            $properUrlCode = $order->linkedOrder->booking_code . '-' . $order->booking_code;
+            return redirect()->route('booking.show', $properUrlCode);
+        }
+
+        // If it's the parent of a return trip, enforce compound URL structure
+        if ($order->trip_type === 'round_trip' && $order->linkedOrder) {
+            $expectedCode = $order->booking_code . '-' . $order->linkedOrder->booking_code;
+            if ($bookingCode !== $expectedCode) {
+                $url = route('booking.show', $expectedCode);
+                if (request()->getQueryString()) {
+                    $url .= '?' . request()->getQueryString();
+                }
+                return redirect($url);
+            }
         }
 
         // Automatically cancel order if it's eligible

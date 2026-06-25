@@ -5,15 +5,33 @@
     import Preloader from '@/components/Template/Preloader.svelte';
     import { Link, useForm } from '@inertiajs/svelte';
     import { router } from '@inertiajs/svelte';
+    import { onMount } from 'svelte';
     import { formatTime12 } from '@/lib/pickupTime';
     import { formatRupiah } from '@/lib/utils';
 
     const { order } = $props();
 
+    let paymentResult = $state<'success' | 'failed' | null>(null);
+
     let isCancelling = $state(false);
     let isRetrying = $state(false);
     let cancellationMessage = $state<string | null>(null);
     let cancellationError = $state<string | null>(null);
+
+    onMount(() => {
+        const params = new URLSearchParams(window.location.search);
+        const payment = params.get('payment');
+        if (payment === 'success') {
+            paymentResult = 'success';
+            // Remove query param from URL without reload
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
+        } else if (payment === 'failed') {
+            paymentResult = 'failed';
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
+        }
+    });
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -238,9 +256,15 @@
             isRetrying = false;
         }
     };
+    const displayBookingCode = $derived(
+        isRoundTrip 
+            ? `${ordersToDisplay[0].booking_code} & ${ordersToDisplay[1].booking_code}`
+            : order.booking_code
+    );
+
 </script>
 
-<AppHead title={`Booking ${order.booking_code} - Siwride`} />
+<AppHead title={`Booking ${displayBookingCode} - Siwride`} />
 <Preloader />
 <div class="custom-cursor__cursor"></div>
 <div class="custom-cursor__cursor-two"></div>
@@ -248,30 +272,48 @@
 <div class="page-wrapper">
     <Header />
 
-    <section class="page-header">
-        <div class="page-header__bg"></div>
-        <div class="page-header__shape-one"></div>
-        <div class="page-header__shape-two"></div>
-        <div class="container">
-            <h2 class="page-header__title bw-split-in-right">
-                Booking Details
-            </h2>
-            <ul class="travhub-breadcrumb list-unstyled">
-                <li><Link href="/">Home</Link></li>
-                <li><Link href="/customer/profile">Dashboard</Link></li>
-                <li><span>{order.booking_code}</span></li>
-            </ul>
-        </div>
-    </section>
-
     <!-- Details Section -->
     <section
-        style="padding: 80px 0 100px; background-color: #f8fafc; min-height: 60vh;"
+        style="padding: 40px 0 100px; background-color: #f8fafc; min-height: 60vh;"
     >
         <div class="container">
+            <div class="simple-page-header" style="margin-bottom: 30px;">
+                <div style="font-size: 13px; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <Link href="/" style="color: #64748b; text-decoration: none;">Home</Link>
+                    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+                    <Link href="/customer/profile" style="color: #64748b; text-decoration: none;">Dashboard</Link>
+                    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+                    <span style="color: var(--travhub-base); font-weight: 600;">{displayBookingCode}</span>
+                </div>
+                <h2 style="font-size: 28px; font-weight: 800; color: #1e293b; margin: 0;">Booking Details</h2>
+            </div>
+
             <div class="checkout-layout">
                 <div class="main-content">
-                    <!-- Elegant Ticket Card -->
+                    <!-- Payment Result Banner -->
+                    {#if paymentResult === 'success'}
+                        <div class="payment-success-banner">
+                            <div class="payment-banner-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="payment-banner-text">
+                                <strong>Payment Successful!</strong>
+                                <p>Your booking has been confirmed. We'll send a confirmation to your email shortly.</p>
+                            </div>
+                        </div>
+                    {:else if paymentResult === 'failed'}
+                        <div class="payment-failed-banner">
+                            <div class="payment-banner-icon">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="payment-banner-text">
+                                <strong>Payment Failed</strong>
+                                <p>Your payment was not completed. You can retry payment below.</p>
+                            </div>
+                        </div>
+                    {/if}
+
+                    <!-- Ticket Cards -->
                     {#each ordersToDisplay as tripOrder, index}
                         {@const tripPickup = splitAddress(tripOrder.pickup_address)}
                         {@const tripDropoff = splitAddress(tripOrder.dropoff_address)}
@@ -744,6 +786,50 @@
 </div>
 
 <style>
+    .payment-success-banner,
+    .payment-failed-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px 24px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        animation: slideDown 0.4s ease;
+    }
+    .payment-success-banner {
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        border: 1.5px solid #6ee7b7;
+    }
+    .payment-failed-banner {
+        background: linear-gradient(135deg, #fef2f2, #fecaca);
+        border: 1.5px solid #fca5a5;
+    }
+    .payment-banner-icon {
+        font-size: 32px;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+    .payment-success-banner .payment-banner-icon { color: #059669; }
+    .payment-failed-banner .payment-banner-icon { color: #dc2626; }
+    .payment-banner-text strong {
+        display: block;
+        font-size: 17px;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+    .payment-success-banner .payment-banner-text strong { color: #065f46; }
+    .payment-failed-banner .payment-banner-text strong { color: #991b1b; }
+    .payment-banner-text p {
+        margin: 0;
+        font-size: 14px;
+    }
+    .payment-success-banner .payment-banner-text p { color: #047857; }
+    .payment-failed-banner .payment-banner-text p { color: #b91c1c; }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     .premium-shadow {
         background: #ffffff;
         border-radius: 20px;

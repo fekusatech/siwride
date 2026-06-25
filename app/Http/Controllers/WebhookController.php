@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +15,7 @@ class WebhookController extends Controller
      */
     private function verifyToken(Request $request): bool
     {
-        $token = \App\Models\Setting::getValue('xendit_webhook_token') ?? config('services.xendit.webhook_token');
+        $token = Setting::getValue('xendit_webhook_token') ?? config('services.xendit.webhook_token');
         $callbackToken = $request->header('x-callback-token');
 
         if (! $token) {
@@ -93,7 +94,7 @@ class WebhookController extends Controller
         $payload = $request->all();
         $order = $this->resolveOrder($payload);
 
-        if ($payload['status'] ?? '' === 'PAID') {
+        if (($payload['status'] ?? '') === 'PAID') {
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'Invoice paid']);
@@ -749,14 +750,23 @@ class WebhookController extends Controller
             return;
         }
 
-        $order->update(['payment_status' => 'paid']);
+        $order->update([
+            'payment_status' => 'paid',
+            'status' => 'confirmed',
+        ]);
 
         if ($order->linked_order_id) {
-            Order::where('id', $order->linked_order_id)->update(['payment_status' => 'paid']);
+            Order::where('id', $order->linked_order_id)->update([
+                'payment_status' => 'paid',
+                'status' => 'confirmed',
+            ]);
         }
-        Order::where('linked_order_id', $order->id)->update(['payment_status' => 'paid']);
+        Order::where('linked_order_id', $order->id)->update([
+            'payment_status' => 'paid',
+            'status' => 'confirmed',
+        ]);
 
-        Log::info("Xendit Webhook — order {$order->booking_code} marked as paid");
+        Log::info("Xendit Webhook — order {$order->booking_code} marked as paid and confirmed");
     }
 
     /**
