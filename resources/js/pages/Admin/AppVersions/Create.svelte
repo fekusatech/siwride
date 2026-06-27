@@ -35,14 +35,11 @@
     function submit(e: Event) {
         e.preventDefault();
         if (isEditing) {
-            form.post(`/admin/app-versions/${version.id}`, {
-                _method: 'PUT',
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            form
+                .transform((data) => ({ ...data, _method: 'PUT' }))
+                .post(`/admin/app-versions/${version.id}`);
         } else {
-            form.post('/admin/app-versions', {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            form.post('/admin/app-versions');
         }
     }
 </script>
