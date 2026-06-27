@@ -337,9 +337,9 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Profil Driver tidak ditemukan.');
         }
 
-        DB::transaction(function () use ($order, $user, $claim) {
+        DB::transaction(function () use ($order, $driver, $claim) {
             $order->update([
-                'driver_id' => $user->id,
+                'driver_id' => $driver->id,
             ]);
 
             // Update all claims for this order
