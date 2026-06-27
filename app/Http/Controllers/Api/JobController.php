@@ -8,6 +8,7 @@ use App\Models\JobClaim;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -57,10 +58,11 @@ class JobController extends Controller
     public function myRides(Request $request)
     {
         $user = $request->user();
+        $driverId = $user->driver_id;
 
-        $jobs = Order::where(function ($query) use ($user) {
+        $jobs = Order::where(function ($query) use ($user, $driverId) {
             // Order milik saya (Confirmed)
-            $query->where('driver_id', $user->id)
+            $query->where('driver_id', $driverId)
                   // ATAU Order yang sedang saya klaim (Waiting Approval)
                 ->orWhereHas('claims', function ($q) use ($user) {
                     $q->where('driver_id', $user->id)->where('status', 'pending');
@@ -72,15 +74,15 @@ class JobController extends Controller
                         ->where('status', 'pending');
                 });
         })
-            ->where('status', 'pending') // Hanya ambil yang masih pending/aktif
+            ->where('status', 'pending')
             ->where('is_cancelled', false)
             ->whereDate('date', '>=', now()->toDateString())
             ->orderBy('date')
             ->orderBy('time')
             ->limit(20)
             ->get()
-            ->map(function ($job) use ($user) {
-                $job->is_confirmed = ($job->driver_id == $user->id);
+            ->map(function ($job) use ($user, $driverId) {
+                $job->is_confirmed = ($job->driver_id == $driverId);
                 $job->is_waiting_approval = $job->claims()->where('driver_id', $user->id)->exists() && is_null($job->driver_id);
                 $job->is_open_order = (is_null($job->driver_id) && ! $job->claims()->exists());
 
@@ -99,7 +101,7 @@ class JobController extends Controller
 
         $user = $request->user();
 
-        $isOwner = $job->driver_id == $user->id || $job->claims()->where('driver_id', $user->id)->exists();
+        $isOwner = $job->driver_id == $user->driver_id || $job->claims()->where('driver_id', $user->id)->exists();
         $isAdmin = $user->role === 'admin';
         $isSharedPool = $job->is_shared && is_null($job->driver_id);
 
@@ -128,8 +130,16 @@ class JobController extends Controller
     public function take(Request $request, $id)
     {
         $user = $request->user();
+        $driverId = $user->driver_id;
 
-        return DB::transaction(function () use ($id, $user) {
+        if (! $driverId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Driver record tidak ditemukan.',
+            ], 404);
+        }
+
+        return DB::transaction(function () use ($id, $user, $driverId) {
             $order = Order::where('id', $id)->lockForUpdate()->firstOrFail();
 
             if ($order->driver_id) {
@@ -162,7 +172,7 @@ class JobController extends Controller
             } catch (\Exception $e) {
             }
 
-            $todayJobsCount = Order::where('driver_id', $user->id)
+            $todayJobsCount = Order::where('driver_id', $driverId)
                 ->whereDate('date', now()->toDateString())
                 ->where('is_cancelled', false)
                 ->count();
@@ -200,11 +210,21 @@ class JobController extends Controller
 
         return DB::transaction(function () use ($id, $request) {
             $order = Order::findOrFail($id);
-            $driverId = $request->driver_id;
+            $userId = $request->driver_id;
+
+            $user = User::findOrFail($userId);
+            $driverId = $user->driver_id;
+
+            if (! $driverId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Driver record tidak ditemukan.',
+                ], 404);
+            }
 
             // Check if this driver actually claimed this job
             $claim = JobClaim::where('order_id', $id)
-                ->where('driver_id', $driverId)
+                ->where('driver_id', $userId)
                 ->first();
 
             if (! $claim) {
@@ -214,7 +234,7 @@ class JobController extends Controller
                 ], 400);
             }
 
-            // Assign driver to order
+            // Assign driver to order (drivers.id, not users.id)
             $order->update([
                 'driver_id' => $driverId,
                 'is_shared' => false,
@@ -384,7 +404,23 @@ class JobController extends Controller
             'driver_id' => 'nullable|exists:users,id',
         ]);
 
-        $order = Order::create(array_merge($request->all(), [
+        $data = $request->except('driver_id');
+
+        if ($request->driver_id) {
+            $user = User::findOrFail($request->driver_id);
+            $driverId = $user->driver_id;
+
+            if (! $driverId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Driver record tidak ditemukan.',
+                ], 404);
+            }
+
+            $data['driver_id'] = $driverId;
+        }
+
+        $order = Order::create(array_merge($data, [
             'booking_code' => 'SW-'.strtoupper(str()->random(8)),
             'order_number' => '#'.str()->random(6),
             'status' => $request->driver_id ? 'pending' : 'shared',
@@ -403,9 +439,19 @@ class JobController extends Controller
             'driver_id' => 'required|exists:users,id',
         ]);
 
+        $user = User::findOrFail($request->driver_id);
+        $driverId = $user->driver_id;
+
+        if (! $driverId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Driver record tidak ditemukan.',
+            ], 404);
+        }
+
         $order = Order::findOrFail($id);
         $order->update([
-            'driver_id' => $request->driver_id,
+            'driver_id' => $driverId,
             'status' => 'pending',
             'is_shared' => false,
         ]);
