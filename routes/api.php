@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\EarningController;
+use App\Http\Controllers\Api\HelpController;
 use App\Http\Controllers\Api\JobController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TrackingController;
@@ -90,6 +92,19 @@ Route::prefix('v1')->group(function () {
 
         // Earnings
         Route::get('/driver/earnings', [EarningController::class, 'index']);
+
+        // Notifications
+        Route::get('/driver/notifications', [NotificationController::class, 'index']);
+        Route::get('/driver/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::put('/driver/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::put('/driver/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/driver/fcm-token', [NotificationController::class, 'registerFcmToken']);
+        Route::delete('/driver/fcm-token', [NotificationController::class, 'removeFcmToken']);
+
+        // Help Center
+        Route::get('/help/faq', [HelpController::class, 'faq']);
+        Route::get('/help/contact', [HelpController::class, 'contactInfo']);
+        Route::post('/help/contact', [HelpController::class, 'submitContact']);
 
         Route::post('/auth/logout', function (Request $request) {
             $request->user()->currentAccessToken()->delete();

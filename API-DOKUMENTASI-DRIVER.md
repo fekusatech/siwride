@@ -15,7 +15,9 @@
 5. [Vehicle](#5-vehicle)
 6. [Earnings](#6-earnings)
 7. [Tracking](#7-tracking)
-8. [Admin](#8-admin)
+8. [Notifikasi](#8-notifikasi)
+9. [Help Center](#9-help-center)
+10. [Admin](#10-admin)
 
 ---
 
@@ -655,7 +657,210 @@ Kirim lokasi driver secara periodik (setiap 30-60 detik).
 
 ---
 
-## 8. Admin
+## 8. Notifikasi
+
+### 8.1 Get Notifications
+
+`GET /driver/notifications`
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Response:**
+```json
+{
+    "status": "success",
+    "data": {
+        "notifications": [
+            {
+                "id": 1,
+                "type": "new_order",
+                "title": "Pesanan Baru",
+                "body": "Ada pesanan baru dari Kuta ke Seminyak",
+                "data": {
+                    "order_id": 1,
+                    "pickup": "Kuta",
+                    "dropoff": "Seminyak"
+                },
+                "is_read": false,
+                "read_at": null,
+                "created_at": "2026-06-28T10:00:00.000000Z"
+            }
+        ],
+        "unread_count": 1,
+        "pagination": {
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 20,
+            "total": 1
+        }
+    }
+}
+```
+
+### 8.2 Unread Count
+
+`GET /driver/notifications/unread-count`
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Response:**
+```json
+{
+    "status": "success",
+    "data": {
+        "unread_count": 5
+    }
+}
+```
+
+### 8.3 Mark Notification as Read
+
+`PUT /driver/notifications/{id}/read`
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Response:**
+```json
+{
+    "status": "success",
+    "message": "Notification marked as read."
+}
+```
+
+### 8.4 Mark All Notifications as Read
+
+`PUT /driver/notifications/read-all`
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Response:**
+```json
+{
+    "status": "success",
+    "message": "All notifications marked as read."
+}
+```
+
+### 8.5 Register FCM Token
+
+`POST /driver/fcm-token`
+
+**Headers:** `Authorization: Bearer {token}`
+
+Daftarkan token Firebase Cloud Messaging untuk push notification.
+
+**Request:**
+```json
+{
+    "fcm_token": "string | required",
+    "device_type": "string | nullable | in:android,ios"
+}
+```
+
+**Response:**
+```json
+{
+    "status": "success",
+    "message": "FCM token registered successfully."
+}
+```
+
+### 8.6 Remove FCM Token
+
+`DELETE /driver/fcm-token`
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Request:**
+```json
+{
+    "fcm_token": "string | required"
+}
+```
+
+**Response:**
+```json
+{
+    "status": "success",
+    "message": "FCM token removed."
+}
+```
+
+---
+
+## 9. Help Center
+
+### 9.1 FAQ
+
+`GET /help/faq`
+
+**Headers:** `Authorization: Bearer {token}`
+
+Ambil daftar FAQ dari pengaturan admin.
+
+**Response:**
+```json
+{
+    "status": "success",
+    "data": {
+        "faq": [
+            {
+                "question": "How do I book a ride?",
+                "answer": "You can book via the app..."
+            }
+        ]
+    }
+}
+```
+
+### 9.2 Contact Info
+
+`GET /help/contact`
+
+**Headers:** `Authorization: Bearer {token}`
+
+Ambil informasi kontak perusahaan.
+
+**Response:**
+```json
+{
+    "status": "success",
+    "data": {
+        "company_name": "SIWRide",
+        "phone": "+6281138105600",
+        "email": "info@siwride.com",
+        "address": "Bali, Indonesia"
+    }
+}
+```
+
+### 9.3 Submit Contact
+
+`POST /help/contact`
+
+**Headers:** `Authorization: Bearer {token}`
+
+Kirim pesan ke admin.
+
+**Request:**
+```json
+{
+    "subject": "string | required | max:255",
+    "message": "string | required | max:5000"
+}
+```
+
+**Response:**
+```json
+{
+    "status": "success",
+    "message": "Your message has been sent. We will contact you soon."
+}
+```
+
+---
+
+## 10. Admin
 
 Semua endpoint di bawah ini khusus admin (`role = admin`).
 

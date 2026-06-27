@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class DriverFcmToken extends Model
+{
+    protected $table = 'driver_fcm_tokens';
+
+    protected $fillable = [
+        'user_id',
+        'fcm_token',
+        'device_type',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+}
