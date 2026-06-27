@@ -222,6 +222,15 @@
                 </Link>
             </li>
 
+            <li class="side-nav-title mt-2">Mobile App</li>
+
+            <li class="side-nav-item">
+                <Link href="/admin/app-versions" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-device-mobile"></i></span>
+                    <span class="menu-text"> App Versions </span>
+                </Link>
+            </li>
+
             <li class="side-nav-title mt-2">System</li>
 
             <li class="side-nav-item">

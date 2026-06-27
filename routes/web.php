@@ -40,6 +40,7 @@ Route::get('/login-admin', function () {
     return Inertia::render('Admin/Login');
 })->name('admin.login');
 
+use App\Http\Controllers\Admin\AppVersionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\FrontendSettingController;
@@ -137,6 +138,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('admin/vehicles', VehicleController::class)->names('admin.vehicles');
     Route::resource('admin/vehicle-categories', VehicleCategoryController::class)->names('admin.vehicle-categories');
+    Route::resource('admin/app-versions', AppVersionController::class)->names('admin.app-versions');
+
     Route::resource('admin/services', ServiceController::class)->names('admin.services');
 
     Route::resource('admin/rs-cities', CityController::class)->names('admin.rs-cities');

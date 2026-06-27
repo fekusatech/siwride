@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AppVersionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\EarningController;
@@ -22,6 +23,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
+    // Public Routes
+    Route::post('/app/check-version', [AppVersionController::class, 'check']);
+
     // Public Auth Routes
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
