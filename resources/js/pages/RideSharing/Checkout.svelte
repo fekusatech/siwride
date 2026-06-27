@@ -137,6 +137,15 @@
                         </div>
                     {/if}
 
+                    {#if Object.keys(form.errors).length > 0}
+                        <div class="alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {#each Object.values(form.errors) as err}
+                                <div>{err}</div>
+                            {/each}
+                        </div>
+                    {/if}
+
                     <form onsubmit={(e) => { e.preventDefault(); if (currentStep === 3) submitForm(); else nextStep(); }}>
                         <!-- STEP 1: Transfer Details -->
                         {#if currentStep === 1}
