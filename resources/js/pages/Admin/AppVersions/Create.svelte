@@ -11,17 +11,38 @@
         version_name: version?.version_name ?? '',
         version_code: version?.version_code ?? '',
         apk_url: version?.apk_url ?? '',
+        apk_file: null as File | null,
         whats_new: version?.whats_new ?? '',
         is_force_update: version?.is_force_update ?? false,
         is_active: version?.is_active ?? true,
     });
 
+    let apkFileName = $state('');
+
+    function handleApkFile(e: Event) {
+        const input = e.target as HTMLInputElement;
+        if (input.files && input.files[0]) {
+            form.apk_file = input.files[0];
+            apkFileName = input.files[0].name;
+        }
+    }
+
+    function removeApkFile() {
+        form.apk_file = null;
+        apkFileName = '';
+    }
+
     function submit(e: Event) {
         e.preventDefault();
         if (isEditing) {
-            form.put(`/admin/app-versions/${version.id}`);
+            form.post(`/admin/app-versions/${version.id}`, {
+                _method: 'PUT',
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
         } else {
-            form.post('/admin/app-versions');
+            form.post('/admin/app-versions', {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
         }
     }
 </script>
@@ -71,13 +92,51 @@
                                         <div class="invalid-feedback">{form.errors.version_code}</div>
                                     {/if}
                                 </div>
+
+                                <!-- Upload APK -->
                                 <div class="col-md-12">
-                                    <label for="apk_url" class="form-label">APK URL</label>
-                                    <input type="url" class="form-control {form.errors.apk_url ? 'is-invalid' : ''}" id="apk_url" bind:value={form.apk_url} placeholder="https://siwride.com/storage/apk/app-v1.2.0.apk" />
+                                    <label class="form-label">APK File</label>
+                                    <div class="border rounded p-3 bg-light">
+                                        {#if form.apk_file}
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="ti ti-file-text text-primary fs-20"></i>
+                                                    <span class="fw-medium">{apkFileName}</span>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick={removeApkFile}>
+                                                    <i class="ti ti-x"></i>
+                                                </button>
+                                            </div>
+                                        {:else if version?.apk_url}
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="ti ti-link text-success fs-20"></i>
+                                                    <a href={version.apk_url} target="_blank" class="text-truncate d-inline-block" style="max-width: 300px;">{version.apk_url}</a>
+                                                </div>
+                                                <span class="badge bg-success">Uploaded</span>
+                                            </div>
+                                            <hr class="my-2" />
+                                            <div class="text-muted small mb-2">Upload new file to replace:</div>
+                                            <input type="file" accept=".apk,.aab" class="form-control" onchange={handleApkFile} />
+                                        {:else}
+                                            <input type="file" accept=".apk,.aab" class="form-control" onchange={handleApkFile} />
+                                        {/if}
+                                        <div class="text-muted small mt-1">Accepted: .apk, .aab (max 100MB)</div>
+                                    </div>
+                                    {#if form.errors.apk_file}
+                                        <div class="text-danger small mt-1">{form.errors.apk_file}</div>
+                                    {/if}
+                                </div>
+
+                                <!-- OR URL fallback -->
+                                <div class="col-md-12">
+                                    <label for="apk_url" class="form-label">Or External URL</label>
+                                    <input type="url" class="form-control {form.errors.apk_url ? 'is-invalid' : ''}" id="apk_url" bind:value={form.apk_url} placeholder="https://play.google.com/store/apps/details?id=..." />
                                     {#if form.errors.apk_url}
                                         <div class="invalid-feedback">{form.errors.apk_url}</div>
                                     {/if}
                                 </div>
+
                                 <div class="col-md-12">
                                     <label for="whats_new" class="form-label">What's New</label>
                                     <textarea class="form-control {form.errors.whats_new ? 'is-invalid' : ''}" id="whats_new" bind:value={form.whats_new} rows="4" placeholder="• New feature A&#10;• Bug fix B&#10;• Performance improvement"></textarea>
@@ -128,7 +187,7 @@
                             <li><strong>Version Code:</strong> Incremental integer. Higher = newer.</li>
                             <li><strong>Version Name:</strong> Display version (e.g. "1.2.0").</li>
                             <li><strong>Force Update:</strong> If enabled, user MUST update to proceed.</li>
-                            <li><strong>APK URL:</strong> Direct download link for Android APK.</li>
+                            <li><strong>Upload APK:</strong> Upload file langsung, atau isi External URL jika APK di Google Play.</li>
                             <li>Flutter app compares its version_code with the API response to determine if update is available.</li>
                         </ul>
                     </div>
