@@ -17,7 +17,8 @@
 7. [Tracking](#7-tracking)
 8. [Notifikasi](#8-notifikasi)
 9. [Help Center](#9-help-center)
-10. [Admin](#10-admin)
+10. [App Version](#10-app-version)
+11. [Admin](#11-admin)
 
 ---
 
@@ -860,18 +861,71 @@ Kirim pesan ke admin.
 
 ---
 
-## 10. Admin
+## 10. App Version
+
+### 10.1 Check Version
+
+`POST /app/check-version`
+
+**Auth:** none (public)
+
+Digunakan Flutter untuk ngecek apakah ada update APK baru.
+
+**Request:**
+```json
+{
+    "platform": "string | required | in:android,ios",
+    "current_version_code": "integer | required | min:0"
+}
+```
+
+**Response (no update):**
+```json
+{
+    "status": "success",
+    "data": {
+        "update_available": false,
+        "is_force_update": false,
+        "latest_version": null
+    }
+}
+```
+
+**Response (update available):**
+```json
+{
+    "status": "success",
+    "data": {
+        "update_available": true,
+        "is_force_update": false,
+        "latest_version": {
+            "version_name": "1.3.0",
+            "version_code": 3,
+            "whats_new": "• New feature A\n• Bug fix B",
+            "apk_url": "https://siwride.com/storage/apk/app-v1.3.0.apk"
+        }
+    }
+}
+```
+
+> **Catatan Flutter:** Panggil endpoint ini di splash screen atau saat app start.  
+> Jika `update_available` true → tampilkan dialog update.  
+> Jika `is_force_update` true → user HARUS update, tidak bisa lanjut pakai app.
+
+---
+
+## 11. Admin
 
 Semua endpoint di bawah ini khusus admin (`role = admin`).
 
-### 8.1 List All Jobs
+### 11.1 List All Jobs
 
 `GET /jobs`
 
 **Headers:** `Authorization: Bearer {token}`  
 **Query:** `?status=pending`
 
-### 8.2 Create Job
+### 11.2 Create Job
 
 `POST /jobs`
 
@@ -891,7 +945,7 @@ Semua endpoint di bawah ini khusus admin (`role = admin`).
 }
 ```
 
-### 8.3 Assign Driver
+### 11.3 Assign Driver
 
 `POST /jobs/{id}/assign`
 
@@ -901,7 +955,7 @@ Semua endpoint di bawah ini khusus admin (`role = admin`).
 }
 ```
 
-### 8.4 Accept / Reject Claim
+### 11.4 Accept / Reject Claim
 
 `POST /jobs/{id}/accept-claim`  
 `POST /jobs/{id}/reject-claim`
@@ -913,11 +967,11 @@ Semua endpoint di bawah ini khusus admin (`role = admin`).
 }
 ```
 
-### 8.5 Pending Drivers
+### 11.5 Pending Drivers
 
 `GET /users/pending`
 
-### 8.6 Approve / Reject Driver
+### 11.6 Approve / Reject Driver
 
 `PUT /users/{id}/status`
 
@@ -927,13 +981,13 @@ Semua endpoint di bawah ini khusus admin (`role = admin`).
 }
 ```
 
-### 8.7 Active Drivers Map
+### 11.7 Active Drivers Map
 
 `GET /tracking/active`
 
 Lokasi driver yang aktif (update < 5 menit).
 
-### 8.8 Settings
+### 11.8 Settings
 
 `GET /settings` — Ambil semua settings  
 `PUT /settings` — Update settings
