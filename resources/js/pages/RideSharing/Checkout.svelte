@@ -328,14 +328,14 @@
                     <div class="sidebar-card">
                         <!-- Sidebar Content -->
                         <div class="sidebar-vehicle">
-                            {#if checkoutData.schedule.vehicleCategory?.image_url}
-                                <img src={checkoutData.schedule.vehicleCategory.image_url} alt="Vehicle" />
+                            {#if checkoutData.schedule.vehicle_category?.image_url}
+                                <img src={checkoutData.schedule.vehicle_category.image_url} alt="Vehicle" />
                             {:else}
                                 <img src="/assets/images/resources/vehicle-default.png" alt="Vehicle" />
                             {/if}
                             <div class="sidebar-vehicle-info">
-                                <h5>{checkoutData.schedule.vehicleCategory?.title || 'Sharing Ride Vehicle'}</h5>
-                                <span>Max {checkoutData.schedule.vehicleCategory?.passenger_capacity || 4} Passengers</span>
+                                <h5>{checkoutData.schedule.vehicle_category?.title || 'Sharing Ride Vehicle'}</h5>
+                                <span>Max {checkoutData.schedule.vehicle_category?.passenger_capacity || 4} Passengers</span>
                             </div>
                         </div>
                         
