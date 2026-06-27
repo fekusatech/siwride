@@ -2,7 +2,6 @@
 
 use App\Models\Order;
 use App\Services\OrderCancellationService;
-use Carbon\Carbon;
 use Database\Seeders\VehicleCategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -24,7 +23,7 @@ test('payment deadline is 10 minutes before pickup time', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     $deadline = $service->getPaymentDeadline($order);
 
     expect($deadline->format('Y-m-d H:i'))->toBe('2024-06-05 08:50');
@@ -38,7 +37,7 @@ test('formatted deadline string returns correct time', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     $formatted = $service->getFormattedDeadlineString($order);
 
     expect($formatted)->toBe('12:50 AM');
@@ -52,7 +51,7 @@ test('should not auto cancel order if status is not pending', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->shouldAutoCancelOrder($order))->toBeFalse();
 });
 
@@ -64,7 +63,7 @@ test('should not auto cancel order if already paid', function () {
         'payment_status' => 'paid',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->shouldAutoCancelOrder($order))->toBeFalse();
 });
 
@@ -76,7 +75,7 @@ test('should not auto cancel order if order date is not today', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->shouldAutoCancelOrder($order))->toBeFalse();
 });
 
@@ -91,7 +90,7 @@ test('should auto cancel order if current time passed payment deadline', functio
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->shouldAutoCancelOrder($order))->toBeTrue();
 });
 
@@ -106,7 +105,7 @@ test('auto cancel order updates status to cancelled', function () {
         'is_cancelled' => false,
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     $service->autoCancelIfEligible($order);
 
     $order->refresh();
@@ -120,7 +119,7 @@ test('can only manually cancel pending unpaid orders', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->canBeCancelled($order))->toBeTrue();
 });
 
@@ -130,7 +129,7 @@ test('cannot manually cancel paid orders', function () {
         'payment_status' => 'paid',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->canBeCancelled($order))->toBeFalse();
 });
 
@@ -140,7 +139,7 @@ test('cannot manually cancel cancelled orders', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->canBeCancelled($order))->toBeFalse();
 });
 
@@ -151,7 +150,7 @@ test('manually cancel order updates status to cancelled', function () {
         'is_cancelled' => false,
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     $result = $service->manuallyCancel($order);
 
     expect($result)->toBeTrue();
@@ -166,7 +165,7 @@ test('manually cancel fails if order is already paid', function () {
         'payment_status' => 'paid',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     $result = $service->manuallyCancel($order);
 
     expect($result)->toBeFalse();
@@ -178,7 +177,7 @@ test('manually cancel fails if order is not pending', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     $result = $service->manuallyCancel($order);
 
     expect($result)->toBeFalse();
@@ -194,7 +193,7 @@ test('order is expired if current time is past pickup time', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->isExpired($order))->toBeTrue();
 });
 
@@ -208,7 +207,7 @@ test('order is not expired if current time is before pickup time', function () {
         'payment_status' => 'pending',
     ]);
 
-    $service = new OrderCancellationService();
+    $service = new OrderCancellationService;
     expect($service->isExpired($order))->toBeFalse();
 });
 

@@ -23,7 +23,7 @@ class CustomerProfileController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $cancellationService = new OrderCancellationService();
+        $cancellationService = new OrderCancellationService;
         $orders->each(fn ($order) => $cancellationService->autoCancelIfEligible($order));
 
         return Inertia::render('customer/profile', [

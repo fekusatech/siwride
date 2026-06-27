@@ -49,8 +49,7 @@ class OrderCancellationService
 
         return Carbon::createFromFormat(
             'Y-m-d H:i:s',
-            $dateString.' '.$timeString
-            , $this->appTimezone()
+            $dateString.' '.$timeString, $this->appTimezone()
         );
     }
 

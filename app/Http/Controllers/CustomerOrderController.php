@@ -688,18 +688,20 @@ class CustomerOrderController extends Controller
 
         // If accessed the return trip directly, redirect to the parent outbound trip instead
         if ($order->is_return_trip && $order->linkedOrder) {
-            $properUrlCode = $order->linkedOrder->booking_code . '-' . $order->booking_code;
+            $properUrlCode = $order->linkedOrder->booking_code.'-'.$order->booking_code;
+
             return redirect()->route('booking.show', $properUrlCode);
         }
 
         // If it's the parent of a return trip, enforce compound URL structure
         if ($order->trip_type === 'round_trip' && $order->linkedOrder) {
-            $expectedCode = $order->booking_code . '-' . $order->linkedOrder->booking_code;
+            $expectedCode = $order->booking_code.'-'.$order->linkedOrder->booking_code;
             if ($bookingCode !== $expectedCode) {
                 $url = route('booking.show', $expectedCode);
                 if (request()->getQueryString()) {
-                    $url .= '?' . request()->getQueryString();
+                    $url .= '?'.request()->getQueryString();
                 }
+
                 return redirect($url);
             }
         }

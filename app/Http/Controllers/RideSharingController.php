@@ -206,24 +206,30 @@ class RideSharingController extends Controller
 
         $customer = Auth::guard('customer')->user();
         if (! $customer) {
-            $customerData = [
-                'name' => $validated['customer_name'],
-                'phone' => $validated['customer_phone'] ?? null,
-            ];
+            $existingCustomer = Customer::where('email', $validated['email'])->first();
 
-            if ($request->boolean('create_account') && ! empty($validated['password'])) {
-                $customerData['password'] = Hash::make($validated['password']);
+            if ($existingCustomer) {
+                if ($request->boolean('create_account')) {
+                    throw ValidationException::withMessages([
+                        'email' => 'This email is already registered. Please log in first.',
+                    ]);
+                }
+
+                $customer = $existingCustomer;
             } else {
-                $customerData['password'] = Hash::make(Str::random(12));
-            }
+                $customerData = [
+                    'name' => $validated['customer_name'],
+                    'phone' => $validated['customer_phone'] ?? null,
+                    'password' => Hash::make(
+                        $request->boolean('create_account') && ! empty($validated['password'])
+                            ? $validated['password']
+                            : Str::random(12)
+                    ),
+                    'email' => $validated['email'],
+                ];
 
-            if (Customer::where('email', $validated['email'])->exists()) {
-                throw ValidationException::withMessages([
-                    'email' => 'This email is already registered. Please log in first.',
-                ]);
+                $customer = Customer::create($customerData);
             }
-            $customerData['email'] = $validated['email'];
-            $customer = Customer::create($customerData);
         }
 
         do {
