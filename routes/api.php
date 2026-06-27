@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DriverController;
+use App\Http\Controllers\Api\EarningController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SettingController;
@@ -75,6 +77,19 @@ Route::prefix('v1')->group(function () {
                 ],
             ]);
         });
+
+        // Change Password
+        Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
+
+        // Driver Features
+        Route::get('/driver/dashboard', [DriverController::class, 'dashboard']);
+        Route::get('/driver/vehicle', [DriverController::class, 'vehicle']);
+        Route::put('/driver/vehicle', [DriverController::class, 'updateVehicle']);
+        Route::put('/driver/availability', [DriverController::class, 'updateAvailability']);
+        Route::post('/jobs/{id}/complete', [DriverController::class, 'completeJob']);
+
+        // Earnings
+        Route::get('/driver/earnings', [EarningController::class, 'index']);
 
         Route::post('/auth/logout', function (Request $request) {
             $request->user()->currentAccessToken()->delete();
