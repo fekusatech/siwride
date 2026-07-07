@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerVehicleController;
 use App\Http\Controllers\RideSharingController;
 use App\Models\RideSharingCity;
 use App\Models\Service;
+use App\Models\TourPackage;
 use App\Models\VehicleCategory;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,12 +15,14 @@ Route::get('/', function () {
     $vehicleCategories = VehicleCategory::orderBy('id')->get();
     $locations = RideSharingCity::orderBy('name')->get();
     $services = Service::where('is_active', true)->orderBy('id')->get();
+    $tourPackages = TourPackage::where('is_active', true)->orderBy('sort_order')->orderBy('id')->limit(6)->get();
 
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'vehicleCategories' => $vehicleCategories,
         'rideSharingLocations' => $locations,
         'services' => $services,
+        'tourPackages' => $tourPackages,
     ]);
 })->name('home');
 
@@ -97,6 +100,7 @@ Route::get('/locations/search', [LocationSearchController::class, 'search'])->na
 Route::get('/booking', [CustomerOrderController::class, 'services'])->name('booking');
 Route::get('/booking/airport-transfer', [CustomerOrderController::class, 'index'])->name('booking.airport-transfer');
 Route::get('/booking/tour', [CustomerOrderController::class, 'tourIndex'])->name('booking.tour');
+Route::get('/tour-packages/{tourPackage:slug}', [CustomerOrderController::class, 'tourShow'])->name('tour-packages.show');
 Route::get('/booking/sharing-ride', [RideSharingController::class, 'index'])->name('booking.sharing-ride');
 Route::get('/booking/sharing-ride/checkout', [RideSharingController::class, 'checkout'])->name('booking.sharing-ride.checkout');
 Route::post('/booking/sharing-ride/orders', [RideSharingController::class, 'store'])->name('booking.sharing-ride.store');

@@ -40,6 +40,8 @@ class DatabaseSeeder extends Seeder
             OrderSeeder::class,
             ZoneSeeder::class,
             ZonePricingSeeder::class,
+            ServiceSeeder::class,
+            TourPackageSeeder::class,
         ]);
 
         Schema::enableForeignKeyConstraints();

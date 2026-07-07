@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Service;
 use App\Models\Setting;
+use App\Models\TourPackage;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
 use App\Models\ZonePricingRule;
@@ -78,12 +79,45 @@ class CustomerOrderController extends Controller
     }
 
     /**
-     * Display the tour booking page.
+     * Display the tour packages listing / booking page.
      */
-    public function tourIndex(): Response
+    public function tourIndex(Request $request): Response
     {
+        $search = $request->input('search', '');
+        $sort = $request->input('sort', 'sort_order');
+
+        $tours = TourPackage::where('is_active', true)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhereJsonContains('destinations', $search);
+                });
+            })
+            ->when($sort === 'price_asc', fn ($q) => $q->orderBy('price_per_pax', 'asc'))
+            ->when($sort === 'price_desc', fn ($q) => $q->orderBy('price_per_pax', 'desc'))
+            ->when($sort === 'duration_asc', fn ($q) => $q->orderBy('duration_hours', 'asc'))
+            ->when(! in_array($sort, ['price_asc', 'price_desc', 'duration_asc']), fn ($q) => $q->orderBy('sort_order')->orderBy('id'))
+            ->get();
+
         return Inertia::render('customer/booking-tour', [
-            'tours' => [],
+            'tours' => $tours,
+            'filters' => [
+                'search' => $search,
+                'sort' => $sort,
+            ],
+        ]);
+    }
+
+    /**
+     * Display a single tour package detail page.
+     */
+    public function tourShow(TourPackage $tourPackage): Response
+    {
+        abort_if(! $tourPackage->is_active, 404);
+
+        return Inertia::render('TourPackage/Show', [
+            'tourPackage' => $tourPackage,
         ]);
     }
 
