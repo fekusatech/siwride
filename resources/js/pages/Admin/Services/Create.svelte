@@ -3,7 +3,7 @@
     import AppHead from '@/components/AppHead.svelte';
     import { Link, useForm, router } from '@inertiajs/svelte';
 
-    let { service = null } = $props();
+    let { service = null, activities = [] } = $props();
     let isEdit = $derived(!!service);
 
     let form = useForm({
@@ -93,15 +93,27 @@
 
                             <div class="mb-4">
                                 <label for="href" class="form-label">Link/URL (Optional)</label>
-                                <input
-                                    type="text"
-                                    class="form-control {form.errors.href ? 'is-invalid' : ''}"
-                                    id="href"
-                                    bind:value={form.href}
-                                    placeholder="e.g. /booking/airport-transfer"
-                                />
+                                <div class="input-group">
+                                    <input
+                                        type="text"
+                                        class="form-control {form.errors.href ? 'is-invalid' : ''}"
+                                        id="href"
+                                        bind:value={form.href}
+                                        placeholder="e.g. /booking/airport-transfer"
+                                    />
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Link to Activity
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        {#each activities as act}
+                                            <li><button type="button" class="dropdown-item" onclick={() => form.href = `/activities/${act.slug}`}>{act.title}</button></li>
+                                        {:else}
+                                            <li><span class="dropdown-item text-muted">No activities found</span></li>
+                                        {/each}
+                                    </ul>
+                                </div>
                                 {#if form.errors.href}
-                                    <div class="invalid-feedback">{form.errors.href}</div>
+                                    <div class="invalid-feedback d-block">{form.errors.href}</div>
                                 {/if}
                             </div>
 
