@@ -205,7 +205,7 @@
                         </ul>
                         <hr>
                         <p class="text-muted small mb-0">
-                            After creating an activity, update the "Book" button link in <strong>Admin → Services</strong> to point to <code>/activities/{slug}</code>.
+                            After creating an activity, update the "Book" button link in <strong>Admin → Services</strong> to point to <code>/activities/your-slug</code>.
                         </p>
                     </div>
                 </div>
