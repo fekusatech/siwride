@@ -198,6 +198,20 @@
                 </Link>
             </li>
 
+            <li class="side-nav-item">
+                <Link href="/admin/activities" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-mountain"></i></span>
+                    <span class="menu-text"> Activities </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
+                <Link href="/admin/activity-bookings" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-ticket"></i></span>
+                    <span class="menu-text"> Activity Bookings </span>
+                </Link>
+            </li>
+
             <li class="side-nav-title mt-2">Ride Sharing</li>
             
             <li class="side-nav-item">
