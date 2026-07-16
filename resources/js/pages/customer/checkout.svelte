@@ -5,7 +5,6 @@
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
-    import LocationSearchInput from '@/components/LocationSearchInput.svelte';
     import DatePicker from '@/components/DatePicker.svelte';
     import TimePicker from '@/components/TimePicker.svelte';
     import {
@@ -81,7 +80,6 @@
         pickup_longitude: '' as string | number,
         dropoff_latitude: '' as string | number,
         dropoff_longitude: '' as string | number,
-        exact_distance_km: null as number | null,
         date: transfer?.date || '',
         time: transfer?.time || '',
         passengers: transfer?.passengers || '1',
@@ -152,41 +150,26 @@
     let fullDropoffAddress = $state<string | null>(null);
     let flightNumber = $state('');
 
-    /** Geocodes an address string and returns {lat, lng, formatted} or null. */
+    /** Geocodes an address string via the backend (Nominatim) and returns {lat, lng, formatted} or null. */
     async function geocodeAddress(
         address: string,
     ): Promise<{ lat: number; lng: number; formatted: string } | null> {
-        return new Promise((resolve) => {
-            try {
-                const geocoder = new (window as any).google.maps.Geocoder();
-                geocoder.geocode(
-                    {
-                        address,
-                        region: 'id',
-                        bounds: {
-                            south: -8.95,
-                            west: 114.4,
-                            north: -8.06,
-                            east: 115.72,
-                        },
+        try {
+            const res = await fetch(
+                `/locations/geocode?address=${encodeURIComponent(address)}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                     },
-                    (results: any, status: string) => {
-                        if (status === 'OK' && results && results[0]) {
-                            const loc = results[0].geometry.location;
-                            resolve({
-                                lat: loc.lat(),
-                                lng: loc.lng(),
-                                formatted: results[0].formatted_address,
-                            });
-                        } else {
-                            resolve(null);
-                        }
-                    },
-                );
-            } catch {
-                resolve(null);
-            }
-        });
+                },
+            );
+            if (!res.ok) return null;
+            const data = await res.json();
+            return { lat: data.lat, lng: data.lng, formatted: data.formatted };
+        } catch {
+            return null;
+        }
     }
 
     /** Calls the estimate-price API and stores the result. */
@@ -195,13 +178,9 @@
         pLng: number,
         dLat: number,
         dLng: number,
-        exactDistanceKm: number | null = null,
     ) {
         try {
-            let url = `/booking/estimate-price?pickup_latitude=${pLat}&pickup_longitude=${pLng}&dropoff_latitude=${dLat}&dropoff_longitude=${dLng}`;
-            if (exactDistanceKm !== null) {
-                url += `&exact_distance_km=${exactDistanceKm}`;
-            }
+            const url = `/booking/estimate-price?pickup_latitude=${pLat}&pickup_longitude=${pLng}&dropoff_latitude=${dLat}&dropoff_longitude=${dLng}`;
             const res = await fetch(url, {
                 headers: {
                     Accept: 'application/json',
@@ -222,6 +201,12 @@
                 dropoff_zone: data.dropoff_zone,
                 distance_km: data.distance_km,
             };
+            if (data.distance_km != null) {
+                exactDistanceStr = `${data.distance_km} km`;
+            }
+            if (data.duration_minutes != null) {
+                exactDurationStr = `${data.duration_minutes} min`;
+            }
             // Find price for the current vehicle category
             const match = data.prices?.find(
                 (p: any) => p.id === vehicleCategory?.id,
@@ -245,73 +230,28 @@
             return;
         }
 
-        // Wait for google maps to be available (it's loaded async)
-        let waited = 0;
-        while (typeof (window as any).google === 'undefined' && waited < 5000) {
-            await new Promise((r) => setTimeout(r, 300));
-            waited += 300;
-        }
-        if (typeof (window as any).google === 'undefined') {
-            isPricingLoaded = true;
-            return;
-        }
-
         const [pickupCoords, dropoffCoords] = await Promise.all([
             geocodeAddress(pickupAddr),
             geocodeAddress(dropoffAddr),
         ]);
 
-        let fullPickupAddr: string | null = null;
-        let fullDropoffAddr: string | null = null;
-
         if (pickupCoords) {
             form.pickup_latitude = pickupCoords.lat;
             form.pickup_longitude = pickupCoords.lng;
-            fullPickupAddr = pickupCoords.formatted;
-            fullPickupAddress = fullPickupAddr;
+            fullPickupAddress = pickupCoords.formatted;
         }
         if (dropoffCoords) {
             form.dropoff_latitude = dropoffCoords.lat;
             form.dropoff_longitude = dropoffCoords.lng;
-            fullDropoffAddr = dropoffCoords.formatted;
-            fullDropoffAddress = fullDropoffAddr;
+            fullDropoffAddress = dropoffCoords.formatted;
         }
 
         if (pickupCoords && dropoffCoords) {
-            let exactDistanceKm: number | null = null;
-            try {
-                const service = new (
-                    window as any
-                ).google.maps.DistanceMatrixService();
-                const dmResponse = await new Promise<any>((resolve, reject) => {
-                    service.getDistanceMatrix(
-                        {
-                            origins: [pickupCoords],
-                            destinations: [dropoffCoords],
-                            travelMode: 'DRIVING',
-                        },
-                        (response: any, status: string) => {
-                            if (status === 'OK') resolve(response);
-                            else reject(status);
-                        },
-                    );
-                });
-                const element = dmResponse.rows[0].elements[0];
-                if (element.status === 'OK') {
-                    exactDistanceKm = element.distance.value / 1000;
-                    exactDistanceStr = element.distance.text;
-                    exactDurationStr = element.duration.text;
-                    form.exact_distance_km = exactDistanceKm;
-                }
-            } catch (err) {
-                // ignore
-            }
             await fetchPriceEstimate(
                 pickupCoords.lat,
                 pickupCoords.lng,
                 dropoffCoords.lat,
                 dropoffCoords.lng,
-                exactDistanceKm,
             );
         } else {
             isPricingLoaded = true;

@@ -160,6 +160,14 @@
                 </Link>
             </li>
 
+            <li class="side-nav-item">
+                <Link href="/admin/transactions" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-qrcode"></i></span
+                    >
+                    <span class="menu-text"> Transactions </span>
+                </Link>
+            </li>
+
             <li class="side-nav-title mt-2">Master Data</li>
 
             <li class="side-nav-item">

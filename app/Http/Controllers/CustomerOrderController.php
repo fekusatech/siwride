@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
 use App\Models\ZonePricingRule;
+use App\Services\GeoService;
 use App\Services\OrderCancellationService;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -204,7 +205,6 @@ class CustomerOrderController extends Controller
             'pickup_longitude' => ['required', 'numeric'],
             'dropoff_latitude' => ['required', 'numeric'],
             'dropoff_longitude' => ['required', 'numeric'],
-            'exact_distance_km' => ['nullable', 'numeric'],
         ]);
 
         $pickupZone = Zone::findContainingPoint((float) $validated['pickup_latitude'], (float) $validated['pickup_longitude']);
@@ -228,7 +228,12 @@ class CustomerOrderController extends Controller
 
         $categories = VehicleCategory::all();
 
-        $exactDistance = isset($validated['exact_distance_km']) ? (float) $validated['exact_distance_km'] : null;
+        $exactDistance = GeoService::roadDistanceKm(
+            (float) $validated['pickup_latitude'],
+            (float) $validated['pickup_longitude'],
+            (float) $validated['dropoff_latitude'],
+            (float) $validated['dropoff_longitude'],
+        );
 
         $prices = $categories->map(function (VehicleCategory $category) use ($pricingRule, $exactDistance): array {
             $estPrice = (int) round($pricingRule->calculate($category, $exactDistance));
@@ -243,7 +248,10 @@ class CustomerOrderController extends Controller
         return response()->json([
             'pickup_zone' => $pickupZone?->name,
             'dropoff_zone' => $dropoffZone?->name,
-            'distance_km' => $exactDistance ?? $pricingRule?->distance_km,
+            'distance_km' => $exactDistance,
+            // ponytail: flat 30km/h average-speed heuristic, no real routing/traffic data.
+            // Upgrade path: a real routing API's duration estimate if precision matters later.
+            'duration_minutes' => (int) round($exactDistance / 30 * 60),
             'prices' => $prices,
         ]);
     }
@@ -395,6 +403,7 @@ class CustomerOrderController extends Controller
 
         // ── Calculate base price for one leg ────────────────────────────────
         $basePrice = 0.0;
+        $exactDistance = null;
 
         if ($vehicleCategory) {
             $pickupLat = isset($validated['pickup_latitude']) ? (float) $validated['pickup_latitude'] : null;
@@ -422,7 +431,7 @@ class CustomerOrderController extends Controller
                     throw ValidationException::withMessages(['pickup_address' => 'The selected route is outside our service area.']);
                 }
 
-                $exactDistance = isset($validated['exact_distance_km']) ? (float) $validated['exact_distance_km'] : null;
+                $exactDistance = GeoService::roadDistanceKm($pickupLat, $pickupLng, $dropoffLat, $dropoffLng);
                 $basePrice = $pricingRule->calculate($vehicleCategory, $exactDistance);
             }
         }
@@ -457,7 +466,7 @@ class CustomerOrderController extends Controller
             'dropoff_address' => $validated['dropoff_address'],
             'dropoff_latitude' => $validated['dropoff_latitude'] ?? null,
             'dropoff_longitude' => $validated['dropoff_longitude'] ?? null,
-            'distance_km' => $validated['exact_distance_km'] ?? null,
+            'distance_km' => $exactDistance,
             'passengers' => $validated['passengers'],
             'notes' => $validated['notes'] ?? null,
             'extras' => $extras ?: null,
@@ -492,7 +501,7 @@ class CustomerOrderController extends Controller
                 'dropoff_address' => $validated['pickup_address'],
                 'dropoff_latitude' => $validated['pickup_latitude'] ?? null,
                 'dropoff_longitude' => $validated['pickup_longitude'] ?? null,
-                'distance_km' => $validated['exact_distance_km'] ?? null,
+                'distance_km' => $exactDistance,
                 'passengers' => $validated['passengers'],
                 'notes' => $validated['notes'] ?? null,
                 'extras' => $extras ?: null, // extras are charged on return order too

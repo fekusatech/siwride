@@ -1,14 +1,11 @@
 <script lang="ts">
-    import SearchableSelect from '@/components/SearchableSelect.svelte';
+    import { useForm } from '@inertiajs/svelte';
     import Flatpickr from '@/components/Flatpickr.svelte';
-    import { useForm, page } from '@inertiajs/svelte';
-    import { onMount } from 'svelte';
-
-    declare const google: any;
+    import LocationSearchInput from '@/components/LocationSearchInput.svelte';
+    import SearchableSelect from '@/components/SearchableSelect.svelte';
 
     let {
         drivers,
-        google_maps_api_key,
         initialDate = '',
         order = null,
         onSuccess = () => {},
@@ -68,8 +65,11 @@
         lng: number,
         type: 'pickup' | 'dropoff',
     ) {
-        if (type === 'pickup') validatingPickup = true;
-        else validatingDropoff = true;
+        if (type === 'pickup') {
+validatingPickup = true;
+} else {
+validatingDropoff = true;
+}
 
         try {
             const response = await fetch('/admin/zones/validate', {
@@ -81,13 +81,20 @@
                 body: JSON.stringify({ lat, lng }),
             });
             const data = await response.json();
-            if (type === 'pickup') pickupInZone = data.inside;
-            else dropoffInZone = data.inside;
+
+            if (type === 'pickup') {
+pickupInZone = data.inside;
+} else {
+dropoffInZone = data.inside;
+}
         } catch (error) {
             console.error('Zone validation error:', error);
         } finally {
-            if (type === 'pickup') validatingPickup = false;
-            else validatingDropoff = false;
+            if (type === 'pickup') {
+validatingPickup = false;
+} else {
+validatingDropoff = false;
+}
         }
     }
 
@@ -138,6 +145,7 @@
     $effect(() => {
         if (form.driver_id) {
             const driverId = Number(form.driver_id);
+
             // Auto-select if there's only one vehicle
             if (availableVehicles.length === 1 && !form.vehicle_id) {
                 form.vehicle_id = availableVehicles[0].id.toString();
@@ -146,106 +154,41 @@
                 const isValid = availableVehicles.some(
                     (v) => v.id === Number(form.vehicle_id),
                 );
-                if (!isValid) form.vehicle_id = '';
+
+                if (!isValid) {
+form.vehicle_id = '';
+}
             }
         } else {
             form.vehicle_id = '';
         }
     });
 
-    let pickupInput: HTMLInputElement;
-    let dropoffInput: HTMLInputElement;
+    // svelte-ignore state_referenced_locally
+    let pickupLat = $state<number | null>(order?.pickup_latitude ?? null);
+    // svelte-ignore state_referenced_locally
+    let pickupLng = $state<number | null>(order?.pickup_longitude ?? null);
+    // svelte-ignore state_referenced_locally
+    let dropoffLat = $state<number | null>(order?.dropoff_latitude ?? null);
+    // svelte-ignore state_referenced_locally
+    let dropoffLng = $state<number | null>(order?.dropoff_longitude ?? null);
 
-    function initGoogleMaps() {
-        if (!google_maps_api_key) return;
-        const scriptExists = document.querySelector(
-            'script[src*="maps.googleapis.com"]',
-        );
-        if (!scriptExists) {
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${google_maps_api_key}&libraries=places`;
-            script.async = true;
-            script.defer = true;
-            script.onload = () => setupAutocomplete();
-            document.head.appendChild(script);
-        } else {
-            if (
-                typeof google !== 'undefined' &&
-                google.maps &&
-                google.maps.places
-            ) {
-                setupAutocomplete();
-            }
+    $effect(() => {
+        if (pickupLat != null && pickupLng != null) {
+            form.pickup_latitude = pickupLat;
+            form.pickup_longitude = pickupLng;
+            checkZone(pickupLat, pickupLng, 'pickup');
+            calculateZonePrice();
         }
-    }
+    });
 
-    function setupAutocomplete() {
-        if (!pickupInput || !dropoffInput) return;
-
-        const activeZonesBounds = (page.props as any).active_zones_bounds;
-        let bounds;
-
-        if (activeZonesBounds) {
-            bounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(activeZonesBounds.south, activeZonesBounds.west),
-                new google.maps.LatLng(activeZonesBounds.north, activeZonesBounds.east),
-            );
-        } else {
-            // Fallback to Bali bounds
-            bounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(-8.9472, 114.4173), // South West
-                new google.maps.LatLng(-8.0583, 115.7118), // North East
-            );
+    $effect(() => {
+        if (dropoffLat != null && dropoffLng != null) {
+            form.dropoff_latitude = dropoffLat;
+            form.dropoff_longitude = dropoffLng;
+            checkZone(dropoffLat, dropoffLng, 'dropoff');
+            calculateZonePrice();
         }
-
-        const autocompleteOptions = {
-            types: ['geocode', 'establishment'],
-            bounds: bounds,
-            componentRestrictions: { country: 'id' },
-            strictBounds: !!activeZonesBounds, // Set to true if you want to ONLY show results inside zones
-        };
-
-        const pickupAutocomplete = new google.maps.places.Autocomplete(
-            pickupInput,
-            autocompleteOptions,
-        );
-        pickupAutocomplete.addListener('place_changed', () => {
-            const place = pickupAutocomplete.getPlace();
-            if (place.geometry && place.geometry.location) {
-                form.pickup_address = place.formatted_address || '';
-                form.pickup_latitude = place.geometry.location.lat();
-                form.pickup_longitude = place.geometry.location.lng();
-                checkZone(
-                    form.pickup_latitude,
-                    form.pickup_longitude,
-                    'pickup',
-                );
-                calculateZonePrice();
-            }
-        });
-
-        const dropoffAutocomplete = new google.maps.places.Autocomplete(
-            dropoffInput,
-            autocompleteOptions,
-        );
-        dropoffAutocomplete.addListener('place_changed', () => {
-            const place = dropoffAutocomplete.getPlace();
-            if (place.geometry && place.geometry.location) {
-                form.dropoff_address = place.formatted_address || '';
-                form.dropoff_latitude = place.geometry.location.lat();
-                form.dropoff_longitude = place.geometry.location.lng();
-                checkZone(
-                    form.dropoff_latitude,
-                    form.dropoff_longitude,
-                    'dropoff',
-                );
-                calculateZonePrice();
-            }
-        });
-    }
-
-    onMount(() => {
-        initGoogleMaps();
     });
 
     function handleSubmit(e: Event) {
@@ -255,6 +198,7 @@
             alert(
                 'Cannot save: One of the addresses is outside the service zones.',
             );
+
             return;
         }
 
@@ -428,12 +372,12 @@
         </div>
         <div class="col-md-6">
             <label for="pickup_address_form" class="form-label">Pick Up</label>
-            <input
-                type="text"
-                class="form-control {!pickupInZone ? 'is-invalid' : ''}"
+            <LocationSearchInput
                 id="pickup_address_form"
-                bind:this={pickupInput}
                 bind:value={form.pickup_address}
+                bind:lat={pickupLat}
+                bind:lng={pickupLng}
+                class="form-control {!pickupInZone ? 'is-invalid' : ''}"
                 placeholder="Search address..."
                 required
             />
@@ -448,12 +392,12 @@
         <div class="col-md-6">
             <label for="dropoff_address_form" class="form-label">Drop Off</label
             >
-            <input
-                type="text"
-                class="form-control {!dropoffInZone ? 'is-invalid' : ''}"
+            <LocationSearchInput
                 id="dropoff_address_form"
-                bind:this={dropoffInput}
                 bind:value={form.dropoff_address}
+                bind:lat={dropoffLat}
+                bind:lng={dropoffLng}
+                class="form-control {!dropoffInZone ? 'is-invalid' : ''}"
                 placeholder="Search address..."
                 required
             />

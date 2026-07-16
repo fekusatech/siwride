@@ -35,7 +35,6 @@ class StoreCustomerOrderRequest extends FormRequest
             'create_account' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed', 'required_if_accepted:create_account'],
             'payment_method' => ['nullable', 'string', 'max:50'],
-            'exact_distance_km' => ['nullable', 'numeric'],
             'trip_type' => ['nullable', 'string', 'in:one_way,round_trip'],
             'return_date' => ['nullable', 'date', 'after_or_equal:date', 'required_if:trip_type,round_trip'],
             'return_time' => ['nullable', 'string', 'required_if:trip_type,round_trip'],

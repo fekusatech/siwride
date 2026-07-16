@@ -54,7 +54,6 @@ class ZoneController extends Controller
 
         return Inertia::render('Admin/Zones/Index', [
             'zones' => $zones,
-            'google_maps_api_key' => config('services.google.maps_api_key'),
         ]);
     }
 

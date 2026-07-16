@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\FrontendSettingController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\VehicleCategoryController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\ZoneController;
@@ -94,6 +95,7 @@ Route::middleware('auth:customer')->group(function () {
 });
 
 Route::get('/locations/search', [LocationSearchController::class, 'search'])->name('locations.search');
+Route::get('/locations/geocode', [LocationSearchController::class, 'geocode'])->name('locations.geocode');
 Route::get('/booking', [CustomerOrderController::class, 'services'])->name('booking');
 Route::get('/booking/airport-transfer', [CustomerOrderController::class, 'index'])->name('booking.airport-transfer');
 Route::get('/booking/tour', [CustomerOrderController::class, 'tourIndex'])->name('booking.tour');
@@ -163,6 +165,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('admin/settings/frontend', [FrontendSettingController::class, 'update'])->name('admin.settings.frontend.update');
 
     Route::resource('admin/users', UserController::class)->names('admin.users');
+
+    Route::get('admin/transactions/{transaction}/status', [TransactionController::class, 'status'])->name('admin.transactions.status');
+    Route::resource('admin/transactions', TransactionController::class)->only(['index', 'create', 'store', 'show'])->names('admin.transactions');
 });
 
 require __DIR__.'/settings.php';
