@@ -35,10 +35,6 @@ return [
         ],
     ],
 
-    'google' => [
-        'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
-    ],
-
     'whatsapp' => [
         'api_url' => env('WA_API_URL', 'https://api-wa.greenenergiutama.cloud/api/v1'),
         'api_key' => env('WA_API_KEY'),

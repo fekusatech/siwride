@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityBookingController;
 use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
 use App\Http\Controllers\RideSharingController;
@@ -50,6 +51,7 @@ use App\Http\Controllers\Admin\FrontendSettingController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\VehicleCategoryController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\ZoneController;
@@ -81,6 +83,7 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/customer/register', [CustomerAuthController::class, 'register']);
 });
 
+use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\RideSharing\CityController;
 use App\Http\Controllers\Admin\RideSharing\RouteController;
 use App\Http\Controllers\Admin\RideSharing\RoutePathController;
@@ -97,6 +100,11 @@ Route::middleware('auth:customer')->group(function () {
 });
 
 Route::get('/locations/search', [LocationSearchController::class, 'search'])->name('locations.search');
+Route::get('/locations/geocode', [LocationSearchController::class, 'geocode'])->name('locations.geocode');
+Route::get('/activities/{slug}', [ActivityBookingController::class, 'show'])->name('activities.show');
+Route::post('/activities/{slug}/book', [ActivityBookingController::class, 'store'])->name('activities.book');
+Route::get('/activities/{bookingCode}/booking-success', [ActivityBookingController::class, 'success'])->name('activities.booking.success');
+
 Route::get('/booking', [CustomerOrderController::class, 'services'])->name('booking');
 Route::get('/booking/airport-transfer', [CustomerOrderController::class, 'index'])->name('booking.airport-transfer');
 Route::get('/booking/tour', [CustomerOrderController::class, 'tourIndex'])->name('booking.tour');
@@ -146,6 +154,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('admin/services', ServiceController::class)->names('admin.services');
 
+    Route::resource('admin/activities', ActivityController::class)->names('admin.activities');
+    Route::patch('admin/activity-bookings/{activityBooking}/status', [App\Http\Controllers\Admin\ActivityBookingController::class, 'updateStatus'])->name('admin.activity-bookings.update-status');
+    Route::resource('admin/activity-bookings', App\Http\Controllers\Admin\ActivityBookingController::class)->only(['index', 'show'])->names('admin.activity-bookings');
+
     Route::resource('admin/rs-cities', CityController::class)->names('admin.rs-cities');
     Route::resource('admin/rs-routes', RouteController::class)->names('admin.rs-routes');
     Route::put('admin/rs-routes/{rs_route}/paths', [RoutePathController::class, 'updatePaths'])->name('admin.rs-routes.paths.update');
@@ -167,6 +179,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('admin/settings/frontend', [FrontendSettingController::class, 'update'])->name('admin.settings.frontend.update');
 
     Route::resource('admin/users', UserController::class)->names('admin.users');
+
+    Route::get('admin/transactions/{transaction}/status', [TransactionController::class, 'status'])->name('admin.transactions.status');
+    Route::resource('admin/transactions', TransactionController::class)->only(['index', 'create', 'store', 'show'])->names('admin.transactions');
 });
 
 require __DIR__.'/settings.php';

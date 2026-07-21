@@ -12,7 +12,7 @@
     let authUser = page.props.auth?.user as any;
     let userRole = authUser?.role || 'admin';
 
-    let { orders, filters, drivers, google_maps_api_key } = $props();
+    let { orders, filters, drivers } = $props();
     // svelte-ignore state_referenced_locally
     let search = $state(filters.search ?? '');
     // svelte-ignore state_referenced_locally
@@ -1255,7 +1255,6 @@
                         {:else}
                             <OrderForm
                                 {drivers}
-                                {google_maps_api_key}
                                 order={selectedOrder}
                                 onSuccess={handleOrderSuccess}
                             >

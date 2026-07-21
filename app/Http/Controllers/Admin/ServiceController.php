@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Activity;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -34,7 +35,9 @@ class ServiceController extends Controller
 
     public function create()
     {
-        return Inertia::render('Admin/Services/Create');
+        return Inertia::render('Admin/Services/Create', [
+            'activities' => Activity::select('id', 'title', 'slug')->get(),
+        ]);
     }
 
     public function store(Request $request)
@@ -65,6 +68,7 @@ class ServiceController extends Controller
     {
         return Inertia::render('Admin/Services/Create', [
             'service' => $service,
+            'activities' => Activity::select('id', 'title', 'slug')->get(),
         ]);
     }
 

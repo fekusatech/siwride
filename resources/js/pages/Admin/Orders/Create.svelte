@@ -4,7 +4,7 @@
     import OrderForm from '@/components/Orders/OrderForm.svelte';
     import { router } from '@inertiajs/svelte';
 
-    let { drivers, google_maps_api_key } = $props();
+    let { drivers } = $props();
 
     function handleSuccess() {
         router.visit('/admin/orders');
@@ -26,7 +26,6 @@
             <div class="card-body p-4">
                 <OrderForm
                     {drivers}
-                    {google_maps_api_key}
                     onSuccess={handleSuccess}
                 >
                     {#snippet footer({ processing })}

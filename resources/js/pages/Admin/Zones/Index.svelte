@@ -1,8 +1,12 @@
 <script lang="ts">
-    import AdminLayout from '@/layouts/AdminLayout.svelte';
-    import AppHead from '@/components/AppHead.svelte';
+    import '@geoman-io/leaflet-geoman-free';
+    import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
     import { useForm, router } from '@inertiajs/svelte';
-    import { onMount } from 'svelte';
+    import L from 'leaflet';
+    import 'leaflet/dist/leaflet.css';
+    import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+    import markerIcon from 'leaflet/dist/images/marker-icon.png';
+    import markerShadow from 'leaflet/dist/images/marker-shadow.png';
     import {
         MapPin,
         Trash2,
@@ -11,10 +15,19 @@
         Pencil,
         MousePointerClick,
     } from 'lucide-svelte';
+    import { onMount } from 'svelte';
+    import AppHead from '@/components/AppHead.svelte';
+    import AdminLayout from '@/layouts/AdminLayout.svelte';
 
-    declare const google: any;
+    // Leaflet's default icon bakes relative image paths that 404 under Vite.
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: markerIcon2x,
+        iconUrl: markerIcon,
+        shadowUrl: markerShadow,
+    });
 
-    let { zones = [], google_maps_api_key } = $props();
+    let { zones = [] } = $props();
 
     const form = useForm({
         id: null as number | null,
@@ -36,43 +49,24 @@
     let boundarySuggestions = $state<any[]>([]);
     let searchingBoundary = $state(false);
     let boundaryError = $state<string | null>(null);
-    let mapClickListener: any = null;
-
-    function initMap() {
-        if (!google_maps_api_key) return;
-
-        const scriptExists = document.querySelector(
-            'script[src*="maps.googleapis.com"]',
-        );
-        if (!scriptExists) {
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${google_maps_api_key}&libraries=places`;
-            script.async = true;
-            script.defer = true;
-            script.onload = () => setupMap();
-            document.head.appendChild(script);
-        } else {
-            if (typeof google !== 'undefined' && google.maps) {
-                setupMap();
-            }
-        }
-    }
+    let mapClickHandler: ((e: any) => void) | null = null;
 
     function setupMap() {
-        const bali = { lat: -8.4095, lng: 115.1889 };
-        map = new google.maps.Map(mapElement, {
-            center: bali,
-            zoom: 10,
-            styles: [
-                {
-                    featureType: 'poi',
-                    elementType: 'labels',
-                    stylers: [{ visibility: 'off' }],
-                },
-            ],
-        });
+        const bali: [number, number] = [-8.4095, 115.1889];
+        map = L.map(mapElement).setView(bali, 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+        }).addTo(map);
 
         renderZones();
+    }
+
+    /** Enables draggable-vertex editing on a polygon and wires coordinate sync. */
+    function enableEditing(polygon: any) {
+        polygon.pm.enable({ draggable: true, allowSelfIntersection: false });
+        polygon.on('pm:edit', () => updateCoordinatesFromPolygon(polygon));
+        polygon.on('pm:dragend', () => updateCoordinatesFromPolygon(polygon));
     }
 
     function startDrawing() {
@@ -80,46 +74,40 @@
         drawPoints = [];
         clearDrawingArtifacts();
 
-        // Change cursor
-        if (map) map.setOptions({ draggableCursor: 'crosshair' });
+        if (mapElement) {
+mapElement.style.cursor = 'crosshair';
+}
 
-        // Listen for map clicks
-        mapClickListener = google.maps.event.addListener(
-            map,
-            'click',
-            (e: any) => {
-                const latLng = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-                drawPoints = [...drawPoints, latLng];
-                updateDrawingVisuals();
-            },
-        );
+        mapClickHandler = (e: any) => {
+            const latLng = { lat: e.latlng.lat, lng: e.latlng.lng };
+            drawPoints = [...drawPoints, latLng];
+            updateDrawingVisuals();
+        };
+        map.on('click', mapClickHandler);
     }
 
     function updateDrawingVisuals() {
         // Clear previous markers and polyline
-        drawMarkers.forEach((m) => m.setMap(null));
+        drawMarkers.forEach((m) => map.removeLayer(m));
         drawMarkers = [];
-        if (drawPolyline) drawPolyline.setMap(null);
+
+        if (drawPolyline) {
+map.removeLayer(drawPolyline);
+}
 
         // Draw markers
         drawPoints.forEach((pt, i) => {
-            const marker = new google.maps.Marker({
-                position: pt,
-                map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: i === 0 ? 8 : 6,
-                    fillColor: i === 0 ? '#22c55e' : '#3b82f6',
-                    fillOpacity: 1,
-                    strokeColor: '#fff',
-                    strokeWeight: 2,
-                },
-                title: i === 0 ? 'Start (click to close)' : `Point ${i + 1}`,
-            });
+            const marker = L.circleMarker([pt.lat, pt.lng], {
+                radius: i === 0 ? 8 : 6,
+                color: '#fff',
+                weight: 2,
+                fillColor: i === 0 ? '#22c55e' : '#3b82f6',
+                fillOpacity: 1,
+            }).addTo(map);
 
             // Click first marker to close polygon
             if (i === 0 && drawPoints.length >= 3) {
-                marker.addListener('click', () => finishDrawing());
+                marker.on('click', () => finishDrawing());
             }
 
             drawMarkers.push(marker);
@@ -127,19 +115,17 @@
 
         // Draw polyline connecting points
         if (drawPoints.length > 1) {
-            drawPolyline = new google.maps.Polyline({
-                path: drawPoints,
-                strokeColor: '#3b82f6',
-                strokeWeight: 2,
-                strokeOpacity: 0.8,
-                map,
-            });
+            drawPolyline = L.polyline(
+                drawPoints.map((p) => [p.lat, p.lng]),
+                { color: '#3b82f6', weight: 2, opacity: 0.8 },
+            ).addTo(map);
         }
     }
 
     function finishDrawing() {
         if (drawPoints.length < 3) {
             alert('You need at least 3 points to create a polygon.');
+
             return;
         }
 
@@ -150,47 +136,45 @@
         clearDrawingArtifacts();
 
         // Reset cursor
-        if (map) map.setOptions({ draggableCursor: '' });
+        if (mapElement) {
+mapElement.style.cursor = '';
+}
 
         // Remove click listener
-        if (mapClickListener) {
-            google.maps.event.removeListener(mapClickListener);
-            mapClickListener = null;
+        if (mapClickHandler) {
+            map.off('click', mapClickHandler);
+            mapClickHandler = null;
         }
 
         // Show the polygon
-        if (selectedPolygon) selectedPolygon.setMap(null);
-        selectedPolygon = new google.maps.Polygon({
-            paths: form.coordinates,
-            editable: true,
-            draggable: true,
-            fillColor: '#22c55e',
-            fillOpacity: 0.35,
-            strokeColor: '#16a34a',
-            strokeWeight: 2,
-            map,
-        });
+        if (selectedPolygon) {
+map.removeLayer(selectedPolygon);
+}
 
-        google.maps.event.addListener(
-            selectedPolygon.getPath(),
-            'set_at',
-            () => updateCoordinatesFromPolygon(selectedPolygon),
-        );
-        google.maps.event.addListener(
-            selectedPolygon.getPath(),
-            'insert_at',
-            () => updateCoordinatesFromPolygon(selectedPolygon),
-        );
+        selectedPolygon = L.polygon(
+            form.coordinates.map((p) => [p.lat, p.lng]),
+            {
+                color: '#16a34a',
+                weight: 2,
+                fillColor: '#22c55e',
+                fillOpacity: 0.35,
+            },
+        ).addTo(map);
+        enableEditing(selectedPolygon);
     }
 
     function cancelDrawing() {
         isDrawing = false;
         drawPoints = [];
         clearDrawingArtifacts();
-        if (map) map.setOptions({ draggableCursor: '' });
-        if (mapClickListener) {
-            google.maps.event.removeListener(mapClickListener);
-            mapClickListener = null;
+
+        if (mapElement) {
+mapElement.style.cursor = '';
+}
+
+        if (mapClickHandler) {
+            map.off('click', mapClickHandler);
+            mapClickHandler = null;
         }
     }
 
@@ -202,72 +186,73 @@
     }
 
     function clearDrawingArtifacts() {
-        drawMarkers.forEach((m) => m.setMap(null));
+        drawMarkers.forEach((m) => map.removeLayer(m));
         drawMarkers = [];
+
         if (drawPolyline) {
-            drawPolyline.setMap(null);
+            map.removeLayer(drawPolyline);
             drawPolyline = null;
         }
     }
 
     function renderZones() {
-        currentPolygons.forEach((p) => p.setMap(null));
+        currentPolygons.forEach((p) => map.removeLayer(p));
         currentPolygons = [];
 
-        const bounds = new google.maps.LatLngBounds();
-        let hasValidCoords = false;
+        const allPoints: [number, number][] = [];
 
         zones.forEach((zone: any) => {
-            if (!zone.coordinates || zone.coordinates.length === 0) return;
+            if (!zone.coordinates || zone.coordinates.length === 0) {
+return;
+}
 
             if (isEditing && form.id === zone.id) {
                 zone.coordinates.forEach((coord: any) => {
-                    bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
-                    hasValidCoords = true;
+                    allPoints.push([coord.lat, coord.lng]);
                 });
+
                 return;
             }
 
-            const polygon = new google.maps.Polygon({
-                paths: zone.coordinates,
-                strokeColor: zone.is_active ? '#3b82f6' : '#9ca3af',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: zone.is_active ? '#3b82f6' : '#9ca3af',
-                fillOpacity: 0.2,
-                map: map,
-            });
+            const polygon = L.polygon(
+                zone.coordinates.map((c: any) => [c.lat, c.lng]),
+                {
+                    color: zone.is_active ? '#3b82f6' : '#9ca3af',
+                    opacity: 0.8,
+                    weight: 2,
+                    fillColor: zone.is_active ? '#3b82f6' : '#9ca3af',
+                    fillOpacity: 0.2,
+                },
+            ).addTo(map);
 
-            polygon.addListener('click', () => {
+            polygon.on('click', () => {
                 editZone(zone);
             });
 
             zone.coordinates.forEach((coord: any) => {
-                bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
-                hasValidCoords = true;
+                allPoints.push([coord.lat, coord.lng]);
             });
 
             currentPolygons.push(polygon);
         });
 
-        if (hasValidCoords && !isEditing) {
-            map.fitBounds(bounds);
+        if (allPoints.length > 0 && !isEditing) {
+            map.fitBounds(L.latLngBounds(allPoints));
         }
     }
 
     function updateCoordinatesFromPolygon(polygon: any) {
-        const path = polygon.getPath();
-        const coords = [];
-        for (let i = 0; i < path.getLength(); i++) {
-            const point = path.getAt(i);
-            coords.push({ lat: point.lat(), lng: point.lng() });
-        }
-        form.coordinates = coords;
+        const latlngs = polygon.getLatLngs()[0];
+        form.coordinates = latlngs.map((ll: any) => ({
+            lat: ll.lat,
+            lng: ll.lng,
+        }));
     }
 
     async function searchBoundaries() {
         if (boundaryQuery.trim().length < 3) {
             boundaryError = 'Type at least 3 characters.';
+
             return;
         }
 
@@ -297,36 +282,23 @@
         form.name = suggestion.name.split(',')[0] ?? suggestion.name;
         form.coordinates = suggestion.coordinates;
 
-        if (selectedPolygon) selectedPolygon.setMap(null);
+        if (selectedPolygon) {
+map.removeLayer(selectedPolygon);
+}
 
-        if (map && typeof google !== 'undefined' && google.maps) {
-            selectedPolygon = new google.maps.Polygon({
-                paths: suggestion.coordinates,
-                editable: true,
-                draggable: true,
-                fillColor: '#22c55e',
-                fillOpacity: 0.35,
-                strokeColor: '#16a34a',
-                strokeWeight: 2,
-                map,
-            });
+        if (map) {
+            selectedPolygon = L.polygon(
+                suggestion.coordinates.map((c: any) => [c.lat, c.lng]),
+                {
+                    color: '#16a34a',
+                    weight: 2,
+                    fillColor: '#22c55e',
+                    fillOpacity: 0.35,
+                },
+            ).addTo(map);
+            enableEditing(selectedPolygon);
 
-            google.maps.event.addListener(
-                selectedPolygon.getPath(),
-                'set_at',
-                () => updateCoordinatesFromPolygon(selectedPolygon),
-            );
-            google.maps.event.addListener(
-                selectedPolygon.getPath(),
-                'insert_at',
-                () => updateCoordinatesFromPolygon(selectedPolygon),
-            );
-
-            const bounds = new google.maps.LatLngBounds();
-            suggestion.coordinates.forEach((coord: any) => {
-                bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
-            });
-            map.fitBounds(bounds);
+            map.fitBounds(selectedPolygon.getBounds());
         }
     }
 
@@ -339,50 +311,42 @@
         form.coordinates = [...zone.coordinates];
         form.is_active = zone.is_active;
 
-        if (selectedPolygon) selectedPolygon.setMap(null);
+        if (selectedPolygon) {
+map.removeLayer(selectedPolygon);
+}
 
         renderZones();
 
-        selectedPolygon = new google.maps.Polygon({
-            paths: zone.coordinates,
-            editable: true,
-            draggable: true,
-            fillColor: '#f59e0b',
-            fillOpacity: 0.4,
-            strokeColor: '#f59e0b',
-            strokeWeight: 2,
-            map: map,
-        });
+        selectedPolygon = L.polygon(
+            zone.coordinates.map((c: any) => [c.lat, c.lng]),
+            {
+                color: '#f59e0b',
+                weight: 2,
+                fillColor: '#f59e0b',
+                fillOpacity: 0.4,
+            },
+        ).addTo(map);
 
-        const bounds = new google.maps.LatLngBounds();
-        zone.coordinates.forEach((coord: any) => {
-            bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
-        });
-        map.fitBounds(bounds);
-
-        google.maps.event.addListener(selectedPolygon.getPath(), 'set_at', () =>
-            updateCoordinatesFromPolygon(selectedPolygon),
-        );
-        google.maps.event.addListener(
-            selectedPolygon.getPath(),
-            'insert_at',
-            () => updateCoordinatesFromPolygon(selectedPolygon),
-        );
+        map.fitBounds(selectedPolygon.getBounds());
+        enableEditing(selectedPolygon);
     }
 
     function cancelEdit() {
         isEditing = false;
         form.reset();
+
         if (selectedPolygon) {
-            selectedPolygon.setMap(null);
+            map.removeLayer(selectedPolygon);
             selectedPolygon = null;
         }
+
         renderZones();
     }
 
     function handleSubmit() {
         if (form.coordinates.length < 3) {
             alert('Please draw a polygon on the map first (minimum 3 points).');
+
             return;
         }
 
@@ -391,7 +355,11 @@
                 onSuccess: () => {
                     isEditing = false;
                     form.reset();
-                    if (selectedPolygon) selectedPolygon.setMap(null);
+
+                    if (selectedPolygon) {
+map.removeLayer(selectedPolygon);
+}
+
                     selectedPolygon = null;
                 },
             });
@@ -399,7 +367,11 @@
             form.post('/admin/zones', {
                 onSuccess: () => {
                     form.reset();
-                    if (selectedPolygon) selectedPolygon.setMap(null);
+
+                    if (selectedPolygon) {
+map.removeLayer(selectedPolygon);
+}
+
                     selectedPolygon = null;
                 },
             });
@@ -413,7 +385,7 @@
     }
 
     onMount(() => {
-        initMap();
+        setupMap();
     });
 
     $effect(() => {

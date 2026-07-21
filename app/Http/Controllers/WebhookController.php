@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityBooking;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -61,6 +63,127 @@ class WebhookController extends Controller
     }
 
     /**
+     * Resolve a manually-created Transaction by its reference_id, which Xendit echoes
+     * back either at the top level or nested under `data` (Payment Request v2 events).
+     */
+    private function resolveTransaction(array $payload): ?Transaction
+    {
+        $referenceId = $payload['data']['reference_id']
+            ?? $payload['reference_id']
+            ?? $payload['external_id']
+            ?? null;
+
+        if (! $referenceId) {
+            return null;
+        }
+
+        return Transaction::where('code', $referenceId)->first();
+    }
+
+    private function resolveActivityBooking(array $payload): ?ActivityBooking
+    {
+        $externalId = $payload['external_id'] ?? null;
+
+        if (! $externalId) {
+            return null;
+        }
+
+        $bookingCode = explode('_', $externalId)[0];
+
+        if (! str_starts_with($bookingCode, 'ACT-')) {
+            return null;
+        }
+
+        return ActivityBooking::where('booking_code', $bookingCode)->first();
+    }
+
+    private function markActivityBookingPaid(?ActivityBooking $booking, array $payload): void
+    {
+        if (! $booking) {
+            return;
+        }
+
+        $booking->update([
+            'payment_status' => ActivityBooking::PAYMENT_PAID,
+            'status' => ActivityBooking::STATUS_CONFIRMED,
+        ]);
+
+        Log::info("Xendit Webhook — activity booking {$booking->booking_code} marked as paid");
+    }
+
+    private function markActivityBookingFailed(?ActivityBooking $booking): void
+    {
+        if (! $booking) {
+            return;
+        }
+
+        $booking->update(['payment_status' => ActivityBooking::PAYMENT_FAILED]);
+
+        Log::info("Xendit Webhook — activity booking {$booking->booking_code} marked as failed");
+    }
+
+    private function markActivityBookingExpired(?ActivityBooking $booking): void
+    {
+        if (! $booking) {
+            return;
+        }
+
+        $booking->update(['payment_status' => ActivityBooking::PAYMENT_EXPIRED]);
+
+        Log::info("Xendit Webhook — activity booking {$booking->booking_code} marked as expired");
+    }
+
+    private function markTransactionPaid(?Transaction $transaction, array $payload): void
+    {
+        if (! $transaction) {
+            Log::warning('Xendit Webhook — transaction not found for paid event', [
+                'reference_id' => $payload['data']['reference_id'] ?? $payload['reference_id'] ?? null,
+            ]);
+
+            return;
+        }
+
+        $transaction->update([
+            'status' => Transaction::STATUS_PAID,
+            'paid_at' => now(),
+        ]);
+
+        Log::info("Xendit Webhook — transaction {$transaction->code} marked as paid");
+    }
+
+    private function markTransactionFailed(?Transaction $transaction, array $payload): void
+    {
+        if (! $transaction) {
+            Log::warning('Xendit Webhook — transaction not found for failed event', [
+                'reference_id' => $payload['data']['reference_id'] ?? $payload['reference_id'] ?? null,
+            ]);
+
+            return;
+        }
+
+        $transaction->update(['status' => Transaction::STATUS_FAILED]);
+
+        Log::info("Xendit Webhook — transaction {$transaction->code} marked as failed", [
+            'reason' => $payload['data']['failure_code'] ?? $payload['failure_code'] ?? null,
+        ]);
+    }
+
+    private function markTransactionExpired(?Transaction $transaction, array $payload): void
+    {
+        if (! $transaction) {
+            Log::warning('Xendit Webhook — transaction not found for expired event', [
+                'reference_id' => $payload['data']['reference_id'] ?? $payload['reference_id'] ?? null,
+            ]);
+
+            return;
+        }
+
+        $transaction->update(['status' => Transaction::STATUS_EXPIRED]);
+
+        Log::info("Xendit Webhook — transaction {$transaction->code} marked as expired");
+    }
+
+    /**
      * Log every incoming webhook payload for audit / debugging.
      */
     private function logPayload(string $product, Request $request): void
@@ -93,27 +216,32 @@ class WebhookController extends Controller
         $this->logPayload('Invoice', $request);
         $payload = $request->all();
         $order = $this->resolveOrder($payload);
+        $activityBooking = $this->resolveActivityBooking($payload);
 
         if (($payload['status'] ?? '') === 'PAID') {
             $this->markOrderPaid($order, $payload);
+            $this->markActivityBookingPaid($activityBooking, $payload);
 
             return response()->json(['success' => true, 'message' => 'Invoice paid']);
         }
 
-        if ($payload['status'] ?? '' === 'EXPIRED') {
+        if (($payload['status'] ?? '') === 'EXPIRED') {
             $this->markOrderExpired($order, $payload);
+            $this->markActivityBookingExpired($activityBooking);
 
             return response()->json(['success' => true, 'message' => 'Invoice expired']);
         }
 
-        if ($payload['status'] ?? '' === 'FAILED') {
+        if (($payload['status'] ?? '') === 'FAILED') {
             $this->markOrderFailed($order, $payload);
+            $this->markActivityBookingFailed($activityBooking);
 
             return response()->json(['success' => true, 'message' => 'Invoice failed']);
         }
 
-        if ($payload['status'] ?? '' === 'CANCELLED') {
+        if (($payload['status'] ?? '') === 'CANCELLED') {
             $this->markOrderCancelled($order, $payload);
+            $this->markActivityBookingFailed($activityBooking);
 
             return response()->json(['success' => true, 'message' => 'Invoice cancelled']);
         }
@@ -224,7 +352,7 @@ class WebhookController extends Controller
         $payload = $request->all();
         $order = $this->resolveOrder($payload);
 
-        if ($payload['status'] ?? '' === 'PAID') {
+        if (($payload['status'] ?? '') === 'PAID') {
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'OTC paid']);
@@ -241,6 +369,8 @@ class WebhookController extends Controller
 
             return response()->json(['success' => true, 'message' => 'OTC failed']);
         }
+
+        Log::warning('Xendit Webhook — RetailOutlet: unhandled status', ['status' => $payload['status'] ?? null]);
 
         return response()->json(['success' => true]);
     }
@@ -286,7 +416,7 @@ class WebhookController extends Controller
         $payload = $request->all();
         $order = $this->resolveOrder($payload);
 
-        if ($payload['event'] ?? '' === 'payment_completed') {
+        if (($payload['event'] ?? '') === 'payment_completed') {
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'Direct debit completed']);
@@ -362,21 +492,25 @@ class WebhookController extends Controller
         $this->logPayload('PaymentRequestV2', $request);
         $payload = $request->all();
         $order = $this->resolveOrder($payload);
+        $transaction = $this->resolveTransaction($payload);
 
         if (($payload['event'] ?? '') === 'payment_request.payment_success') {
             $this->markOrderPaid($order, $payload);
+            $this->markTransactionPaid($transaction, $payload);
 
             return response()->json(['success' => true, 'message' => 'Payment request success']);
         }
 
         if (($payload['event'] ?? '') === 'payment_request.payment_failed') {
             $this->markOrderFailed($order, $payload);
+            $this->markTransactionFailed($transaction, $payload);
 
             return response()->json(['success' => true, 'message' => 'Payment request failed']);
         }
 
         if (($payload['event'] ?? '') === 'payment_request.expired') {
             $this->markOrderExpired($order, $payload);
+            $this->markTransactionExpired($transaction, $payload);
 
             return response()->json(['success' => true, 'message' => 'Payment request expired']);
         }
@@ -446,7 +580,7 @@ class WebhookController extends Controller
         $payload = $request->all();
         $order = $this->resolveOrder($payload);
 
-        if ($payload['status'] ?? '' === 'COMPLETED') {
+        if (($payload['status'] ?? '') === 'COMPLETED') {
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'E-Wallet completed']);
@@ -463,6 +597,8 @@ class WebhookController extends Controller
 
             return response()->json(['success' => true, 'message' => 'E-Wallet cancelled']);
         }
+
+        Log::warning('Xendit Webhook — Ewallet: unhandled status', ['status' => $payload['status'] ?? null]);
 
         return response()->json(['success' => true]);
     }
@@ -508,7 +644,7 @@ class WebhookController extends Controller
         $payload = $request->all();
         $order = $this->resolveOrder($payload);
 
-        if ($payload['status'] ?? '' === 'COMPLETED') {
+        if (($payload['status'] ?? '') === 'COMPLETED') {
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'Paylater completed']);
@@ -525,6 +661,8 @@ class WebhookController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Paylater cancelled']);
         }
+
+        Log::warning('Xendit Webhook — Paylater: unhandled status', ['status' => $payload['status'] ?? null]);
 
         return response()->json(['success' => true]);
     }
@@ -549,7 +687,7 @@ class WebhookController extends Controller
         $payload = $request->all();
         $order = $this->resolveOrder($payload);
 
-        if ($payload['status'] ?? '' === 'COMPLETED') {
+        if (($payload['status'] ?? '') === 'COMPLETED') {
             $this->markOrderPaid($order, $payload);
 
             return response()->json(['success' => true, 'message' => 'QR Code completed']);
@@ -566,6 +704,8 @@ class WebhookController extends Controller
 
             return response()->json(['success' => true, 'message' => 'QR Code expired']);
         }
+
+        Log::warning('Xendit Webhook — QRCode: unhandled status', ['status' => $payload['status'] ?? null]);
 
         return response()->json(['success' => true]);
     }

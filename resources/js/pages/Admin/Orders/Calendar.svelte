@@ -5,7 +5,7 @@
     import { onMount } from 'svelte';
     import { Link, router } from '@inertiajs/svelte';
 
-    let { orders, drivers, google_maps_api_key } = $props();
+    let { orders, drivers } = $props();
 
     let calendarEl: HTMLDivElement;
     let calendar: any;
@@ -378,7 +378,6 @@
                         {:else}
                             <OrderForm
                                 {drivers}
-                                {google_maps_api_key}
                                 initialDate={selectedDate}
                                 order={selectedOrder}
                                 onSuccess={handleOrderSuccess}

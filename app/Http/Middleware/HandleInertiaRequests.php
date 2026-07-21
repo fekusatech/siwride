@@ -241,7 +241,6 @@ class HandleInertiaRequests extends Middleware
                 'updated_at' => Setting::query()->max('updated_at'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'google_maps_api_key' => config('services.google.maps_api_key'),
             'active_zones_bounds' => Zone::getActiveBounds(),
             'vehicleCategories' => VehicleCategory::all(),
             'flash' => [

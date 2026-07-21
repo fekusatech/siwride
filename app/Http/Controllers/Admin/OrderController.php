@@ -7,10 +7,10 @@ use App\Imports\OrdersImport;
 use App\Models\Customer;
 use App\Models\Driver;
 use App\Models\Order;
+use App\Services\GeoService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -75,7 +75,6 @@ class OrderController extends Controller
                 ->withQueryString(),
             'filters' => $request->only(['search', 'status', 'driver_id', 'from_date', 'to_date']),
             'drivers' => $user->role === 'admin' ? Driver::with('vehicles')->get() : collect(),
-            'google_maps_api_key' => config('services.google.maps_api_key'),
             'user_role' => $user->role,
         ]);
     }
@@ -88,7 +87,6 @@ class OrderController extends Controller
         return Inertia::render('Admin/Orders/Calendar', [
             'orders' => Order::with(['driver', 'vehicle', 'customer'])->get(),
             'drivers' => Driver::with('vehicles')->get(),
-            'google_maps_api_key' => config('services.google.maps_api_key'),
         ]);
     }
 
@@ -128,7 +126,6 @@ class OrderController extends Controller
     {
         return Inertia::render('Admin/Orders/Create', [
             'drivers' => Driver::with('vehicles')->get(),
-            'google_maps_api_key' => config('services.google.maps_api_key'),
         ]);
     }
 
@@ -466,37 +463,18 @@ class OrderController extends Controller
             'dropoff_longitude' => 'required|numeric',
         ]);
 
-        $apiKey = config('services.google.maps_api_key');
-        if (! $apiKey) {
-            return response()->json(['distance' => '-']);
-        }
+        $km = GeoService::roadDistanceKm(
+            (float) $request->pickup_latitude,
+            (float) $request->pickup_longitude,
+            (float) $request->dropoff_latitude,
+            (float) $request->dropoff_longitude,
+        );
 
-        $origins = "{$request->pickup_latitude},{$request->pickup_longitude}";
-        $destinations = "{$request->dropoff_latitude},{$request->dropoff_longitude}";
-
-        try {
-            $response = Http::get('https://maps.googleapis.com/maps/api/distancematrix/json', [
-                'origins' => $origins,
-                'destinations' => $destinations,
-                'mode' => 'driving',
-                'key' => $apiKey,
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                $distance = $data['rows'][0]['elements'][0]['distance']['text'] ?? '-';
-
-                return response()->json(['distance' => $distance]);
-            }
-        } catch (\Exception $e) {
-            Log::warning("Failed to get distance from Google API: {$e->getMessage()}");
-        }
-
-        return response()->json(['distance' => '-']);
+        return response()->json(['distance' => "{$km} km"]);
     }
 
     /**
-     * Calculate driving distance between pickup and dropoff using Google Distance Matrix API.
+     * Estimate driving distance between pickup and dropoff (haversine + road-distance factor).
      */
     private function getDistance(Order $order): string
     {
@@ -504,33 +482,14 @@ class OrderController extends Controller
             return '-';
         }
 
-        $apiKey = config('services.google.maps_api_key');
-        if (! $apiKey) {
-            return '-';
-        }
+        $km = GeoService::roadDistanceKm(
+            (float) $order->pickup_latitude,
+            (float) $order->pickup_longitude,
+            (float) $order->dropoff_latitude,
+            (float) $order->dropoff_longitude,
+        );
 
-        $origins = "{$order->pickup_latitude},{$order->pickup_longitude}";
-        $destinations = "{$order->dropoff_latitude},{$order->dropoff_longitude}";
-
-        try {
-            $response = Http::get('https://maps.googleapis.com/maps/api/distancematrix/json', [
-                'origins' => $origins,
-                'destinations' => $destinations,
-                'mode' => 'driving',
-                'key' => $apiKey,
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['rows'][0]['elements'][0]['distance']['text'])) {
-                    return $data['rows'][0]['elements'][0]['distance']['text'];
-                }
-            }
-        } catch (\Exception $e) {
-            Log::warning("Failed to get distance from Google API: {$e->getMessage()}");
-        }
-
-        return '-';
+        return "{$km} km";
     }
 
     /**

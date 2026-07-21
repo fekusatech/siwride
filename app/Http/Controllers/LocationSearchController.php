@@ -100,10 +100,10 @@ class LocationSearchController extends Controller
      * Search for locations within active admin-configured zones.
      *
      * Priority:
-     * 1. If active zones exist → restrict results to those zones
-     * 2. Google Places API (if key configured) → bias to zone bounding box
-     * 3. Static list → filter by zone polygons using PHP point-in-polygon
-     * 4. If NO active zones → allow all Bali locations (open mode)
+     * 1. Static curated list (zero cost, filtered by active zone polygons if any)
+     * 2. Nominatim (OpenStreetMap), only as enrichment when the static list is thin —
+     *    Nominatim's public usage policy is ~1 req/sec for the whole app, so it isn't
+     *    the first-choice tier for a debounced-keystroke search across all customers.
      */
     public function search(Request $request): JsonResponse
     {
@@ -112,16 +112,26 @@ class LocationSearchController extends Controller
         ]);
 
         $query = trim($request->string('q'));
-        $apiKey = config('services.google.maps_api_key');
 
         // Load active zone polygons from the database
         $activeZones = $this->loadActiveZonePolygons();
 
-        if ($apiKey) {
-            return $this->searchWithGooglePlaces($query, $apiKey, $activeZones);
+        $staticResults = $this->searchFromStaticList($query, $activeZones);
+
+        if (count($staticResults) >= 3) {
+            return response()->json(['suggestions' => $staticResults]);
         }
 
-        return $this->searchFromStaticList($query, $activeZones);
+        try {
+            $nominatimResults = $this->searchWithNominatim($query, $activeZones);
+        } catch (\Exception $e) {
+            Log::warning("LocationSearchController: Nominatim error: {$e->getMessage()}");
+            $nominatimResults = [];
+        }
+
+        $merged = array_slice(array_merge($staticResults, $nominatimResults), 0, 8);
+
+        return response()->json(['suggestions' => $merged]);
     }
 
     /**
@@ -257,58 +267,56 @@ class LocationSearchController extends Controller
     }
 
     /**
-     * Proxy Google Places Autocomplete, biased/restricted to active zone bounding box.
+     * Search via Nominatim (OpenStreetMap), biased to the active zone bounding box
+     * and post-filtered to actually fall inside a zone, same as the static list does.
      *
      * @param  array<int, array{polygon: array<array{lat: float, lng: float}>}>  $activeZones
+     * @return array<int, array{name: string, address: string, place_id: null, lat: float, lng: float}>
      */
-    private function searchWithGooglePlaces(string $query, string $apiKey, array $activeZones): JsonResponse
+    private function searchWithNominatim(string $query, array $activeZones): array
     {
         $bounds = $this->computeBoundingBox($activeZones);
+        $hasZones = ! empty($activeZones);
 
-        // Fallback to Bali center if no zones
-        $centerLat = $bounds['centerLat'] ?? -8.4095;
-        $centerLng = $bounds['centerLng'] ?? 115.1889;
-        $radius = $bounds['radiusMeters'] ?? 70000;
-
-        try {
-            $response = Http::timeout(5)->get('https://maps.googleapis.com/maps/api/place/autocomplete/json', [
-                'input' => $query,
-                'key' => $apiKey,
-                'components' => 'country:id',
-                'location' => "{$centerLat},{$centerLng}",
-                'radius' => $radius,
-                'strictbounds' => $bounds ? 'true' : 'false',
-                'language' => 'id',
-                'types' => 'establishment|geocode',
+        $response = Http::withHeaders([
+            'User-Agent' => config('app.name', 'Siwride').'/1.0',
+        ])
+            ->timeout(10)
+            ->connectTimeout(5)
+            ->get('https://nominatim.openstreetmap.org/search', [
+                'q' => $query,
+                'format' => 'jsonv2',
+                'addressdetails' => 1,
+                'limit' => 8,
+                'countrycodes' => 'id',
+                'viewbox' => $bounds ? "{$bounds['minLng']},{$bounds['minLat']},{$bounds['maxLng']},{$bounds['maxLat']}" : null,
+                'bounded' => $bounds ? 1 : null,
             ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $suggestions = collect($data['predictions'] ?? [])
-                    ->map(fn ($p) => [
-                        'name' => $p['structured_formatting']['main_text'] ?? $p['description'],
-                        'address' => $p['description'],
-                        'place_id' => $p['place_id'] ?? null,
-                    ])
-                    ->values()
-                    ->all();
-
-                return response()->json(['suggestions' => $suggestions]);
-            }
-        } catch (\Exception $e) {
-            Log::warning("LocationSearchController: Google Places API error: {$e->getMessage()}");
+        if (! $response->successful()) {
+            return [];
         }
 
-        // Fall through to static list on Google API error
-        return $this->searchFromStaticList($query, $activeZones);
+        return collect($response->json())
+            ->map(fn ($item) => [
+                'name' => explode(',', $item['display_name'] ?? '')[0] ?? $item['display_name'] ?? 'Unknown',
+                'address' => $item['display_name'] ?? '',
+                'place_id' => null,
+                'lat' => (float) ($item['lat'] ?? 0),
+                'lng' => (float) ($item['lon'] ?? 0),
+            ])
+            ->filter(fn ($l) => ! $hasZones || $this->isInsideAnyZone($l['lat'], $l['lng'], $activeZones))
+            ->values()
+            ->all();
     }
 
     /**
      * Filter the static location list by query text and active zone polygons.
      *
      * @param  array<int, array{polygon: array<array{lat: float, lng: float}>}>  $activeZones
+     * @return array<int, array{name: string, address: string, place_id: null, lat: float, lng: float}>
      */
-    private function searchFromStaticList(string $query, array $activeZones): JsonResponse
+    private function searchFromStaticList(string $query, array $activeZones): array
     {
         $lowerQuery = mb_strtolower($query);
         $hasZones = ! empty($activeZones);
@@ -336,10 +344,51 @@ class LocationSearchController extends Controller
                 'name' => $l['name'],
                 'address' => $l['address'],
                 'place_id' => null,
+                'lat' => $l['lat'],
+                'lng' => $l['lng'],
             ])
             ->values()
             ->all();
 
-        return response()->json(['suggestions' => $suggestions]);
+        return $suggestions;
+    }
+
+    /**
+     * Resolve a single free-typed address string to coordinates via Nominatim.
+     * Used where a component only has plain text (no prior suggestion selection).
+     */
+    public function geocode(Request $request): JsonResponse
+    {
+        $request->validate([
+            'address' => ['required', 'string', 'min:3', 'max:200'],
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => config('app.name', 'Siwride').'/1.0',
+            ])
+                ->timeout(10)
+                ->connectTimeout(5)
+                ->get('https://nominatim.openstreetmap.org/search', [
+                    'q' => $request->string('address'),
+                    'format' => 'jsonv2',
+                    'limit' => 1,
+                    'countrycodes' => 'id',
+                ]);
+
+            $results = $response->json();
+
+            if ($response->successful() && ! empty($results)) {
+                return response()->json([
+                    'lat' => (float) $results[0]['lat'],
+                    'lng' => (float) $results[0]['lon'],
+                    'formatted' => $results[0]['display_name'] ?? (string) $request->string('address'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning("LocationSearchController::geocode error: {$e->getMessage()}");
+        }
+
+        return response()->json(['error' => 'Could not geocode this address.'], 422);
     }
 }

@@ -63,7 +63,7 @@ Sistem Siwride mencakup:
 - Laravel Sanctum v4.3.1
 - MySQL Database
 - Xendit Payment Gateway v7.0
-- Google Maps API
+- Leaflet + OpenStreetMap (Nominatim geocoding)
 
 ### 1.5 Gambaran Produk
 
@@ -102,7 +102,7 @@ Siwride terdiri dari tiga antarmuka utama:
 
 ### 2.5 Asumsi dan Dependensi
 
-- API Google Maps tersedia dan aktif untuk geocoding dan distance matrix
+- Nominatim (OpenStreetMap) tersedia untuk geocoding; jarak dihitung via haversine formula
 - Akun Xendit aktif untuk pemrosesan pembayaran
 - API WhatsApp tersedia untuk notifikasi
 - MySQL dengan dukungan spatial (ST_Contains, ST_GeomFromText) untuk zone detection
@@ -364,7 +364,7 @@ Siwride terdiri dari tiga antarmuka utama:
 │          Spatial (ST_Contains, etc.)            │
 ├─────────────────────────────────────────────────┤
 │        External Services Integration            │
-│  Google Maps | Xendit | WhatsApp API            │
+│  Nominatim (OSM) | Xendit | WhatsApp API        │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -541,7 +541,7 @@ Kolom kunci:
 
 ### 7.1 Halaman Publik (Customer-facing)
 - **Landing Page**: Hero, vehicle categories, CTA
-- **Booking Page**: Form rute (pickup/dropoff via Google Maps autocomplete), date/time picker, passenger counter, estimasi harga real-time, pilih kendaraan, track booking
+- **Booking Page**: Form rute (pickup/dropoff via Nominatim-backed autocomplete), date/time picker, passenger counter, estimasi harga real-time, pilih kendaraan, track booking
 - **Checkout**: Multi-step: Detail Transfer → Info Penumpang → Ekstra → Ringkasan → Pembayaran (Xendit redirect)
 - **Vehicle Catalog**: Grid kendaraan dengan detail
 - **Static Pages**: About, Services, FAQ, Contact, Terms, Privacy
@@ -551,7 +551,7 @@ Kolom kunci:
 - **Dashboard**: KPI cards, ApexCharts (revenue trend, status distribution), recent orders table
 - **Orders**: Table dengan filter/search, calendar view, create/edit modal, import Excel
 - **Drivers**: Table, create/edit, sync user, upload dokumen
-- **Zones**: Map-based polygon zone editor, pricing rules CRUD
+- **Zones**: Leaflet-based polygon zone editor, pricing rules CRUD
 - **Settings**: General settings (app name, WA config, etc.), Frontend settings (hero, branding, extras)
 
 ### 7.3 Mobile App Pages (via API)
@@ -567,7 +567,7 @@ Kolom kunci:
 
 | Layanan | Fungsi | Konfigurasi |
 |---------|--------|-------------|
-| Google Maps API | Geocoding, Distance Matrix, Autocomplete, Maps | `GOOGLE_MAPS_API_KEY` |
+| Leaflet + Nominatim (OSM) | Maps, geocoding, autocomplete (no API key, free) | — |
 | Xendit | Payment gateway (invoice) | `services.xendit.secret_key` |
 | WhatsApp API | Notifikasi order ke grup & private message | `WA_API_URL`, `WA_API_KEY`, `WA_SESSION_ID`, `WA_GROUP_ID` |
 | ApexCharts | Dashboard charts (CDN) | Loaded via CDN di frontend |

@@ -1,20 +1,12 @@
-<script lang="ts" module>
-    // Global shared service to avoid race conditions between multiple instances
-    let sharedAutocompleteService: any = null;
-    let isScriptLoading = false;
-</script>
-
 <script lang="ts">
     import { search } from '@/actions/App/Http/Controllers/LocationSearchController';
-    import { page } from '@inertiajs/svelte';
-    import { onMount } from 'svelte';
-
-    declare const google: any;
 
     interface Suggestion {
         name: string;
         address: string;
         place_id: string | null;
+        lat: number;
+        lng: number;
     }
 
     interface Props {
@@ -22,12 +14,18 @@
         value: string;
         /** Full address bound from the parent */
         fullAddress?: string;
+        /** Latitude of the selected suggestion, null until one is picked */
+        lat?: number | null;
+        /** Longitude of the selected suggestion, null until one is picked */
+        lng?: number | null;
         /** Input ID for label association */
         id?: string;
         /** Placeholder text */
         placeholder?: string;
         /** Whether the field is required */
         required?: boolean;
+        /** Extra class applied to the input element (for form-invalid styling, etc.) */
+        class?: string;
         /**
          * Visual style variant.
          * - 'default' – no extra styling, inherits parent form styles (hero banner).
@@ -41,15 +39,15 @@
     let {
         value = $bindable(''),
         fullAddress = $bindable(''),
+        lat = $bindable(null),
+        lng = $bindable(null),
         id = '',
         placeholder = 'Hotel name, area, or landmark...',
         required = false,
+        class: className = '',
         variant = 'default',
         onchange,
     }: Props = $props();
-
-    const googleMapsApiKey = $derived((page.props as any).google_maps_api_key);
-    const activeZonesBounds = $derived((page.props as any).active_zones_bounds);
 
     let suggestions = $state<Suggestion[]>([]);
     let isOpen = $state(false);
@@ -59,58 +57,23 @@
     let inputEl: HTMLInputElement | null = null;
     let containerEl: HTMLDivElement | null = null;
 
-    function initGoogleMaps() {
-        if (!googleMapsApiKey) return;
-
-        // If already initialized, nothing to do
-        if (sharedAutocompleteService) return;
-
-        const scriptExists = document.querySelector(
-            'script[src*="maps.googleapis.com"]',
-        );
-
-        if (!scriptExists && !isScriptLoading) {
-            isScriptLoading = true;
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
-            script.async = true;
-            script.defer = true;
-            script.onload = () => {
-                isScriptLoading = false;
-                if (
-                    typeof google !== 'undefined' &&
-                    google.maps &&
-                    google.maps.places
-                ) {
-                    sharedAutocompleteService =
-                        new google.maps.places.AutocompleteService();
-                }
-            };
-            document.head.appendChild(script);
-        } else if (
-            typeof google !== 'undefined' &&
-            google.maps &&
-            google.maps.places
-        ) {
-            sharedAutocompleteService =
-                new google.maps.places.AutocompleteService();
-        }
-    }
-
-    onMount(() => {
-        initGoogleMaps();
-    });
-
     function handleInput(e: Event) {
         const target = e.target as HTMLInputElement;
         value = target.value;
+        // Picking a suggestion sets lat/lng; free-typing after that must not
+        // leave stale coordinates attached to a now-different address.
+        lat = null;
+        lng = null;
         onchange?.(value);
 
-        if (debounceTimer) clearTimeout(debounceTimer);
+        if (debounceTimer) {
+clearTimeout(debounceTimer);
+}
 
         if (value.length < 2) {
             suggestions = [];
             isOpen = false;
+
             return;
         }
 
@@ -120,74 +83,6 @@
     async function fetchSuggestions(q: string) {
         isLoading = true;
 
-        // Try to initialize if script loaded in the meantime
-        if (
-            !sharedAutocompleteService &&
-            typeof google !== 'undefined' &&
-            google.maps &&
-            google.maps.places
-        ) {
-            sharedAutocompleteService =
-                new google.maps.places.AutocompleteService();
-        }
-
-        // Try Google Maps AutocompleteService first if available
-        if (sharedAutocompleteService) {
-            let bounds;
-            if (activeZonesBounds) {
-                bounds = new google.maps.LatLngBounds(
-                    new google.maps.LatLng(activeZonesBounds.south, activeZonesBounds.west),
-                    new google.maps.LatLng(activeZonesBounds.north, activeZonesBounds.east),
-                );
-            } else {
-                // Fallback to Bali bounds
-                bounds = new google.maps.LatLngBounds(
-                    new google.maps.LatLng(-8.9472, 114.4173),
-                    new google.maps.LatLng(-8.0583, 115.7118),
-                );
-            }
-
-            sharedAutocompleteService.getPlacePredictions(
-                {
-                    input: q,
-                    locationRestriction: bounds,
-                    componentRestrictions: { country: 'id' },
-                },
-                (predictions: any, status: any) => {
-                    if (
-                        status === google.maps.places.PlacesServiceStatus.OK &&
-                        predictions
-                    ) {
-                        suggestions = predictions.map((p: any) => ({
-                            name:
-                                p.structured_formatting?.main_text ||
-                                p.description,
-                            address: p.description,
-                            place_id: p.place_id,
-                        }));
-                        isOpen = suggestions.length > 0;
-                        activeIndex = -1;
-                        isLoading = false;
-                    } else if (
-                        status ===
-                        google.maps.places.PlacesServiceStatus.ZERO_RESULTS
-                    ) {
-                        suggestions = [];
-                        isOpen = false;
-                        isLoading = false;
-                    } else {
-                        // On other errors (over query limit, etc), also try backend
-                        fetchFromBackend(q);
-                    }
-                },
-            );
-        } else {
-            // Fallback to backend proxy if Google script not loaded yet
-            await fetchFromBackend(q);
-        }
-    }
-
-    async function fetchFromBackend(q: string) {
         try {
             const url = search.url({ query: { q } });
             const res = await fetch(url, {
@@ -196,6 +91,7 @@
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             });
+
             if (res.ok) {
                 const data = await res.json();
                 suggestions = data.suggestions ?? [];
@@ -213,6 +109,8 @@
     function selectSuggestion(suggestion: Suggestion) {
         value = suggestion.name;
         fullAddress = suggestion.address;
+        lat = suggestion.lat;
+        lng = suggestion.lng;
         onchange?.(value);
         suggestions = [];
         isOpen = false;
@@ -220,7 +118,9 @@
     }
 
     function handleKeydown(e: KeyboardEvent) {
-        if (!isOpen) return;
+        if (!isOpen) {
+return;
+}
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
@@ -260,6 +160,7 @@
             type="text"
             {placeholder}
             {required}
+            class={className}
             autocomplete="off"
             bind:value
             oninput={handleInput}
