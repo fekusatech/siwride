@@ -58,7 +58,7 @@
                         data-wow-delay="{i * 150}ms"
                     >
                         <a
-                            href={service.href || '#'}
+                            href={service.link_url || '#'}
                             class="service-card"
                             style="background: #fff; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.07); text-decoration: none; transition: transform 0.35s ease, box-shadow 0.35s ease; border: 1px solid #f0f0f0; height: 100%;"
                             onmouseenter={(e) => {

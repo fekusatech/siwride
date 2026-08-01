@@ -565,7 +565,7 @@
                         data-wow-delay={index * 100 + 'ms'}
                     >
                         <a
-                            href={service.href || '#/'}
+                            href={service.link_url || '#/'}
                             class="service-card d-block"
                             style="text-decoration: none; color: inherit; background: #fff; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; display: flex; flex-direction: column;"
                             role="presentation"

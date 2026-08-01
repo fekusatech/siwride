@@ -4,8 +4,8 @@ use App\Http\Controllers\ActivityBookingController;
 use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
 use App\Http\Controllers\RideSharingController;
+use App\Models\Activity;
 use App\Models\RideSharingCity;
-use App\Models\Service;
 use App\Models\VehicleCategory;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,7 +14,7 @@ use Laravel\Fortify\Features;
 Route::get('/', function () {
     $vehicleCategories = VehicleCategory::orderBy('id')->get();
     $locations = RideSharingCity::orderBy('name')->get();
-    $services = Service::where('is_active', true)->orderBy('id')->get();
+    $services = Activity::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
 
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
@@ -86,7 +86,6 @@ use App\Http\Controllers\Admin\RideSharing\RouteController;
 use App\Http\Controllers\Admin\RideSharing\RoutePathController;
 use App\Http\Controllers\Admin\RideSharing\RoutePriceController;
 use App\Http\Controllers\Admin\RideSharing\ScheduleController;
-use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CustomerProfileController;
 
@@ -147,8 +146,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('admin/vehicles', VehicleController::class)->names('admin.vehicles');
     Route::resource('admin/vehicle-categories', VehicleCategoryController::class)->names('admin.vehicle-categories');
     Route::resource('admin/app-versions', AppVersionController::class)->names('admin.app-versions');
-
-    Route::resource('admin/services', ServiceController::class)->names('admin.services');
 
     Route::resource('admin/activities', ActivityController::class)->names('admin.activities');
     Route::patch('admin/activity-bookings/{activityBooking}/status', [App\Http\Controllers\Admin\ActivityBookingController::class, 'updateStatus'])->name('admin.activity-bookings.update-status');

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCustomerOrderRequest;
+use App\Models\Activity;
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\Service;
 use App\Models\Setting;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
@@ -35,7 +35,8 @@ class CustomerOrderController extends Controller
      */
     public function services(): Response
     {
-        $services = Service::where('is_active', true)
+        $services = Activity::where('is_active', true)
+            ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 

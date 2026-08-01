@@ -38,12 +38,17 @@ class ActivityController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge(['price_per_pax' => $request->input('price_per_pax') ?: null]);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
-            'price_per_pax' => ['required', 'numeric', 'min:0'],
+            'gallery' => ['nullable', 'array'],
+            'gallery.*' => ['image', 'max:2048'],
+            'href' => ['nullable', 'string', 'max:255'],
+            'price_per_pax' => ['nullable', 'numeric', 'min:0'],
             'min_pax' => ['nullable', 'integer', 'min:1'],
             'max_pax' => ['nullable', 'integer', 'min:1'],
             'duration_label' => ['nullable', 'string', 'max:100'],
@@ -64,6 +69,12 @@ class ActivityController extends Controller
             $validated['image'] = $request->file('image')->store('activities', 'public');
         }
 
+        if ($request->hasFile('gallery')) {
+            $validated['gallery'] = collect($request->file('gallery'))
+                ->map(fn ($file) => $file->store('activities/gallery', 'public'))
+                ->all();
+        }
+
         Activity::create($validated);
 
         return redirect()->route('admin.activities.index')
@@ -79,12 +90,19 @@ class ActivityController extends Controller
 
     public function update(Request $request, Activity $activity)
     {
+        $request->merge(['price_per_pax' => $request->input('price_per_pax') ?: null]);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
-            'price_per_pax' => ['required', 'numeric', 'min:0'],
+            'gallery' => ['nullable', 'array'],
+            'gallery.*' => ['image', 'max:2048'],
+            'existing_gallery' => ['nullable', 'array'],
+            'existing_gallery.*' => ['string'],
+            'href' => ['nullable', 'string', 'max:255'],
+            'price_per_pax' => ['nullable', 'numeric', 'min:0'],
             'min_pax' => ['nullable', 'integer', 'min:1'],
             'max_pax' => ['nullable', 'integer', 'min:1'],
             'duration_label' => ['nullable', 'string', 'max:100'],
@@ -107,6 +125,23 @@ class ActivityController extends Controller
             }
             $validated['image'] = $request->file('image')->store('activities', 'public');
         }
+
+        $currentGallery = $activity->gallery ?? [];
+        $keepGallery = array_intersect($validated['existing_gallery'] ?? [], $currentGallery);
+        unset($validated['existing_gallery']);
+
+        foreach (array_diff($currentGallery, $keepGallery) as $removedPath) {
+            Storage::disk('public')->delete($removedPath);
+        }
+
+        $newGallery = [];
+        if ($request->hasFile('gallery')) {
+            $newGallery = collect($request->file('gallery'))
+                ->map(fn ($file) => $file->store('activities/gallery', 'public'))
+                ->all();
+        }
+
+        $validated['gallery'] = array_values(array_merge($keepGallery, $newGallery)) ?: null;
 
         $activity->update($validated);
 

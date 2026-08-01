@@ -16,6 +16,7 @@
         subtitle: activity?.subtitle || '',
         description: activity?.description || '',
         image: null as File | null,
+        href: activity?.href || '',
         price_per_pax: activity?.price_per_pax || '',
         min_pax: activity?.min_pax || 1,
         max_pax: activity?.max_pax || '',
@@ -26,9 +27,15 @@
         highlights: arrayToLines(activity?.highlights),
         is_active: activity?.is_active ?? true,
         sort_order: activity?.sort_order || 0,
+        gallery: [] as File[],
+        existing_gallery: (activity?.gallery ?? []) as string[],
     });
 
     let previewUrl = $state(activity?.image_url ?? null);
+
+    // Multi-photo gallery: existing (already-uploaded) paths + newly picked files
+    let existingGalleryUrls = $state<string[]>(activity?.gallery_urls ?? []);
+    let galleryPreviews = $state<string[]>([]);
 
     function handleImageChange(event: Event) {
         const input = event.target as HTMLInputElement;
@@ -39,6 +46,27 @@
         }
     }
 
+    function handleGalleryChange(event: Event) {
+        const input = event.target as HTMLInputElement;
+        if (input.files) {
+            for (const file of Array.from(input.files)) {
+                form.gallery.push(file);
+                galleryPreviews.push(URL.createObjectURL(file));
+            }
+        }
+        input.value = '';
+    }
+
+    function removeExistingGalleryImage(index: number) {
+        form.existing_gallery.splice(index, 1);
+        existingGalleryUrls.splice(index, 1);
+    }
+
+    function removeNewGalleryImage(index: number) {
+        form.gallery.splice(index, 1);
+        galleryPreviews.splice(index, 1);
+    }
+
     function submit() {
         if (isEdit) {
             router.post(`/admin/activities/${activity.id}`, {
@@ -46,6 +74,7 @@
                 title: form.title,
                 subtitle: form.subtitle,
                 description: form.description,
+                href: form.href,
                 price_per_pax: form.price_per_pax,
                 min_pax: form.min_pax,
                 max_pax: form.max_pax,
@@ -57,6 +86,8 @@
                 is_active: form.is_active,
                 sort_order: form.sort_order,
                 image: form.image,
+                gallery: form.gallery,
+                existing_gallery: form.existing_gallery,
             }, { preserveScroll: true, forceFormData: true });
         } else {
             form.post('/admin/activities', { preserveScroll: true, forceFormData: true });
@@ -104,10 +135,28 @@
                                 {#if form.errors.description}<div class="text-danger mt-1 small">{form.errors.description}</div>{/if}
                             </div>
 
+                            <div class="mb-4">
+                                <label for="href" class="form-label">Custom Link (optional)</label>
+                                <input
+                                    type="text"
+                                    class="form-control {form.errors.href ? 'is-invalid' : ''}"
+                                    id="href"
+                                    bind:value={form.href}
+                                    placeholder="e.g. /booking/airport-transfer"
+                                />
+                                <small class="text-muted d-block mt-1">
+                                    Leave blank to link to this activity's own booking page (<code>/activities/{form.title ? form.title.toLowerCase().replace(/\s+/g, '-') : 'slug'}</code>). Set this only if the card should link elsewhere (e.g. another booking flow).
+                                </small>
+                                {#if form.errors.href}
+                                    <div class="invalid-feedback d-block">{form.errors.href}</div>
+                                {/if}
+                            </div>
+
                             <div class="row mb-3">
                                 <div class="col-md-4">
-                                    <label class="form-label" for="price_per_pax">Price per Pax (IDR) <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="price_per_pax" bind:value={form.price_per_pax} min="0" required>
+                                    <label class="form-label" for="price_per_pax">Price per Pax (IDR)</label>
+                                    <input type="number" class="form-control" id="price_per_pax" bind:value={form.price_per_pax} min="0">
+                                    <small class="text-muted d-block mt-1">Leave blank if not a per-pax bookable tour.</small>
                                     {#if form.errors.price_per_pax}<div class="text-danger mt-1 small">{form.errors.price_per_pax}</div>{/if}
                                 </div>
                                 <div class="col-md-4">
@@ -147,7 +196,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="image">Activity Image</label>
+                                <label class="form-label" for="image">Activity Image (cover)</label>
                                 <input type="file" class="form-control" id="image" accept="image/*" onchange={handleImageChange}>
                                 <small class="text-muted d-block mt-1">Recommended size: 800x500px</small>
                                 {#if form.errors.image}<div class="text-danger mt-1 small">{form.errors.image}</div>{/if}
@@ -155,6 +204,42 @@
                                     <div class="mt-3">
                                         <p class="mb-2 fw-medium">Preview:</p>
                                         <img src={previewUrl} alt="Preview" class="img-thumbnail" style="max-height: 200px;">
+                                    </div>
+                                {/if}
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label" for="gallery">Gallery (multiple photos)</label>
+                                <input type="file" class="form-control" id="gallery" accept="image/*" multiple onchange={handleGalleryChange}>
+                                <small class="text-muted d-block mt-1">Add as many photos as you like. You can pick files across multiple selections.</small>
+                                {#if form.errors.gallery}<div class="text-danger mt-1 small">{form.errors.gallery}</div>{/if}
+
+                                {#if existingGalleryUrls.length || galleryPreviews.length}
+                                    <div class="d-flex flex-wrap gap-2 mt-3">
+                                        {#each existingGalleryUrls as url, index}
+                                            <div class="position-relative">
+                                                <img src={url} alt="Gallery" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-danger position-absolute top-0 end-0"
+                                                    style="padding: 0 6px; line-height: 1.5;"
+                                                    onclick={() => removeExistingGalleryImage(index)}
+                                                    aria-label="Remove photo"
+                                                >&times;</button>
+                                            </div>
+                                        {/each}
+                                        {#each galleryPreviews as url, index}
+                                            <div class="position-relative">
+                                                <img src={url} alt="New gallery" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-danger position-absolute top-0 end-0"
+                                                    style="padding: 0 6px; line-height: 1.5;"
+                                                    onclick={() => removeNewGalleryImage(index)}
+                                                    aria-label="Remove photo"
+                                                >&times;</button>
+                                            </div>
+                                        {/each}
                                     </div>
                                 {/if}
                             </div>
@@ -195,18 +280,15 @@
                     <div class="card-body">
                         <h5 class="card-title mb-3">Activity Guidelines</h5>
                         <p class="text-muted small">
-                            Activities are bookable experiences shown on the website (e.g. ATV Ride, Rafting, Jeep Sunrise).
+                            Activities power both the bookable experiences (e.g. ATV Ride, Rafting) and the simple service cards shown on the homepage/booking page (e.g. Airport Transfer).
                         </p>
                         <ul class="text-muted small ps-3">
-                            <li class="mb-2"><strong>Price per Pax</strong>: Base price per person</li>
-                            <li class="mb-2"><strong>Min/Max Pax</strong>: Booking participant limits</li>
+                            <li class="mb-2"><strong>Price per Pax</strong>: Leave blank for a plain service card (not a per-pax tour)</li>
+                            <li class="mb-2"><strong>Custom Link</strong>: Leave blank to book this activity directly; set it to point elsewhere (e.g. another booking flow)</li>
                             <li class="mb-2"><strong>Includes/Excludes</strong>: One item per line</li>
+                            <li class="mb-2"><strong>Gallery</strong>: Extra photos shown on the activity's detail page</li>
                             <li class="mb-2"><strong>Sort Order</strong>: Lower = shown first</li>
                         </ul>
-                        <hr>
-                        <p class="text-muted small mb-0">
-                            After creating an activity, update the "Book" button link in <strong>Admin → Services</strong> to point to <code>/activities/your-slug</code>.
-                        </p>
                     </div>
                 </div>
             </div>
