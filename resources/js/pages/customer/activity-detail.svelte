@@ -5,8 +5,9 @@
     import Preloader from '@/components/Template/Preloader.svelte';
     import { useForm } from '@inertiajs/svelte';
 
-    let { activity, customer = null } = $props<{
+    let { activity, relatedActivities = [], customer = null } = $props<{
         activity: any;
+        relatedActivities?: any[];
         customer: { name: string; email: string; phone: string } | null;
     }>();
 
@@ -20,6 +21,14 @@
     });
 
     let totalPrice = $derived(Number(activity.price_per_pax) * form.pax);
+
+    let allImages = (activity.gallery_urls?.length
+        ? [activity.image_url, ...activity.gallery_urls]
+        : [activity.image_url]
+    ).filter(Boolean);
+    let mainImage = $state(allImages[0]);
+    let extraThumbs = allImages.slice(1, 5);
+    let remainingPhotoCount = Math.max(0, allImages.length - 5);
 
     function formatRp(amount: number): string {
         return 'Rp ' + amount.toLocaleString('id-ID');
@@ -42,41 +51,103 @@
 <div class="page-wrapper">
     <Header />
 
-    <section style="padding: 80px 0 100px; background: #f7f9fa;">
+    <section style="padding: 40px 0 100px; background: #f7f9fa;">
         <div class="container">
+            <!-- Gallery -->
+            <div class="row g-2 mb-4" style="height: 420px;">
+                <div class="col-lg-8 h-100">
+                    <img
+                        src={mainImage}
+                        alt={activity.title}
+                        class="rounded-3 w-100 h-100"
+                        style="object-fit: cover;"
+                    />
+                </div>
+                {#if extraThumbs.length}
+                    <div class="col-lg-4 h-100">
+                        <div class="row g-2 h-100">
+                            {#each extraThumbs as url, i}
+                                <div class="col-6" style="height: 50%;">
+                                    <button
+                                        type="button"
+                                        class="p-0 border-0 w-100 h-100 position-relative overflow-hidden rounded-3"
+                                        style="cursor: pointer;"
+                                        onclick={() => (mainImage = url)}
+                                    >
+                                        <img
+                                            src={url}
+                                            alt={activity.title}
+                                            class="w-100 h-100"
+                                            style="object-fit: cover; outline: {mainImage === url ? '3px solid var(--travhub-base, #e52029)' : 'none'}; outline-offset: -3px;"
+                                        />
+                                        {#if i === 3 && remainingPhotoCount > 0}
+                                            <div
+                                                class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white fw-bold"
+                                                style="background: rgba(0,0,0,0.5);"
+                                            >
+                                                +{remainingPhotoCount} Photos
+                                            </div>
+                                        {/if}
+                                    </button>
+                                </div>
+                            {/each}
+                        </div>
+                    </div>
+                {/if}
+            </div>
+
             <div class="row gutter-y-40">
                 <!-- Left: Activity Details -->
                 <div class="col-lg-7">
-                    {#if activity.image_url}
-                        <img
-                            src={activity.image_url}
-                            alt={activity.title}
-                            class="img-fluid rounded-3 mb-4 w-100"
-                            style="max-height: 420px; object-fit: cover;"
-                        />
-                    {/if}
-
                     <h2 class="fw-bold mb-1">{activity.title}</h2>
                     {#if activity.subtitle}
                         <p class="text-muted fs-5 mb-3">{activity.subtitle}</p>
                     {/if}
 
-                    <div class="d-flex flex-wrap gap-3 mb-4">
+                    <!-- Quick specs -->
+                    <div class="d-flex flex-wrap gap-2 mb-4">
                         {#if activity.duration_label}
-                            <span class="badge bg-light text-dark border px-3 py-2 fs-6">
-                                <i class="ti ti-clock me-1"></i> {activity.duration_label}
-                            </span>
+                            <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
+                                <i class="ti ti-clock fs-4" style="color: var(--travhub-base, #e52029);"></i>
+                                <div>
+                                    <div class="small text-muted lh-1">Duration</div>
+                                    <div class="fw-medium">{activity.duration_label}</div>
+                                </div>
+                            </div>
                         {/if}
+                        <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
+                            <i class="ti ti-users fs-4" style="color: var(--travhub-base, #e52029);"></i>
+                            <div>
+                                <div class="small text-muted lh-1">Participants</div>
+                                <div class="fw-medium">Min {activity.min_pax}{#if activity.max_pax} · Max {activity.max_pax}{/if}</div>
+                            </div>
+                        </div>
                         {#if activity.meeting_point}
-                            <span class="badge bg-light text-dark border px-3 py-2 fs-6">
-                                <i class="ti ti-map-pin me-1"></i> {activity.meeting_point}
-                            </span>
+                            <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
+                                <i class="ti ti-map-pin fs-4" style="color: var(--travhub-base, #e52029);"></i>
+                                <div>
+                                    <div class="small text-muted lh-1">Meeting Point</div>
+                                    <div class="fw-medium">{activity.meeting_point}</div>
+                                </div>
+                            </div>
                         {/if}
-                        <span class="badge bg-light text-dark border px-3 py-2 fs-6">
-                            <i class="ti ti-users me-1"></i> Min {activity.min_pax} pax
-                            {#if activity.max_pax} · Max {activity.max_pax} pax{/if}
-                        </span>
                     </div>
+
+                    {#if activity.highlights?.length}
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3">Why You'll Love This Tour</h5>
+                            <div class="row g-2">
+                                {#each activity.highlights as item}
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="ti ti-sparkles mt-1" style="color: var(--travhub-base, #e52029);"></i>
+                                            <span>{item}</span>
+                                        </div>
+                                    </div>
+                                {/each}
+                            </div>
+                        </div>
+                    {/if}
 
                     {#if activity.description}
                         <div class="mb-4">
@@ -85,29 +156,41 @@
                         </div>
                     {/if}
 
-                    {#if activity.includes?.length}
-                        <div class="mb-4">
-                            <h5 class="fw-bold mb-2">What's Included</h5>
-                            <ul class="list-unstyled">
-                                {#each activity.includes as item}
-                                    <li class="mb-1">
-                                        <i class="ti ti-circle-check text-success me-2"></i>{item}
-                                    </li>
-                                {/each}
-                            </ul>
+                    {#if activity.includes?.length || activity.excludes?.length}
+                        <div class="row mb-4">
+                            {#if activity.includes?.length}
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <h5 class="fw-bold mb-2">What's Included</h5>
+                                    <ul class="list-unstyled">
+                                        {#each activity.includes as item}
+                                            <li class="mb-2">
+                                                <i class="ti ti-circle-check text-success me-2"></i>{item}
+                                            </li>
+                                        {/each}
+                                    </ul>
+                                </div>
+                            {/if}
+                            {#if activity.excludes?.length}
+                                <div class="col-md-6">
+                                    <h5 class="fw-bold mb-2">Not Included</h5>
+                                    <ul class="list-unstyled">
+                                        {#each activity.excludes as item}
+                                            <li class="mb-2 text-muted">
+                                                <i class="ti ti-circle-x text-danger me-2"></i>{item}
+                                            </li>
+                                        {/each}
+                                    </ul>
+                                </div>
+                            {/if}
                         </div>
                     {/if}
 
-                    {#if activity.excludes?.length}
-                        <div class="mb-4">
-                            <h5 class="fw-bold mb-2">Not Included</h5>
-                            <ul class="list-unstyled">
-                                {#each activity.excludes as item}
-                                    <li class="mb-1 text-muted">
-                                        <i class="ti ti-circle-x text-danger me-2"></i>{item}
-                                    </li>
-                                {/each}
-                            </ul>
+                    {#if activity.meeting_point}
+                        <div class="mb-4 pt-2 border-top">
+                            <h5 class="fw-bold mb-2 mt-3">Meeting Point</h5>
+                            <p class="text-muted mb-0">
+                                <i class="ti ti-map-pin me-2"></i>{activity.meeting_point}
+                            </p>
                         </div>
                     {/if}
                 </div>
@@ -116,11 +199,17 @@
                 <div class="col-lg-5">
                     <div class="card shadow border-0 rounded-3 sticky-top" style="top: 100px;">
                         <div class="card-body p-4">
-                            <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
                                 <div>
                                     <div class="fs-4 fw-bold text-primary">{formatRp(Number(activity.price_per_pax))}</div>
                                     <small class="text-muted">per person</small>
                                 </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-3 small text-muted mb-4 pb-3 border-bottom">
+                                {#if activity.duration_label}
+                                    <span><i class="ti ti-clock me-1"></i>{activity.duration_label}</span>
+                                {/if}
+                                <span><i class="ti ti-users me-1"></i>Min {activity.min_pax}{#if activity.max_pax} · Max {activity.max_pax}{/if} pax</span>
                             </div>
 
                             <form onsubmit={submit}>
@@ -229,6 +318,38 @@
             </div>
         </div>
     </section>
+
+    {#if relatedActivities?.length}
+        <section style="padding: 20px 0 100px; background: #fff;">
+            <div class="container">
+                <h3 class="fw-bold mb-4">You Might Also Like</h3>
+                <div class="row gutter-y-30">
+                    {#each relatedActivities as item}
+                        <div class="col-lg-4 col-md-6">
+                            <a href={item.link_url} class="d-block text-decoration-none" style="color: inherit;">
+                                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
+                                    <img src={item.image_url} alt={item.title} style="height: 180px; object-fit: cover;" />
+                                    <div class="card-body">
+                                        <h6 class="fw-bold mb-1">{item.title}</h6>
+                                        <div class="d-flex flex-wrap gap-2 mb-2 small text-muted">
+                                            {#if item.duration_label}
+                                                <span><i class="ti ti-clock me-1"></i>{item.duration_label}</span>
+                                            {/if}
+                                            <span><i class="ti ti-users me-1"></i>Min {item.min_pax} pax</span>
+                                        </div>
+                                        <div class="fw-bold text-primary">
+                                            {formatRp(Number(item.price_per_pax))}
+                                            <span class="fw-normal text-muted small">/ person</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        </section>
+    {/if}
 
     <Footer />
 </div>

@@ -27,8 +27,17 @@ class ActivityBookingController extends Controller
 
         $customer = Auth::guard('customer')->user();
 
+        $relatedActivities = Activity::where('is_active', true)
+            ->where('id', '!=', $activity->id)
+            ->whereNotNull('price_per_pax')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->limit(3)
+            ->get();
+
         return Inertia::render('customer/activity-detail', [
             'activity' => $activity,
+            'relatedActivities' => $relatedActivities,
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'email' => $customer->email,
