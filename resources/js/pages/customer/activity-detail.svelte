@@ -78,7 +78,7 @@
                                             src={url}
                                             alt={activity.title}
                                             class="w-100 h-100"
-                                            style="object-fit: cover; outline: {mainImage === url ? '3px solid var(--travhub-base, #e52029)' : 'none'}; outline-offset: -3px;"
+                                            style="object-fit: cover; outline: {mainImage === url ? '3px solid var(--travhub-base, #d11f1f)' : 'none'}; outline-offset: -3px;"
                                         />
                                         {#if i === 3 && remainingPhotoCount > 0}
                                             <div
@@ -108,7 +108,7 @@
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         {#if activity.duration_label}
                             <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                                <i class="ti ti-clock fs-4" style="color: var(--travhub-base, #e52029);"></i>
+                                <i class="ti ti-clock fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
                                 <div>
                                     <div class="small text-muted lh-1">Duration</div>
                                     <div class="fw-medium">{activity.duration_label}</div>
@@ -116,7 +116,7 @@
                             </div>
                         {/if}
                         <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                            <i class="ti ti-users fs-4" style="color: var(--travhub-base, #e52029);"></i>
+                            <i class="ti ti-users fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
                             <div>
                                 <div class="small text-muted lh-1">Participants</div>
                                 <div class="fw-medium">Min {activity.min_pax}{#if activity.max_pax} · Max {activity.max_pax}{/if}</div>
@@ -124,7 +124,7 @@
                         </div>
                         {#if activity.meeting_point}
                             <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                                <i class="ti ti-map-pin fs-4" style="color: var(--travhub-base, #e52029);"></i>
+                                <i class="ti ti-map-pin fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
                                 <div>
                                     <div class="small text-muted lh-1">Meeting Point</div>
                                     <div class="fw-medium">{activity.meeting_point}</div>
@@ -140,7 +140,7 @@
                                 {#each activity.highlights as item}
                                     <div class="col-md-6">
                                         <div class="d-flex align-items-start gap-2">
-                                            <i class="ti ti-sparkles mt-1" style="color: var(--travhub-base, #e52029);"></i>
+                                            <i class="ti ti-sparkles mt-1" style="color: var(--travhub-base, #d11f1f);"></i>
                                             <span>{item}</span>
                                         </div>
                                     </div>
@@ -201,7 +201,7 @@
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <div>
-                                    <div class="fs-4 fw-bold text-primary">{formatRp(Number(activity.price_per_pax))}</div>
+                                    <div class="fs-4 fw-bold" style="color: var(--travhub-base, #d11f1f);">{formatRp(Number(activity.price_per_pax))}</div>
                                     <small class="text-muted">per person</small>
                                 </div>
                             </div>
@@ -297,15 +297,18 @@
 
                                 <button
                                     type="submit"
-                                    class="btn btn-primary w-100 py-3 fw-bold"
+                                    class="travhub-btn w-100 fw-bold"
+                                    style="padding: 16px 25px; opacity: {form.processing ? 0.7 : 1};"
                                     disabled={form.processing}
                                 >
-                                    {#if form.processing}
-                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                        Processing...
-                                    {:else}
-                                        Book Now — {formatRp(totalPrice)}
-                                    {/if}
+                                    <span>
+                                        {#if form.processing}
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            Processing...
+                                        {:else}
+                                            Book Now — {formatRp(totalPrice)}
+                                        {/if}
+                                    </span>
                                 </button>
 
                                 <p class="text-muted text-center small mt-3 mb-0">
@@ -337,7 +340,7 @@
                                             {/if}
                                             <span><i class="ti ti-users me-1"></i>Min {item.min_pax} pax</span>
                                         </div>
-                                        <div class="fw-bold text-primary">
+                                        <div class="fw-bold" style="color: var(--travhub-base, #d11f1f);">
                                             {formatRp(Number(item.price_per_pax))}
                                             <span class="fw-normal text-muted small">/ person</span>
                                         </div>
@@ -353,3 +356,10 @@
 
     <Footer />
 </div>
+
+<style>
+    :global(.page-wrapper .form-control:focus) {
+        border-color: var(--travhub-base, #d11f1f);
+        box-shadow: 0 0 0 0.2rem rgba(var(--travhub-base-rgb, 209, 31, 31), 0.15);
+    }
+</style>
