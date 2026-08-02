@@ -474,29 +474,6 @@
         border-radius: 0 0 30px 15px;
     }
 
-    :global(.main-header.scrolled .main-header__logo img) {
-        width: 50px !important;
-        height: 50px !important;
-        transition: all 0.3s ease !important;
-    }
-
-    :global(.main-header.scrolled .main-header__logo span) {
-        font-size: 24px !important;
-        transition: all 0.3s ease !important;
-    }
-
-    :global(.main-header.scrolled .main-menu__list > li > a) {
-        padding: 8px 15px !important;
-        font-size: 15px !important;
-        transition: all 0.3s ease !important;
-    }
-
-    :global(.main-header.scrolled .travhub-btn) {
-        padding: 8px 20px !important;
-        font-size: 14px !important;
-        transition: all 0.3s ease !important;
-    }
-
     :global(.main-header) {
         transition: all 0.3s ease !important;
     }
