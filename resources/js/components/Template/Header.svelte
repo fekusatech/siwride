@@ -5,6 +5,9 @@
     let scrolled = $state(false);
     let mobileNavOpen = $state(false);
     let headerElement: HTMLElement;
+    // Reserves the header's normal-flow height once it becomes `fixed` on
+    // scroll, so content below doesn't jump up / end up hidden behind it.
+    let headerHeight = $state(0);
 
     const handleScroll = () => {
         scrolled = window.scrollY > 50;
@@ -13,6 +16,9 @@
     onMount(() => {
         window.addEventListener('scroll', handleScroll);
         handleScroll();
+        if (headerElement) {
+            headerHeight = headerElement.offsetHeight;
+        }
     });
 
     onDestroy(() => {
@@ -202,6 +208,10 @@
         </div>
     </div>
 </header>
+
+{#if scrolled}
+    <div style="height: {headerHeight}px;" aria-hidden="true"></div>
+{/if}
 
 <!-- ==================== Mobile Nav Drawer ==================== -->
 <div class="mobile-nav__wrapper" class:expanded={mobileNavOpen}>
@@ -443,7 +453,12 @@
 </div>
 
 <style>
-    /* ── Sticky header ── */
+    /* ── Sticky header ──
+       position: sticky would be the simpler fix, but .page-wrapper has
+       overflow: hidden (travhub.css), which silently breaks sticky
+       positioning. Using fixed instead, paired with a spacer element
+       (rendered below) that reserves the header's height so content
+       doesn't jump up / get covered when the class toggles. */
     :global(.main-header.scrolled) {
         position: fixed !important;
         top: 0 !important;
