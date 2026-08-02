@@ -489,6 +489,45 @@
         border-radius: 0 0 30px 15px;
     }
 
+    /* ── Mobile header redesign ──
+       The desktop look nests a red "logo card" inside a white rounded
+       card inside a black bar, which on narrow screens shows up as an
+       off-center pill with the black bar peeking through the corners.
+       Below 767px, flatten it into one solid, edge-to-edge red bar. */
+    @media (max-width: 767px) {
+        :global(.main-header .container) {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        :global(.main-header .main-header__inner) {
+            background-color: var(--travhub-base, #d11f1f) !important;
+            border-radius: 0 !important;
+            padding: 14px 20px !important;
+        }
+
+        :global(.main-header .main-header__logo) {
+            background-color: transparent !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            width: auto !important;
+            min-width: 0 !important;
+        }
+
+        :global(.main-header .main-header__logo img) {
+            width: 42px !important;
+            height: 42px !important;
+        }
+
+        :global(.main-header .main-header__logo span) {
+            font-size: 20px !important;
+        }
+
+        :global(.main-header .mobile-nav__btn span) {
+            background-color: #fff !important;
+        }
+    }
+
     :global(.main-header) {
         transition: all 0.3s ease !important;
     }
