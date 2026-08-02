@@ -1,5 +1,4 @@
 <script lang="ts">
-    import '@geoman-io/leaflet-geoman-free';
     import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
     import { useForm, router } from '@inertiajs/svelte';
     import L from 'leaflet';
@@ -26,6 +25,14 @@
         iconUrl: markerIcon,
         shadowUrl: markerShadow,
     });
+
+    // leaflet-geoman's bundle expects a global `L` (not a module import) and
+    // reads it as soon as it's loaded. A static `import` would evaluate
+    // before this line ever runs (imports are always hoisted ahead of a
+    // module's own statements), so it's loaded dynamically in onMount below,
+    // after `L` has been exposed on window — otherwise its internal
+    // `L.PM = ...` throws "L is not defined" in the production build.
+    (window as any).L = L;
 
     let { zones = [] } = $props();
 
@@ -384,7 +391,8 @@ map.removeLayer(selectedPolygon);
         }
     }
 
-    onMount(() => {
+    onMount(async () => {
+        await import('@geoman-io/leaflet-geoman-free');
         setupMap();
     });
 
