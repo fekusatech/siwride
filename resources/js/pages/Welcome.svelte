@@ -48,10 +48,22 @@
         vehicleCategories = [],
         rideSharingLocations = [],
         services = [],
+        tourPackages = [],
     } = $props<{
         vehicleCategories: any[];
         rideSharingLocations: { id: number; name: string }[];
         services?: any[];
+        tourPackages?: {
+            id: number;
+            name: string;
+            slug: string;
+            description: string;
+            price_per_pax: number;
+            duration_hours: number;
+            max_pax: number;
+            destinations: string[];
+            image_url: string;
+        }[];
     }>();
 
     const settings = $derived(page.props.settings as any);
@@ -67,6 +79,33 @@
 
             // Wait for DOM
             setTimeout(() => {
+            // Initialize Tour Packages Carousel
+                const tourCarousel = jQuery('.featured-tours__carousel');
+                if (
+                    tourCarousel.length &&
+                    typeof tourCarousel.owlCarousel === 'function'
+                ) {
+                    tourCarousel.owlCarousel({
+                        loop: true,
+                        margin: 30,
+                        nav: true,
+                        dots: false,
+                        navText: [
+                            '<i class="fas fa-chevron-left"></i>',
+                            '<i class="fas fa-chevron-right"></i>',
+                        ],
+                        smartSpeed: 700,
+                        autoplay: true,
+                        autoplayTimeout: 5000,
+                        autoplayHoverPause: true,
+                        responsive: {
+                            0: { items: 1 },
+                            768: { items: 2 },
+                            1024: { items: 3 },
+                        },
+                    });
+                }
+
                 // Initialize Vehicles Carousel
                 const vehicleCarousel = jQuery('.tours-one__carousel');
                 if (
@@ -626,6 +665,156 @@
             </div>
         </div>
     </section>
+
+    <!-- ==================== Featured Tour Packages ==================== -->
+    {#if tourPackages && tourPackages.length > 0}
+        <section
+            class="featured-tours"
+            style="padding: 100px 0; background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #0f172a 100%); position: relative; overflow: hidden;"
+        >
+            <!-- Background decorative blobs -->
+            <div
+                style="position: absolute; top: -80px; right: -80px; width: 350px; height: 350px; background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%); pointer-events: none;"
+            ></div>
+            <div
+                style="position: absolute; bottom: -80px; left: -80px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(229,32,41,0.1) 0%, transparent 70%); pointer-events: none;"
+            ></div>
+
+            <div class="container" style="position: relative; z-index: 1;">
+                <div class="sec-title text-center" style="margin-bottom: 60px;">
+                    <div class="sec-title__tagline bw-split-in-right" style="color: #f59e0b;">
+                        Explore Bali
+                        <img
+                            src="/assets/images/shapes/sec-title-shape.png"
+                            alt="Siwride"
+                            style="filter: brightness(0) saturate(100%) invert(72%) sepia(97%) saturate(442%) hue-rotate(352deg) brightness(103%) contrast(97%);"
+                        />
+                    </div>
+                    <h3
+                        class="sec-title__title bw-split-in-left"
+                        style="color: #fff; font-size: 38px; padding-bottom:0px !important;"
+                    >
+                        Featured Tour Packages
+                    </h3>
+                    <!-- <p
+                        class="sec-title__text bw-split-in-up-fast"
+                        style="max-width: 600px; margin: 15px auto 0; color: rgba(255,255,255,0.65); font-size: 16px; line-height: 1.7;"
+                    >
+                        Curated Bali day tours with professional drivers. Fixed price per person — no hidden fees.
+                    </p> -->
+                </div>
+
+                <div
+                    class="featured-tours__carousel owl-carousel owl-theme"
+                    data-wow-duration="1000ms"
+                >
+                    {#each tourPackages as tour}
+                        <div class="featured-tour-card-wrapper">
+                            <a
+                                href="/tour-packages/{tour.slug}"
+                                class="featured-tour-card"
+                                style="text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 410px; background: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; overflow: hidden; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 4px 20px rgba(0,0,0,0.25);"
+                                onmouseenter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-8px)';
+                                    e.currentTarget.style.boxShadow = '0 25px 60px rgba(245,158,11,0.35)';
+                                    e.currentTarget.style.borderColor = 'rgba(245,158,11,0.5)';
+                                }}
+                                onmouseleave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.25)';
+                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                                }}
+                            >
+                                <!-- Image -->
+                                <div style="height: 230px; overflow: hidden; position: relative;">
+                                    {#if tour.image_url && !tour.image_url.includes('tour-default')}
+                                        <img
+                                            src={tour.image_url}
+                                            alt={tour.name}
+                                            style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;"
+                                            onmouseenter={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
+                                            onmouseleave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                                        />
+                                    {:else}
+                                        <div
+                                            style="width: 100%; height: 100%; background: linear-gradient(135deg, #b45309 0%, #f59e0b 50%, #d97706 100%); display: flex; align-items: center; justify-content: center;"
+                                        >
+                                            <i class="flaticon-map" style="font-size: 70px; color: rgba(255,255,255,0.4);"></i>
+                                        </div>
+                                    {/if}
+
+                                    <!-- Duration badge -->
+                                    <div
+                                        style="position: absolute; top: 14px; left: 14px; background: rgba(0,0,0,0.7); color: #fff; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 6px; backdrop-filter: blur(6px); display: flex; align-items: center; gap: 5px;"
+                                    >
+                                        <i class="fas fa-clock" style="font-size: 10px; color: #f59e0b;"></i>
+                                        {tour.duration_hours} Hours
+                                    </div>
+
+                                    <!-- Price badge -->
+                                    <div
+                                        style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 30px 18px 16px; display: flex; align-items: flex-end; justify-content: space-between;"
+                                    >
+                                        <div>
+                                            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin-bottom: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">From</p>
+                                            <p style="color: #f59e0b; font-size: 20px; font-weight: 800; margin: 0; line-height: 1;">
+                                                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(tour.price_per_pax)}
+                                            </p>
+                                            <p style="color: rgba(255,255,255,0.5); font-size: 11px; margin: 2px 0 0;">/ person</p>
+                                        </div>
+                                        <div
+                                            style="background: #e52029; color: #fff; padding: 8px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px;"
+                                        >
+                                            View <i class="fas fa-arrow-right" style="font-size: 10px;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Content -->
+                                <div style="padding: 20px 22px 24px; flex: 1; display: flex; flex-direction: column;">
+                                    <h4
+                                        style="color: #1e293b; font-size: 17px; font-weight: 800; margin-bottom: 8px; line-height: 1.3;"
+                                    >{tour.name}</h4>
+                                    <p
+                                        style="color: #64748b; font-size: 13px; line-height: 1.6; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;"
+                                    >
+                                        {tour.description}
+                                    </p>
+
+                                    <!-- Destinations pills -->
+                                    {#if tour.destinations && tour.destinations.length > 0}
+                                        <div style="display: flex; flex-wrap: nowrap; gap: 6px; margin-top: 4px; overflow: hidden; align-items: center; width: 100%;">
+                                            {#each tour.destinations.slice(0, 1) as dest}
+                                                <span
+                                                    style="background: #fee2e2; color: #dc2626; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; border: 1px solid #fca5a5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; display: inline-block; min-width: 0;"
+                                                >
+                                                    📍 {dest}
+                                                </span>
+                                            {/each}
+                                            {#if tour.destinations.length > 1}
+                                                <span
+                                                    style="background: #f1f5f9; color: #64748b; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; border: 1px solid #e2e8f0; white-space: nowrap; flex-shrink: 0;"
+                                                >
+                                                    +{tour.destinations.length - 1} other
+                                                </span>
+                                            {/if}
+                                        </div>
+                                    {/if}
+                                </div>
+                            </a>
+                        </div>
+                    {/each}
+                </div>
+
+                <!-- CTA -->
+                <div class="text-center" style="margin-top: 50px;">
+                    <a href="/booking/tour" class="travhub-btn">
+                        <span>View All Tour Packages</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    {/if}
 
     <section
         class="how-it-works"
@@ -1277,6 +1466,40 @@
 </div>
 
 <style>
+    :global(.featured-tours__carousel .owl-nav) {
+        position: absolute;
+        top: 50%;
+        width: calc(100% + 140px) !important;
+        left: -70px !important;
+        transform: translateY(-50%);
+        display: flex !important;
+        justify-content: space-between;
+        pointer-events: none;
+        margin: 0 !important;
+    }
+    :global(.featured-tours__carousel .owl-nav button) {
+        pointer-events: auto;
+        width: 50px;
+        height: 50px;
+        background: #fff !important;
+        color: #1e293b !important;
+        border-radius: 50% !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px !important;
+        transition: all 0.3s ease !important;
+    }
+    :global(.featured-tours__carousel .owl-nav button:hover) {
+        background: #f59e0b !important;
+        color: #fff !important;
+        transform: scale(1.1);
+    }
+    :global(.featured-tours__carousel) {
+        padding: 0 10px; /* Give room for shadows */
+    }
+
     /* Fix shadow clipping while keeping carousel width constrained */
     :global(.testimonials-one .owl-carousel, .vehicle-category .owl-carousel) {
         position: relative;
