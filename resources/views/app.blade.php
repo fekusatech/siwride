@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-@php 
-    $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*'); 
+@php
+    $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*');
     $logoSetting = \App\Models\Setting::getValue('logo');
     $logoUrl = $logoSetting ? (str_starts_with($logoSetting, '/storage/') ? $logoSetting : asset('storage/' . $logoSetting)) : null;
+    $siteName = \App\Models\Setting::getValue('business_name') ?: 'Siwride';
+    $siteDescription = 'Book your professional driver in advance and enjoy a comfortable, safe, and reliable journey across the beautiful island of Bali.';
+    $ogImageUrl = $logoUrl ?: asset('assets/images/og/siwride-og-image.png');
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
     @if($isDashboard)
@@ -19,11 +22,26 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="icon" href="{{ $logoUrl ?? '/favicon.ico' }}" sizes="any">
-        @if(!$logoUrl)
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        @endif
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <meta name="description" content="{{ $siteDescription }}">
+
+        <link rel="icon" href="{{ $logoUrl ?? asset('assets/images/favicons/favicon-32x32.png') }}" sizes="any">
+        @unless($logoUrl)
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/favicons/favicon-16x16.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/images/favicons/favicon-32x32.png') }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('assets/images/favicons/android-chrome-192x192.png') }}">
+        @endunless
+        <link rel="apple-touch-icon" href="{{ $logoUrl ?? asset('assets/images/favicons/apple-touch-icon.png') }}">
+
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ $siteName }}">
+        <meta property="og:title" content="{{ $siteName }}">
+        <meta property="og:description" content="{{ $siteDescription }}">
+        <meta property="og:image" content="{{ $ogImageUrl }}">
+        <meta property="og:url" content="{{ request()->url() }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $siteName }}">
+        <meta name="twitter:description" content="{{ $siteDescription }}">
+        <meta name="twitter:image" content="{{ $ogImageUrl }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
