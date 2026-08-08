@@ -54,8 +54,8 @@
     <section style="padding: 40px 0 100px; background: #f7f9fa;">
         <div class="container">
             <!-- Gallery -->
-            <div class="row g-2 mb-4" style="height: 420px;">
-                <div class="col-lg-8 h-100">
+            <div class="row g-2 mb-4 gallery-row">
+                <div class="col-lg-8 gallery-main">
                     <img
                         src={mainImage}
                         alt={activity.title}
@@ -64,7 +64,7 @@
                     />
                 </div>
                 {#if extraThumbs.length}
-                    <div class="col-lg-4 h-100">
+                    <div class="col-lg-4 gallery-thumbs">
                         <div class="row g-2 h-100">
                             {#each extraThumbs as url, i}
                                 <div class="col-6" style="height: 50%;">
@@ -361,5 +361,28 @@
     :global(.page-wrapper .form-control:focus) {
         border-color: var(--travhub-base, #d11f1f);
         box-shadow: 0 0 0 0.2rem rgba(var(--travhub-base-rgb, 209, 31, 31), 0.15);
+    }
+
+    /* Gallery: main photo + thumbnail grid stack on mobile, so they can't
+       share one fixed height like the side-by-side desktop layout does. */
+    .gallery-row {
+        height: auto;
+    }
+    .gallery-main {
+        height: 260px;
+    }
+    .gallery-thumbs {
+        height: 140px;
+        margin-top: 8px;
+    }
+    @media (min-width: 992px) {
+        .gallery-row {
+            height: 420px;
+        }
+        .gallery-main,
+        .gallery-thumbs {
+            height: 100%;
+            margin-top: 0;
+        }
     }
 </style>
