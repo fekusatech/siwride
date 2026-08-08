@@ -44,7 +44,6 @@ class ActivityController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
             'gallery' => ['nullable', 'array'],
             'gallery.*' => ['image', 'max:2048'],
             'href' => ['nullable', 'string', 'max:255'],
@@ -65,15 +64,14 @@ class ActivityController extends Controller
         $validated['excludes'] = $this->parseLines($validated['excludes'] ?? null);
         $validated['highlights'] = $this->parseLines($validated['highlights'] ?? null);
 
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('activities', 'public');
-        }
-
-        if ($request->hasFile('gallery')) {
-            $validated['gallery'] = collect($request->file('gallery'))
-                ->map(fn ($file) => $file->store('activities/gallery', 'public'))
-                ->all();
-        }
+        // The gallery is one ordered photo list — whichever photo ends up
+        // first (drag-and-drop order, set client-side) becomes the cover
+        // image shown in listings.
+        $gallery = $request->hasFile('gallery')
+            ? collect($request->file('gallery'))->map(fn ($file) => $file->store('activities/gallery', 'public'))->all()
+            : [];
+        $validated['gallery'] = $gallery ?: null;
+        $validated['image'] = $gallery[0] ?? null;
 
         Activity::create($validated);
 
@@ -96,11 +94,12 @@ class ActivityController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
             'gallery' => ['nullable', 'array'],
             'gallery.*' => ['image', 'max:2048'],
             'existing_gallery' => ['nullable', 'array'],
             'existing_gallery.*' => ['string'],
+            'gallery_order' => ['nullable', 'array'],
+            'gallery_order.*' => ['string'],
             'href' => ['nullable', 'string', 'max:255'],
             'price_per_pax' => ['nullable', 'numeric', 'min:0'],
             'min_pax' => ['nullable', 'integer', 'min:1'],
@@ -119,29 +118,40 @@ class ActivityController extends Controller
         $validated['excludes'] = $this->parseLines($validated['excludes'] ?? null);
         $validated['highlights'] = $this->parseLines($validated['highlights'] ?? null);
 
-        if ($request->hasFile('image')) {
-            if ($activity->image && ! str_starts_with($activity->image, 'assets/')) {
-                Storage::disk('public')->delete($activity->image);
-            }
-            $validated['image'] = $request->file('image')->store('activities', 'public');
-        }
-
+        // Kept existing photos + newly uploaded ones, merged back into the
+        // exact order the admin arranged them in (drag-and-drop client
+        // side): gallery_order holds tokens like "e0" (existing_gallery[0])
+        // or "n0" (gallery[0]) describing the final sequence.
         $currentGallery = $activity->gallery ?? [];
-        $keepGallery = array_intersect($validated['existing_gallery'] ?? [], $currentGallery);
-        unset($validated['existing_gallery']);
+        $keepGallery = array_values(array_intersect($validated['existing_gallery'] ?? [], $currentGallery));
 
         foreach (array_diff($currentGallery, $keepGallery) as $removedPath) {
             Storage::disk('public')->delete($removedPath);
         }
 
-        $newGallery = [];
-        if ($request->hasFile('gallery')) {
-            $newGallery = collect($request->file('gallery'))
-                ->map(fn ($file) => $file->store('activities/gallery', 'public'))
-                ->all();
+        $newGallery = $request->hasFile('gallery')
+            ? collect($request->file('gallery'))->map(fn ($file) => $file->store('activities/gallery', 'public'))->all()
+            : [];
+
+        $order = $validated['gallery_order'] ?? [];
+        $gallery = collect($order)
+            ->map(function (string $token) use ($keepGallery, $newGallery) {
+                $index = (int) substr($token, 1);
+
+                return $token[0] === 'e' ? ($keepGallery[$index] ?? null) : ($newGallery[$index] ?? null);
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        // Fallback if gallery_order wasn't sent for some reason.
+        if (empty($gallery)) {
+            $gallery = array_values(array_merge($keepGallery, $newGallery));
         }
 
-        $validated['gallery'] = array_values(array_merge($keepGallery, $newGallery)) ?: null;
+        unset($validated['existing_gallery'], $validated['gallery_order']);
+        $validated['gallery'] = $gallery ?: null;
+        $validated['image'] = $gallery[0] ?? null;
 
         $activity->update($validated);
 
@@ -153,6 +163,10 @@ class ActivityController extends Controller
     {
         if ($activity->image && ! str_starts_with($activity->image, 'assets/')) {
             Storage::disk('public')->delete($activity->image);
+        }
+
+        foreach ($activity->gallery ?? [] as $path) {
+            Storage::disk('public')->delete($path);
         }
 
         $activity->delete();

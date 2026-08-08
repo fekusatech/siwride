@@ -15,7 +15,6 @@
         title: activity?.title || '',
         subtitle: activity?.subtitle || '',
         description: activity?.description || '',
-        image: null as File | null,
         href: activity?.href || '',
         price_per_pax: activity?.price_per_pax || '',
         min_pax: activity?.min_pax || 1,
@@ -28,46 +27,67 @@
         is_active: activity?.is_active ?? true,
         sort_order: activity?.sort_order || 0,
         gallery: [] as File[],
-        existing_gallery: (activity?.gallery ?? []) as string[],
     });
 
-    let previewUrl = $state(activity?.image_url ?? null);
+    // One ordered photo list — existing (already-uploaded) + newly picked
+    // files, reorderable by drag-and-drop. Whichever ends up first becomes
+    // the cover/thumbnail shown in listings and cards.
+    type GalleryItem =
+        | { kind: 'existing'; path: string; url: string }
+        | { kind: 'new'; file: File; url: string };
 
-    // Multi-photo gallery: existing (already-uploaded) paths + newly picked files
-    let existingGalleryUrls = $state<string[]>(activity?.gallery_urls ?? []);
-    let galleryPreviews = $state<string[]>([]);
-
-    function handleImageChange(event: Event) {
-        const input = event.target as HTMLInputElement;
-        if (input.files && input.files.length > 0) {
-            const file = input.files[0];
-            form.image = file;
-            previewUrl = URL.createObjectURL(file);
-        }
-    }
+    let galleryItems = $state<GalleryItem[]>(
+        (activity?.gallery ?? []).map((path: string, i: number) => ({
+            kind: 'existing' as const,
+            path,
+            url: activity?.gallery_urls?.[i] ?? path,
+        })),
+    );
+    let draggedIndex = $state<number | null>(null);
 
     function handleGalleryChange(event: Event) {
         const input = event.target as HTMLInputElement;
         if (input.files) {
             for (const file of Array.from(input.files)) {
-                form.gallery.push(file);
-                galleryPreviews.push(URL.createObjectURL(file));
+                galleryItems.push({ kind: 'new', file, url: URL.createObjectURL(file) });
             }
         }
         input.value = '';
     }
 
-    function removeExistingGalleryImage(index: number) {
-        form.existing_gallery.splice(index, 1);
-        existingGalleryUrls.splice(index, 1);
+    function removeGalleryItem(index: number) {
+        galleryItems.splice(index, 1);
     }
 
-    function removeNewGalleryImage(index: number) {
-        form.gallery.splice(index, 1);
-        galleryPreviews.splice(index, 1);
+    function moveGalleryItem(index: number, direction: -1 | 1) {
+        const target = index + direction;
+        if (target < 0 || target >= galleryItems.length) return;
+        const [item] = galleryItems.splice(index, 1);
+        galleryItems.splice(target, 0, item);
+    }
+
+    function handleDrop(index: number) {
+        if (draggedIndex === null || draggedIndex === index) return;
+        const [item] = galleryItems.splice(draggedIndex, 1);
+        galleryItems.splice(index, 0, item);
+        draggedIndex = null;
     }
 
     function submit() {
+        const existing_gallery: string[] = [];
+        const gallery: File[] = [];
+        const gallery_order: string[] = [];
+
+        for (const item of galleryItems) {
+            if (item.kind === 'existing') {
+                gallery_order.push(`e${existing_gallery.length}`);
+                existing_gallery.push(item.path);
+            } else {
+                gallery_order.push(`n${gallery.length}`);
+                gallery.push(item.file);
+            }
+        }
+
         if (isEdit) {
             router.post(`/admin/activities/${activity.id}`, {
                 _method: 'put',
@@ -85,11 +105,12 @@
                 highlights: form.highlights,
                 is_active: form.is_active,
                 sort_order: form.sort_order,
-                image: form.image,
-                gallery: form.gallery,
-                existing_gallery: form.existing_gallery,
+                gallery,
+                existing_gallery,
+                gallery_order,
             }, { preserveScroll: true, forceFormData: true });
         } else {
+            form.gallery = gallery;
             form.post('/admin/activities', { preserveScroll: true, forceFormData: true });
         }
     }
@@ -195,49 +216,61 @@
                                 <textarea class="form-control" id="highlights" rows="3" bind:value={form.highlights} placeholder="Scenic volcano view&#10;Suitable for beginners"></textarea>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label" for="image">Activity Image (cover)</label>
-                                <input type="file" class="form-control" id="image" accept="image/*" onchange={handleImageChange}>
-                                <small class="text-muted d-block mt-1">Recommended size: 800x500px</small>
-                                {#if form.errors.image}<div class="text-danger mt-1 small">{form.errors.image}</div>{/if}
-                                {#if previewUrl}
-                                    <div class="mt-3">
-                                        <p class="mb-2 fw-medium">Preview:</p>
-                                        <img src={previewUrl} alt="Preview" class="img-thumbnail" style="max-height: 200px;">
-                                    </div>
-                                {/if}
-                            </div>
-
                             <div class="mb-4">
-                                <label class="form-label" for="gallery">Gallery (multiple photos)</label>
+                                <label class="form-label" for="gallery">Photos</label>
                                 <input type="file" class="form-control" id="gallery" accept="image/*" multiple onchange={handleGalleryChange}>
-                                <small class="text-muted d-block mt-1">Add as many photos as you like. You can pick files across multiple selections.</small>
+                                <small class="text-muted d-block mt-1">
+                                    Drag photos to reorder, or use the arrows. The first photo is used as the cover/thumbnail everywhere this activity is shown.
+                                </small>
                                 {#if form.errors.gallery}<div class="text-danger mt-1 small">{form.errors.gallery}</div>{/if}
 
-                                {#if existingGalleryUrls.length || galleryPreviews.length}
+                                {#if galleryItems.length}
                                     <div class="d-flex flex-wrap gap-2 mt-3">
-                                        {#each existingGalleryUrls as url, index}
-                                            <div class="position-relative">
-                                                <img src={url} alt="Gallery" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                        {#each galleryItems as item, index (item.url)}
+                                            <div
+                                                class="position-relative"
+                                                draggable="true"
+                                                role="group"
+                                                aria-label="Photo {index + 1}"
+                                                ondragstart={() => (draggedIndex = index)}
+                                                ondragover={(e) => e.preventDefault()}
+                                                ondrop={() => handleDrop(index)}
+                                                style="cursor: grab;"
+                                            >
+                                                <img
+                                                    src={item.url}
+                                                    alt="Activity photo {index + 1}"
+                                                    class="img-thumbnail"
+                                                    style="width: 110px; height: 110px; object-fit: cover; {index === 0 ? 'border-color: var(--bs-primary); border-width: 2px;' : ''}"
+                                                />
+                                                {#if index === 0}
+                                                    <span class="badge bg-primary position-absolute top-0 start-0 m-1">Thumbnail</span>
+                                                {/if}
                                                 <button
                                                     type="button"
                                                     class="btn btn-sm btn-danger position-absolute top-0 end-0"
                                                     style="padding: 0 6px; line-height: 1.5;"
-                                                    onclick={() => removeExistingGalleryImage(index)}
+                                                    onclick={() => removeGalleryItem(index)}
                                                     aria-label="Remove photo"
                                                 >&times;</button>
-                                            </div>
-                                        {/each}
-                                        {#each galleryPreviews as url, index}
-                                            <div class="position-relative">
-                                                <img src={url} alt="New gallery" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-sm btn-danger position-absolute top-0 end-0"
-                                                    style="padding: 0 6px; line-height: 1.5;"
-                                                    onclick={() => removeNewGalleryImage(index)}
-                                                    aria-label="Remove photo"
-                                                >&times;</button>
+                                                <div class="d-flex justify-content-between position-absolute bottom-0 start-0 end-0 p-1">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-light border"
+                                                        style="padding: 0 6px; line-height: 1.4; opacity: {index === 0 ? 0.3 : 1};"
+                                                        onclick={() => moveGalleryItem(index, -1)}
+                                                        disabled={index === 0}
+                                                        aria-label="Move left"
+                                                    >‹</button>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-light border"
+                                                        style="padding: 0 6px; line-height: 1.4; opacity: {index === galleryItems.length - 1 ? 0.3 : 1};"
+                                                        onclick={() => moveGalleryItem(index, 1)}
+                                                        disabled={index === galleryItems.length - 1}
+                                                        aria-label="Move right"
+                                                    >›</button>
+                                                </div>
                                             </div>
                                         {/each}
                                     </div>
@@ -286,7 +319,7 @@
                             <li class="mb-2"><strong>Price per Pax</strong>: Leave blank for a plain service card (not a per-pax tour)</li>
                             <li class="mb-2"><strong>Custom Link</strong>: Leave blank to book this activity directly; set it to point elsewhere (e.g. another booking flow)</li>
                             <li class="mb-2"><strong>Includes/Excludes</strong>: One item per line</li>
-                            <li class="mb-2"><strong>Gallery</strong>: Extra photos shown on the activity's detail page</li>
+                            <li class="mb-2"><strong>Photos</strong>: Drag to reorder — the first one is used as the cover/thumbnail</li>
                             <li class="mb-2"><strong>Sort Order</strong>: Lower = shown first</li>
                         </ul>
                     </div>
