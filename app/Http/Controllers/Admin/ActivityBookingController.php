@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityBooking;
+use App\Support\DriverReferralAttribution;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -47,6 +48,10 @@ class ActivityBookingController extends Controller
         ]);
 
         $activityBooking->update($validated);
+
+        if ($validated['status'] === ActivityBooking::STATUS_CANCELLED) {
+            DriverReferralAttribution::void($activityBooking);
+        }
 
         return back()->with('success', 'Booking status updated.');
     }

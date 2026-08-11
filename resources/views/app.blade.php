@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 @php
-    $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*');
+    $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*') || (request()->is('driver/*') && ! request()->is('driver/register'));
     $logoSetting = \App\Models\Setting::getValue('logo');
     $logoUrl = $logoSetting ? (str_starts_with($logoSetting, '/storage/') ? $logoSetting : asset('storage/' . $logoSetting)) : null;
     $siteName = \App\Models\Setting::getValue('business_name') ?: 'Siwride';

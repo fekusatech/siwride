@@ -20,6 +20,7 @@ createInertiaApp({
             case name === 'Welcome' ||
                 name.startsWith('customer/') ||
                 name.startsWith('Admin/') ||
+                name.startsWith('Driver/') ||
                 name.startsWith('Public/') ||
                 name.startsWith('RideSharing/'):
                 return null;

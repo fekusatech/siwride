@@ -30,7 +30,17 @@ return Application::configure(basePath: dirname(__DIR__))
             LogApiRequest::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->is('driver/*')) {
+                return route('driver.login');
+            }
+
+            if ($request->is('customer/*')) {
+                return route('customer.login');
+            }
+
+            return route('admin.login');
+        });
 
         $middleware->statefulApi();
     })

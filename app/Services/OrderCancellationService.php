@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Support\DriverReferralAttribution;
 use Carbon\Carbon;
 
 class OrderCancellationService
@@ -124,6 +125,7 @@ class OrderCancellationService
             'status' => 'cancelled',
             'is_cancelled' => true,
         ]);
+        DriverReferralAttribution::void($order);
 
         return true;
     }

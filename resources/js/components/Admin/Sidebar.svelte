@@ -205,6 +205,20 @@
                 </Link>
             </li>
 
+            <li class="side-nav-item">
+                <Link href="/admin/driver-articles" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-article"></i></span>
+                    <span class="menu-text"> Driver Articles </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
+                <Link href="/admin/driver-referrals" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-report-money"></i></span>
+                    <span class="menu-text"> Driver Referrals </span>
+                </Link>
+            </li>
+
             <li class="side-nav-title mt-2">Ride Sharing</li>
             
             <li class="side-nav-item">

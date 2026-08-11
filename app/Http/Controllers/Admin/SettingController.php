@@ -25,6 +25,8 @@ class SettingController extends Controller
                 'xendit_secret_key' => null,
                 'xendit_public_key' => null,
                 'xendit_webhook_token' => null,
+                'referral_commission_amount' => '50000',
+                'referral_window_days' => '30',
                 'updated_at' => Setting::query()->max('updated_at'),
             ]),
         ]);
@@ -42,6 +44,8 @@ class SettingController extends Controller
             'xendit_secret_key' => ['nullable', 'string', 'max:500'],
             'xendit_public_key' => ['nullable', 'string', 'max:500'],
             'xendit_webhook_token' => ['nullable', 'string', 'max:500'],
+            'referral_commission_amount' => ['required', 'numeric', 'min:0'],
+            'referral_window_days' => ['required', 'integer', 'min:1'],
         ]);
 
         if ($validated['recaptcha_enabled']) {
@@ -65,6 +69,8 @@ class SettingController extends Controller
         Setting::setValue('xendit_secret_key', $validated['xendit_secret_key'] ?? '');
         Setting::setValue('xendit_public_key', $validated['xendit_public_key'] ?? '');
         Setting::setValue('xendit_webhook_token', $validated['xendit_webhook_token'] ?? '');
+        Setting::setValue('referral_commission_amount', (string) $validated['referral_commission_amount']);
+        Setting::setValue('referral_window_days', (string) $validated['referral_window_days']);
 
         $currentLogo = Setting::getValue('logo');
         if ($request->hasFile('logo')) {

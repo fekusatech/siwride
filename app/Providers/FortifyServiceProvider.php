@@ -53,7 +53,7 @@ class FortifyServiceProvider extends ServiceProvider
 
             $user = User::query()->where('email', $request->email)->first();
 
-            if ($user && Hash::check($request->password, $user->password)) {
+            if ($user && $user->isAdmin() && Hash::check($request->password, $user->password)) {
                 return $user;
             }
 

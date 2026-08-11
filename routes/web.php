@@ -3,6 +3,10 @@
 use App\Http\Controllers\ActivityBookingController;
 use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
+use App\Http\Controllers\Driver\ArticleController as DriverArticleManageController;
+use App\Http\Controllers\Driver\DashboardController as DriverDashboardController;
+use App\Http\Controllers\Driver\DriverAuthController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\RideSharingController;
 use App\Models\Activity;
 use App\Models\RideSharingCity;
@@ -35,6 +39,17 @@ Route::get('/dokumentasi', function () {
 
 Route::get('/driver/register', [RegisteredDriverController::class, 'create'])->name('driver.register');
 Route::post('/driver/register', [RegisteredDriverController::class, 'store']);
+
+Route::middleware('guest:driver')->group(function () {
+    Route::get('/driver/login', [DriverAuthController::class, 'showLoginForm'])->name('driver.login');
+    Route::post('/driver/login', [DriverAuthController::class, 'login']);
+});
+
+Route::middleware('auth:driver')->prefix('driver')->name('driver.')->group(function () {
+    Route::post('/logout', [DriverAuthController::class, 'logout'])->name('logout');
+    Route::get('/dashboard', [DriverDashboardController::class, 'index'])->name('dashboard');
+    Route::resource('articles', DriverArticleManageController::class)->except(['show', 'destroy']);
+});
 
 // Route::get('/login', function () {
 //     return Inertia::render('Admin/Login');
@@ -84,6 +99,8 @@ Route::middleware('guest:customer')->group(function () {
 });
 
 use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\DriverArticleController;
+use App\Http\Controllers\Admin\DriverReferralController;
 use App\Http\Controllers\Admin\RideSharing\CityController;
 use App\Http\Controllers\Admin\RideSharing\RouteController;
 use App\Http\Controllers\Admin\RideSharing\RoutePathController;
@@ -91,6 +108,7 @@ use App\Http\Controllers\Admin\RideSharing\RoutePriceController;
 use App\Http\Controllers\Admin\RideSharing\ScheduleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CustomerProfileController;
+use App\Http\Middleware\AdminMiddleware;
 
 Route::middleware('auth:customer')->group(function () {
     Route::get('/customer/profile', [CustomerProfileController::class, 'index'])->name('customer.profile');
@@ -103,6 +121,9 @@ Route::get('/locations/geocode', [LocationSearchController::class, 'geocode'])->
 Route::get('/activities/{slug}', [ActivityBookingController::class, 'show'])->name('activities.show');
 Route::post('/activities/{slug}/book', [ActivityBookingController::class, 'store'])->name('activities.book');
 Route::get('/activities/{bookingCode}/booking-success', [ActivityBookingController::class, 'success'])->name('activities.booking.success');
+
+Route::get('/guides', [GuideController::class, 'index'])->name('guides');
+Route::get('/guides/{driverArticle:slug}', [GuideController::class, 'show'])->name('guides.show');
 
 Route::get('/booking', [CustomerOrderController::class, 'services'])->name('booking');
 Route::get('/booking/airport-transfer', [CustomerOrderController::class, 'index'])->name('booking.airport-transfer');
@@ -124,7 +145,7 @@ Route::post('/booking/{booking_code}/cancel', [CustomerOrderController::class, '
 Route::post('/booking/{booking_code}/retry-payment', [CustomerOrderController::class, 'retryPayment'])->name('booking.retry-payment');
 Route::get('/booking/{booking_code}', [CustomerOrderController::class, 'show'])->name('booking.show');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', AdminMiddleware::class])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('admin/profile', [ProfileController::class, 'edit'])->name('admin.profile');
@@ -154,6 +175,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('admin/activities', ActivityController::class)->names('admin.activities');
     Route::patch('admin/activity-bookings/{activityBooking}/status', [App\Http\Controllers\Admin\ActivityBookingController::class, 'updateStatus'])->name('admin.activity-bookings.update-status');
     Route::resource('admin/activity-bookings', App\Http\Controllers\Admin\ActivityBookingController::class)->only(['index', 'show'])->names('admin.activity-bookings');
+
+    Route::patch('admin/driver-articles/{driverArticle}/status', [DriverArticleController::class, 'updateStatus'])->name('admin.driver-articles.update-status');
+    Route::resource('admin/driver-articles', DriverArticleController::class)->only(['index', 'show'])->names('admin.driver-articles');
+
+    Route::patch('admin/driver-referrals/{driverReferral}/mark-paid', [DriverReferralController::class, 'markPaid'])->name('admin.driver-referrals.mark-paid');
+    Route::resource('admin/driver-referrals', DriverReferralController::class)->only(['index'])->names('admin.driver-referrals');
 
     Route::resource('admin/rs-cities', CityController::class)->names('admin.rs-cities');
     Route::resource('admin/rs-routes', RouteController::class)->names('admin.rs-routes');

@@ -13,6 +13,7 @@ use App\Models\Zone;
 use App\Models\ZonePricingRule;
 use App\Services\GeoService;
 use App\Services\OrderCancellationService;
+use App\Support\DriverReferralAttribution;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
@@ -553,6 +554,10 @@ class CustomerOrderController extends Controller
             // Link parent order back to return order
             $order->update(['linked_order_id' => $returnOrder->id]);
         }
+
+        // Attribute against the outbound order only — a round-trip booking
+        // creates two Order rows, but should only earn one commission.
+        DriverReferralAttribution::attribute($request, $order);
 
         // Auto-login customer if they just created an account
         if ($request->boolean('create_account')) {

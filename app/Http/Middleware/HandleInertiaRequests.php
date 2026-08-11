@@ -235,6 +235,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'customer' => Auth::guard('customer')->user(),
+                'driver' => Auth::guard('driver')->user(),
             ],
             'settings' => [
                 ...$settings,

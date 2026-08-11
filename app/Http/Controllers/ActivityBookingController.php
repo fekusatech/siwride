@@ -7,6 +7,7 @@ use App\Models\ActivityBooking;
 use App\Models\Customer;
 use App\Models\Setting;
 use App\Services\WhatsAppService;
+use App\Support\DriverReferralAttribution;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -112,6 +113,8 @@ class ActivityBookingController extends Controller
             'status' => ActivityBooking::STATUS_PENDING,
             'payment_status' => ActivityBooking::PAYMENT_PENDING,
         ]);
+
+        DriverReferralAttribution::attribute($request, $booking);
 
         if ($request->boolean('create_account')) {
             Auth::guard('customer')->login($customer);

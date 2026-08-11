@@ -19,6 +19,10 @@ class AdminMiddleware
             return $next($request);
         }
 
-        return response()->json(['message' => 'Unauthorized. Admin access only.'], 403);
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Unauthorized. Admin access only.'], 403);
+        }
+
+        abort(403, 'Admin access only.');
     }
 }

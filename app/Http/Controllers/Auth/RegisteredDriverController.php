@@ -28,6 +28,6 @@ class RegisteredDriverController extends Controller
     {
         $creator->create($request->all());
 
-        return redirect()->route('login')->with('status', 'Registration successful. Waiting for admin approval.');
+        return redirect()->route('driver.login')->with('status', 'Registration successful. Waiting for admin approval.');
     }
 }

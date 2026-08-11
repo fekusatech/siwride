@@ -17,6 +17,8 @@
         xendit_secret_key: setting.xendit_secret_key ?? '',
         xendit_public_key: setting.xendit_public_key ?? '',
         xendit_webhook_token: setting.xendit_webhook_token ?? '',
+        referral_commission_amount: setting.referral_commission_amount ?? '50000',
+        referral_window_days: setting.referral_window_days ?? '30',
     });
 
     let logoPreview = $state<string | null>(null);
@@ -362,6 +364,50 @@
                                         {/if}
                                         <small class="text-muted mt-1 d-block">
                                             Found in Xendit Dashboard → Settings → Webhooks → Verification Token
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4 opacity-50" />
+
+                            <!-- Driver Referrals -->
+                            <div class="mb-4">
+                                <div class="form-label fw-bold mb-1">Driver Referrals</div>
+                                <div class="text-muted small mb-3">
+                                    Commission drivers earn when a booking is made through one of their published guide articles.
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="referral_commission_amount" class="form-label fw-bold">Commission per Booking (IDR)</label>
+                                        <input
+                                            id="referral_commission_amount"
+                                            name="referral_commission_amount"
+                                            type="number"
+                                            min="0"
+                                            class="form-control"
+                                            bind:value={form.referral_commission_amount}
+                                        />
+                                        {#if form.errors.referral_commission_amount}
+                                            <div class="text-danger small mt-1">{form.errors.referral_commission_amount}</div>
+                                        {/if}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="referral_window_days" class="form-label fw-bold">Attribution Window (days)</label>
+                                        <input
+                                            id="referral_window_days"
+                                            name="referral_window_days"
+                                            type="number"
+                                            min="1"
+                                            class="form-control"
+                                            bind:value={form.referral_window_days}
+                                        />
+                                        {#if form.errors.referral_window_days}
+                                            <div class="text-danger small mt-1">{form.errors.referral_window_days}</div>
+                                        {/if}
+                                        <small class="text-muted mt-1 d-block">
+                                            How long after reading a guide a booking still counts as referred.
                                         </small>
                                     </div>
                                 </div>

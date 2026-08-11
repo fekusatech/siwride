@@ -6,6 +6,7 @@ use App\Models\ActivityBooking;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Models\Transaction;
+use App\Support\DriverReferralAttribution;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -97,7 +98,7 @@ class WebhookController extends Controller
         return ActivityBooking::where('booking_code', $bookingCode)->first();
     }
 
-    private function markActivityBookingPaid(?ActivityBooking $booking, array $payload): void
+    private function markActivityBookingPaid(?ActivityBooking $booking): void
     {
         if (! $booking) {
             return;
@@ -107,6 +108,7 @@ class WebhookController extends Controller
             'payment_status' => ActivityBooking::PAYMENT_PAID,
             'status' => ActivityBooking::STATUS_CONFIRMED,
         ]);
+        DriverReferralAttribution::qualify($booking);
 
         Log::info("Xendit Webhook — activity booking {$booking->booking_code} marked as paid");
     }
@@ -118,6 +120,7 @@ class WebhookController extends Controller
         }
 
         $booking->update(['payment_status' => ActivityBooking::PAYMENT_FAILED]);
+        DriverReferralAttribution::void($booking);
 
         Log::info("Xendit Webhook — activity booking {$booking->booking_code} marked as failed");
     }
@@ -129,6 +132,7 @@ class WebhookController extends Controller
         }
 
         $booking->update(['payment_status' => ActivityBooking::PAYMENT_EXPIRED]);
+        DriverReferralAttribution::void($booking);
 
         Log::info("Xendit Webhook — activity booking {$booking->booking_code} marked as expired");
     }
@@ -220,7 +224,7 @@ class WebhookController extends Controller
 
         if (($payload['status'] ?? '') === 'PAID') {
             $this->markOrderPaid($order, $payload);
-            $this->markActivityBookingPaid($activityBooking, $payload);
+            $this->markActivityBookingPaid($activityBooking);
 
             return response()->json(['success' => true, 'message' => 'Invoice paid']);
         }
@@ -894,6 +898,7 @@ class WebhookController extends Controller
             'payment_status' => 'paid',
             'status' => 'confirmed',
         ]);
+        DriverReferralAttribution::qualify($order);
 
         if ($order->linked_order_id) {
             Order::where('id', $order->linked_order_id)->update([
@@ -923,6 +928,7 @@ class WebhookController extends Controller
         }
 
         $order->update(['payment_status' => 'expired']);
+        DriverReferralAttribution::void($order);
 
         if ($order->linked_order_id) {
             Order::where('id', $order->linked_order_id)->update(['payment_status' => 'expired']);
@@ -946,6 +952,7 @@ class WebhookController extends Controller
         }
 
         $order->update(['payment_status' => 'failed']);
+        DriverReferralAttribution::void($order);
 
         if ($order->linked_order_id) {
             Order::where('id', $order->linked_order_id)->update(['payment_status' => 'failed']);
@@ -972,6 +979,7 @@ class WebhookController extends Controller
         }
 
         $order->update(['payment_status' => 'cancelled']);
+        DriverReferralAttribution::void($order);
 
         if ($order->linked_order_id) {
             Order::where('id', $order->linked_order_id)->update(['payment_status' => 'cancelled']);
@@ -995,6 +1003,7 @@ class WebhookController extends Controller
         }
 
         $order->update(['payment_status' => 'refunded']);
+        DriverReferralAttribution::void($order);
 
         Log::info("Xendit Webhook — order {$order->booking_code} marked as refunded", [
             'refund_id' => $payload['refund_id'] ?? null,
