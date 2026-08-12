@@ -8,7 +8,6 @@ use App\Models\RideSharingCity;
 use App\Models\RideSharingRoute;
 use App\Models\RideSharingSchedule;
 use App\Models\Setting;
-use App\Support\DriverReferralAttribution;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\RedirectResponse;
@@ -267,8 +266,6 @@ class RideSharingController extends Controller
             'trip_type' => 'sharing_ride',
             'is_return_trip' => false,
         ]);
-
-        DriverReferralAttribution::attribute($request, $order);
 
         if ($request->boolean('create_account')) {
             Auth::guard('customer')->login($customer);

@@ -20,10 +20,11 @@ class DriverReferral extends Model
 
     protected $fillable = [
         'driver_id',
-        'driver_article_id',
+        'driver_service_id',
         'booking_key',
         'order_id',
         'activity_booking_id',
+        'driver_service_booking_id',
         'commission_amount',
         'status',
     ];
@@ -40,9 +41,9 @@ class DriverReferral extends Model
         return $this->belongsTo(User::class, 'driver_id');
     }
 
-    public function article(): BelongsTo
+    public function service(): BelongsTo
     {
-        return $this->belongsTo(DriverArticle::class, 'driver_article_id');
+        return $this->belongsTo(DriverService::class, 'driver_service_id');
     }
 
     public function order(): BelongsTo
@@ -53,5 +54,10 @@ class DriverReferral extends Model
     public function activityBooking(): BelongsTo
     {
         return $this->belongsTo(ActivityBooking::class);
+    }
+
+    public function serviceBooking(): BelongsTo
+    {
+        return $this->belongsTo(DriverServiceBooking::class, 'driver_service_booking_id');
     }
 }

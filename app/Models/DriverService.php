@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class DriverArticle extends Model
+class DriverService extends Model
 {
     use HasFactory;
 
@@ -19,11 +19,17 @@ class DriverArticle extends Model
 
     protected $fillable = [
         'driver_id',
-        'activity_id',
         'title',
         'slug',
-        'excerpt',
-        'content',
+        'price_per_pax',
+        'min_pax',
+        'max_pax',
+        'duration_label',
+        'meeting_point',
+        'description',
+        'includes',
+        'excludes',
+        'highlights',
         'image',
         'gallery',
         'status',
@@ -37,6 +43,10 @@ class DriverArticle extends Model
     {
         return [
             'gallery' => 'array',
+            'includes' => 'array',
+            'excludes' => 'array',
+            'highlights' => 'array',
+            'price_per_pax' => 'decimal:2',
             'published_at' => 'datetime',
         ];
     }
@@ -73,9 +83,9 @@ class DriverArticle extends Model
         return $this->belongsTo(User::class, 'driver_id');
     }
 
-    public function activity(): BelongsTo
+    public function bookings(): HasMany
     {
-        return $this->belongsTo(Activity::class);
+        return $this->hasMany(DriverServiceBooking::class);
     }
 
     public function referrals(): HasMany

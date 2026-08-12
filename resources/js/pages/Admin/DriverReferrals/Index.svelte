@@ -36,7 +36,7 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h4 class="mb-0">Driver Referrals</h4>
-                <p class="text-muted mb-0">Commission earned by drivers from bookings referred through their articles</p>
+                <p class="text-muted mb-0">Commission earned by drivers from their service bookings</p>
             </div>
         </div>
 
@@ -60,7 +60,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th>Driver</th>
-                                <th>Article</th>
+                                <th>Service</th>
                                 <th>Booking</th>
                                 <th>Commission</th>
                                 <th>Status</th>
@@ -72,9 +72,9 @@
                             {#each referralList as referral}
                                 <tr>
                                     <td>{referral.driver?.name ?? '-'}</td>
-                                    <td>{referral.article?.title ?? '-'}</td>
+                                    <td>{referral.service?.title ?? '-'}</td>
                                     <td>
-                                        <code class="small">{referral.order?.booking_code ?? referral.activity_booking?.booking_code ?? '-'}</code>
+                                        <code class="small">{referral.order?.booking_code ?? referral.activity_booking?.booking_code ?? referral.service_booking?.booking_code ?? '-'}</code>
                                     </td>
                                     <td>{formatRp(referral.commission_amount)}</td>
                                     <td>

@@ -25,8 +25,8 @@
             </Link>
             <div class="d-flex align-items-center gap-3">
                 <Link href="/driver/dashboard" class="nav-link text-white-50">Dashboard</Link>
-                <Link href="/driver/articles" class="nav-link text-white-50">My Articles</Link>
-                <Link href="/driver/articles/create" class="nav-link text-white-50">New Article</Link>
+                <Link href="/driver/services" class="nav-link text-white-50">My Services</Link>
+                <Link href="/driver/services/create" class="nav-link text-white-50">New Service</Link>
                 <span class="text-white-50 small d-none d-md-inline">{driver?.name}</span>
                 <button type="button" class="btn btn-sm btn-outline-light" onclick={logout}>Logout</button>
             </div>

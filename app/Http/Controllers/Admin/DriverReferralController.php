@@ -13,7 +13,7 @@ class DriverReferralController extends Controller
     {
         $status = $request->input('status');
 
-        $referrals = DriverReferral::with('driver', 'article', 'order', 'activityBooking')
+        $referrals = DriverReferral::with('driver', 'service', 'order', 'activityBooking', 'serviceBooking')
             ->when($status, fn ($q, $s) => $q->where('status', $s))
             ->latest()
             ->paginate(15)

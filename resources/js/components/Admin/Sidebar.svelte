@@ -206,9 +206,16 @@
             </li>
 
             <li class="side-nav-item">
-                <Link href="/admin/driver-articles" class="side-nav-link">
-                    <span class="menu-icon"><i class="ti ti-article"></i></span>
-                    <span class="menu-text"> Driver Articles </span>
+                <Link href="/admin/driver-services" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-briefcase"></i></span>
+                    <span class="menu-text"> Driver Services </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
+                <Link href="/admin/driver-service-bookings" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-calendar-event"></i></span>
+                    <span class="menu-text"> Service Bookings </span>
                 </Link>
             </li>
 

@@ -4,7 +4,7 @@
     import Pagination from '@/components/Pagination.svelte';
     import { Link, router } from '@inertiajs/svelte';
 
-    let { articles, filters } = $props();
+    let { bookings, filters } = $props();
     let search = $state(filters.search ?? '');
     let status = $state(filters.status ?? '');
 
@@ -14,7 +14,7 @@
         if (search !== currentSearch) {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                router.get('/admin/driver-articles', { search, status }, { preserveState: true, replace: true });
+                router.get('/admin/driver-service-bookings', { search, status }, { preserveState: true, replace: true });
             }, 300);
         }
     });
@@ -26,26 +26,34 @@
 
     function filterByStatus(newStatus: string) {
         status = newStatus;
-        router.get('/admin/driver-articles', { search, status }, { preserveState: true, replace: true });
+        router.get('/admin/driver-service-bookings', { search, status }, { preserveState: true, replace: true });
     }
 
     const statusColors: Record<string, string> = {
         pending: 'bg-warning-subtle text-warning',
-        approved: 'bg-success-subtle text-success',
-        rejected: 'bg-danger-subtle text-danger',
+        confirmed: 'bg-success-subtle text-success',
+        cancelled: 'bg-danger-subtle text-danger',
+        completed: 'bg-primary-subtle text-primary',
     };
 
-    let articleList = $derived(articles.data);
+    const paymentColors: Record<string, string> = {
+        pending: 'bg-warning-subtle text-warning',
+        paid: 'bg-success-subtle text-success',
+        failed: 'bg-danger-subtle text-danger',
+        expired: 'bg-secondary-subtle text-secondary',
+    };
+
+    let bookingList = $derived(bookings.data);
 </script>
 
-<AppHead title="Driver Articles" />
+<AppHead title="Driver Service Bookings" />
 
 <AdminLayout>
     <div class="py-3">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
-                <h4 class="mb-0">Driver Articles</h4>
-                <p class="text-muted mb-0">Review and approve tour & guide content submitted by drivers</p>
+                <h4 class="mb-0">Driver Service Bookings</h4>
+                <p class="text-muted mb-0">Manage all driver-posted service bookings</p>
             </div>
         </div>
 
@@ -61,14 +69,14 @@
                                 <input
                                     type="text"
                                     class="form-control border-start-0 ps-0"
-                                    placeholder="Search by title or driver..."
+                                    placeholder="Search by code, name, email..."
                                     bind:value={search}
                                 />
                             </div>
                         </div>
                         <div class="col-md-auto">
                             <div class="d-flex gap-2">
-                                {#each ['', 'pending', 'approved', 'rejected'] as s}
+                                {#each ['', 'pending', 'confirmed', 'completed', 'cancelled'] as s}
                                     <button
                                         onclick={() => filterByStatus(s)}
                                         class="btn btn-sm {status === s ? 'btn-primary' : 'btn-outline-secondary'}"
@@ -85,31 +93,48 @@
                     <table class="table table-hover table-centered mb-0 text-nowrap">
                         <thead class="bg-light">
                             <tr>
-                                <th>Title</th>
+                                <th>Booking Code</th>
+                                <th>Service</th>
                                 <th>Driver</th>
-                                <th>Linked Tour</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Pax</th>
+                                <th>Total</th>
                                 <th>Status</th>
-                                <th>Submitted</th>
+                                <th>Payment</th>
                                 <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {#each articleList as article}
+                            {#each bookingList as booking}
                                 <tr>
                                     <td>
-                                        <div class="fw-medium">{article.title}</div>
+                                        <code class="small">{booking.booking_code}</code>
                                     </td>
-                                    <td>{article.driver?.name ?? '-'}</td>
-                                    <td>{article.activity?.title ?? '-'}</td>
                                     <td>
-                                        <span class="badge {statusColors[article.status] ?? ''}">
-                                            {article.status}
+                                        <div class="fw-medium">{booking.driver_service?.title ?? '-'}</div>
+                                    </td>
+                                    <td>{booking.driver_service?.driver?.name ?? '-'}</td>
+                                    <td>
+                                        <div>{booking.customer_name}</div>
+                                        <small class="text-muted">{booking.customer_phone || booking.customer_email}</small>
+                                    </td>
+                                    <td>{new Date(booking.booking_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                    <td>{booking.pax}</td>
+                                    <td>Rp {Number(booking.total_price).toLocaleString('id-ID')}</td>
+                                    <td>
+                                        <span class="badge {statusColors[booking.status] ?? ''}">
+                                            {booking.status}
                                         </span>
                                     </td>
-                                    <td>{new Date(article.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                    <td>
+                                        <span class="badge {paymentColors[booking.payment_status] ?? ''}">
+                                            {booking.payment_status}
+                                        </span>
+                                    </td>
                                     <td class="text-center">
                                         <Link
-                                            href={`/admin/driver-articles/${article.id}`}
+                                            href={`/admin/driver-service-bookings/${booking.id}`}
                                             class="btn btn-sm btn-icon btn-primary"
                                         >
                                             <i class="ti ti-eye"></i>
@@ -118,8 +143,8 @@
                                 </tr>
                             {:else}
                                 <tr>
-                                    <td colspan="6" class="text-center py-5">
-                                        <div class="text-muted">No driver articles found.</div>
+                                    <td colspan="10" class="text-center py-5">
+                                        <div class="text-muted">No driver service bookings found.</div>
                                     </td>
                                 </tr>
                             {/each}
@@ -127,7 +152,7 @@
                     </table>
                 </div>
 
-                <Pagination links={articles.links} />
+                <Pagination links={bookings.links} />
             </div>
         </div>
     </div>

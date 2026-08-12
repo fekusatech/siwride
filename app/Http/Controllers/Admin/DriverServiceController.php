@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\DriverArticle;
+use App\Models\DriverService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class DriverArticleController extends Controller
+class DriverServiceController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
         $status = $request->input('status');
 
-        $articles = DriverArticle::with('driver', 'activity')
+        $services = DriverService::with('driver')
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('title', 'like', "%{$search}%")
@@ -27,40 +27,40 @@ class DriverArticleController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return Inertia::render('Admin/DriverArticles/Index', [
-            'articles' => $articles,
+        return Inertia::render('Admin/DriverServices/Index', [
+            'services' => $services,
             'filters' => $request->only(['search', 'status']),
         ]);
     }
 
-    public function show(DriverArticle $driverArticle)
+    public function show(DriverService $driverService)
     {
-        $driverArticle->load('driver', 'activity');
+        $driverService->load('driver');
 
-        return Inertia::render('Admin/DriverArticles/Show', [
-            'article' => $driverArticle,
+        return Inertia::render('Admin/DriverServices/Show', [
+            'service' => $driverService,
         ]);
     }
 
-    public function updateStatus(Request $request, DriverArticle $driverArticle)
+    public function updateStatus(Request $request, DriverService $driverService)
     {
         $validated = $request->validate([
             'status' => ['required', 'in:pending,approved,rejected'],
             'rejection_reason' => ['nullable', 'string', 'max:500'],
         ]);
 
-        if ($validated['status'] === DriverArticle::STATUS_APPROVED) {
-            $validated['published_at'] ??= $driverArticle->published_at ?? now();
+        if ($validated['status'] === DriverService::STATUS_APPROVED) {
+            $validated['published_at'] ??= $driverService->published_at ?? now();
             $validated['rejection_reason'] = null;
-        } elseif ($validated['status'] === DriverArticle::STATUS_REJECTED) {
+        } elseif ($validated['status'] === DriverService::STATUS_REJECTED) {
             $validated['published_at'] = null;
         } else {
             $validated['published_at'] = null;
             $validated['rejection_reason'] = null;
         }
 
-        $driverArticle->update($validated);
+        $driverService->update($validated);
 
-        return back()->with('success', 'Article status updated.');
+        return back()->with('success', 'Service status updated.');
     }
 }

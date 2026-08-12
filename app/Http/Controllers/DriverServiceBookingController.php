@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Activity;
-use App\Models\ActivityBooking;
 use App\Models\Customer;
+use App\Models\DriverService;
+use App\Models\DriverServiceBooking;
 use App\Models\Setting;
-use App\Services\WhatsAppService;
+use App\Support\DriverReferralAttribution;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,25 +19,16 @@ use Xendit\Configuration;
 use Xendit\Invoice\CreateInvoiceRequest;
 use Xendit\Invoice\InvoiceApi;
 
-class ActivityBookingController extends Controller
+class DriverServiceBookingController extends Controller
 {
     public function show(string $slug): Response
     {
-        $activity = Activity::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $service = DriverService::where('slug', $slug)->where('status', DriverService::STATUS_APPROVED)->firstOrFail();
 
         $customer = Auth::guard('customer')->user();
 
-        $relatedActivities = Activity::where('is_active', true)
-            ->where('id', '!=', $activity->id)
-            ->whereNotNull('price_per_pax')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->limit(3)
-            ->get();
-
-        return Inertia::render('customer/activity-detail', [
-            'activity' => $activity,
-            'relatedActivities' => $relatedActivities,
+        return Inertia::render('customer/service-detail', [
+            'service' => $service->load('driver'),
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'email' => $customer->email,
@@ -48,11 +39,11 @@ class ActivityBookingController extends Controller
 
     public function store(Request $request, string $slug)
     {
-        $activity = Activity::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $service = DriverService::where('slug', $slug)->where('status', DriverService::STATUS_APPROVED)->firstOrFail();
 
         $validated = $request->validate([
             'booking_date' => ['required', 'date', 'after_or_equal:today'],
-            'pax' => ['required', 'integer', 'min:'.$activity->min_pax],
+            'pax' => ['required', 'integer', 'min:'.$service->min_pax],
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_email' => ['required', 'email'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
@@ -61,9 +52,9 @@ class ActivityBookingController extends Controller
             'password' => ['nullable', 'string', 'min:8'],
         ]);
 
-        if ($activity->max_pax && $validated['pax'] > $activity->max_pax) {
+        if ($service->max_pax && $validated['pax'] > $service->max_pax) {
             throw ValidationException::withMessages([
-                'pax' => "Maximum {$activity->max_pax} participants per booking.",
+                'pax' => "Maximum {$service->max_pax} participants per booking.",
             ]);
         }
 
@@ -95,49 +86,41 @@ class ActivityBookingController extends Controller
             $customer = Customer::create($customerData);
         }
 
-        $totalPrice = $activity->price_per_pax * $validated['pax'];
+        $totalPrice = $service->price_per_pax * $validated['pax'];
 
-        $booking = ActivityBooking::create([
+        $booking = DriverServiceBooking::create([
             'booking_code' => $this->generateUniqueBookingCode(),
-            'activity_id' => $activity->id,
+            'driver_service_id' => $service->id,
             'customer_id' => $customer->id,
             'booking_date' => $validated['booking_date'],
             'pax' => $validated['pax'],
-            'price_per_pax' => $activity->price_per_pax,
+            'price_per_pax' => $service->price_per_pax,
             'total_price' => $totalPrice,
             'customer_name' => $validated['customer_name'],
             'customer_phone' => $validated['customer_phone'] ?? null,
             'customer_email' => $validated['customer_email'],
             'notes' => $validated['notes'] ?? null,
-            'status' => ActivityBooking::STATUS_PENDING,
-            'payment_status' => ActivityBooking::PAYMENT_PENDING,
+            'status' => DriverServiceBooking::STATUS_PENDING,
+            'payment_status' => DriverServiceBooking::PAYMENT_PENDING,
         ]);
+
+        DriverReferralAttribution::attributeService($booking);
 
         if ($request->boolean('create_account')) {
             Auth::guard('customer')->login($customer);
         }
 
         try {
-            $paymentUrl = $this->generateXenditPayment($booking, $activity);
-
-            app(WhatsAppService::class)->sendGroupMessage(
-                "🏄 *New Activity Booking!*\n".
-                "Code: {$booking->booking_code}\n".
-                "Activity: {$activity->title}\n".
-                "Date: {$booking->booking_date->format('d M Y')}\n".
-                "Pax: {$booking->pax}\n".
-                'Total: Rp '.number_format((float) $booking->total_price, 0, ',', '.')."\n".
-                "Customer: {$booking->customer_name} ({$booking->customer_phone})"
-            );
+            $paymentUrl = $this->generateXenditPayment($booking, $service);
 
             return inertia()->location($paymentUrl);
         } catch (\Exception $e) {
-            return redirect()->route('activities.show', $slug)
+            return redirect()->route('driver-services.show', $slug)
                 ->with('error', 'Failed to create payment: '.$e->getMessage());
         }
     }
 
-    private function generateXenditPayment(ActivityBooking $booking, Activity $activity): string
+    private function generateXenditPayment(DriverServiceBooking $booking, DriverService $service): string
     {
         $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
         Configuration::setXenditKey($xenditKey);
@@ -145,14 +128,14 @@ class ActivityBookingController extends Controller
         $guzzleClient = new Client(['verify' => ! app()->environment('local')]);
         $apiInstance = new InvoiceApi($guzzleClient);
 
-        $successUrl = route('activities.booking.success', $booking->booking_code);
-        $failureUrl = route('activities.show', $activity->slug).'?payment=failed';
+        $successUrl = route('driver-services.booking.success', $booking->booking_code);
+        $failureUrl = route('driver-services.show', $service->slug).'?payment=failed';
 
         $req = new CreateInvoiceRequest([
             'external_id' => $booking->booking_code.'_'.time(),
             'amount' => (float) $booking->total_price,
             'payer_email' => $booking->customer_email,
-            'description' => "Activity Booking: {$activity->title} — {$booking->booking_code}",
+            'description' => "Service Booking: {$service->title} — {$booking->booking_code}",
             'success_redirect_url' => $successUrl,
             'failure_redirect_url' => $failureUrl,
         ]);
@@ -170,11 +153,11 @@ class ActivityBookingController extends Controller
 
     public function success(string $bookingCode): Response
     {
-        $booking = ActivityBooking::with('activity')
+        $booking = DriverServiceBooking::with('driverService')
             ->where('booking_code', $bookingCode)
             ->firstOrFail();
 
-        return Inertia::render('customer/activity-booking-success', [
+        return Inertia::render('customer/service-booking-success', [
             'booking' => $booking,
         ]);
     }
@@ -182,8 +165,8 @@ class ActivityBookingController extends Controller
     private function generateUniqueBookingCode(): string
     {
         do {
-            $code = 'ACT-'.strtoupper(Str::random(10));
-        } while (ActivityBooking::where('booking_code', $code)->exists());
+            $code = 'SVC-'.strtoupper(Str::random(10));
+        } while (DriverServiceBooking::where('booking_code', $code)->exists());
 
         return $code;
     }
