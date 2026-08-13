@@ -15,7 +15,7 @@ class DriverServiceBookingController extends Controller
         $search = $request->input('search');
         $status = $request->input('status');
 
-        $bookings = DriverServiceBooking::with('driverService')
+        $bookings = DriverServiceBooking::with('driverService.driver')
             ->when($search, function ($query, $search) {
                 $query->where('booking_code', 'like', "%{$search}%")
                     ->orWhere('customer_name', 'like', "%{$search}%")

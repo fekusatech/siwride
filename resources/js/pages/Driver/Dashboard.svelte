@@ -4,10 +4,11 @@
     import Pagination from '@/components/Pagination.svelte';
     import { Link } from '@inertiajs/svelte';
 
-    let { serviceCounts, earnings, orders } = $props<{
+    let { serviceCounts, earnings, orders, serviceBookings } = $props<{
         serviceCounts: { pending: number; approved: number; rejected: number };
         earnings: { pending: number; paid: number };
         orders: { data: any[]; links: any };
+        serviceBookings: { data: any[]; links: any };
     }>();
 
     const statusColors: Record<string, string> = {
@@ -63,6 +64,43 @@
             <Link href="/driver/services/create" class="btn btn-primary">
                 <i class="ti ti-plus me-1"></i> New Service
             </Link>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">My Service Bookings</h5>
+            <div class="table-responsive">
+                <table class="table table-hover table-centered mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Booking</th>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each serviceBookings.data as booking}
+                            <tr>
+                                <td class="fw-medium">{booking.booking_code}</td>
+                                <td>{booking.driver_service?.title ?? '—'}</td>
+                                <td>{booking.booking_date}</td>
+                                <td>{booking.customer_name}</td>
+                                <td>{formatRp(Number(booking.total_price))}</td>
+                                <td><span class="badge {statusColors[booking.status] ?? ''}">{booking.status}</span></td>
+                                <td>{booking.payment_status}</td>
+                            </tr>
+                        {:else}
+                            <tr><td colspan="7" class="text-center py-4 text-muted">No service bookings yet.</td></tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+            <Pagination links={serviceBookings.links} />
         </div>
     </div>
 

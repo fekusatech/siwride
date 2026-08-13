@@ -23,7 +23,7 @@ class DriverServiceController extends Controller
                 });
             })
             ->when($status, fn ($q, $s) => $q->where('status', $s))
-            ->latest()
+            ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
 
@@ -47,16 +47,23 @@ class DriverServiceController extends Controller
         $validated = $request->validate([
             'status' => ['required', 'in:pending,approved,rejected'],
             'rejection_reason' => ['nullable', 'string', 'max:500'],
+            'is_featured' => ['sometimes', 'boolean'],
+            'sort_order' => ['sometimes', 'integer', 'min:0'],
         ]);
+
+        $validated['is_featured'] = $validated['is_featured'] ?? $driverService->is_featured;
+        $validated['sort_order'] = $validated['sort_order'] ?? $driverService->sort_order;
 
         if ($validated['status'] === DriverService::STATUS_APPROVED) {
             $validated['published_at'] ??= $driverService->published_at ?? now();
             $validated['rejection_reason'] = null;
         } elseif ($validated['status'] === DriverService::STATUS_REJECTED) {
             $validated['published_at'] = null;
+            $validated['is_featured'] = false;
         } else {
             $validated['published_at'] = null;
             $validated['rejection_reason'] = null;
+            $validated['is_featured'] = false;
         }
 
         $driverService->update($validated);

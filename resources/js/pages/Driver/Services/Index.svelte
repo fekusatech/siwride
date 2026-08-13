@@ -4,6 +4,18 @@
     import Pagination from '@/components/Pagination.svelte';
     import { Link } from '@inertiajs/svelte';
 
+    const publicUrl = (slug: string) => `${window.location.origin}/services/${slug}`;
+
+    async function shareService(service: any) {
+        const url = publicUrl(service.slug);
+        if (navigator.share) {
+            await navigator.share({ title: service.title, url });
+            return;
+        }
+        await navigator.clipboard.writeText(url);
+        alert('Service link copied.');
+    }
+
     let { services } = $props();
 
     const statusColors: Record<string, string> = {
@@ -39,6 +51,7 @@
                             <th>Price / pax</th>
                             <th>Status</th>
                             <th>Submitted</th>
+                            <th class="text-center">Share</th>
                             <th class="text-center">Action</th>
                         </tr>
                     </thead>
@@ -54,6 +67,15 @@
                                     {/if}
                                 </td>
                                 <td>{new Date(service.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                <td class="text-center">
+                                    {#if service.status === 'approved'}
+                                        <button onclick={() => shareService(service)} class="btn btn-sm btn-outline-primary">
+                                            <i class="ti ti-share me-1"></i> Share
+                                        </button>
+                                    {:else}
+                                        <span class="text-muted">—</span>
+                                    {/if}
+                                </td>
                                 <td class="text-center">
                                     <Link href={`/driver/services/${service.id}/edit`} class="btn btn-sm btn-icon btn-primary">
                                         <i class="ti ti-edit"></i>

@@ -93,6 +93,7 @@
                                 <th>Driver</th>
                                 <th>Price / pax</th>
                                 <th>Status</th>
+                                <th>Landing</th>
                                 <th>Submitted</th>
                                 <th class="text-center">Action</th>
                             </tr>
@@ -110,6 +111,13 @@
                                             {service.status}
                                         </span>
                                     </td>
+                                    <td>
+                                        {#if service.is_featured}
+                                            <span class="badge bg-primary-subtle text-primary">Featured</span>
+                                        {:else}
+                                            <span class="text-muted">—</span>
+                                        {/if}
+                                    </td>
                                     <td>{new Date(service.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                                     <td class="text-center">
                                         <Link
@@ -122,7 +130,7 @@
                                 </tr>
                             {:else}
                                 <tr>
-                                    <td colspan="6" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <div class="text-muted">No driver services found.</div>
                                     </td>
                                 </tr>

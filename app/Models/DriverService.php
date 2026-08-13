@@ -33,6 +33,8 @@ class DriverService extends Model
         'image',
         'gallery',
         'status',
+        'is_featured',
+        'sort_order',
         'rejection_reason',
         'published_at',
     ];
@@ -47,6 +49,8 @@ class DriverService extends Model
             'excludes' => 'array',
             'highlights' => 'array',
             'price_per_pax' => 'decimal:2',
+            'is_featured' => 'boolean',
+            'sort_order' => 'integer',
             'published_at' => 'datetime',
         ];
     }

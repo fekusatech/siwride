@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Driver;
 use App\Http\Controllers\Controller;
 use App\Models\DriverReferral;
 use App\Models\DriverService;
+use App\Models\DriverServiceBooking;
 use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -26,6 +27,11 @@ class DashboardController extends Controller
             ->latest()
             ->paginate(10, pageName: 'orders_page');
 
+        $serviceBookings = DriverServiceBooking::with('driverService')
+            ->whereHas('driverService', fn ($query) => $query->where('driver_id', $user->id))
+            ->latest()
+            ->paginate(10, pageName: 'service_bookings_page');
+
         return Inertia::render('Driver/Dashboard', [
             'serviceCounts' => [
                 'pending' => $serviceCounts['pending'] ?? 0,
@@ -37,6 +43,7 @@ class DashboardController extends Controller
                 'paid' => (clone $referrals)->where('status', 'paid')->sum('commission_amount'),
             ],
             'orders' => $orders,
+            'serviceBookings' => $serviceBookings,
         ]);
     }
 }

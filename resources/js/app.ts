@@ -24,7 +24,7 @@ createInertiaApp({
                 name.startsWith('Public/') ||
                 name.startsWith('RideSharing/'):
                 return null;
-            case name.startsWith('auth/'):
+            case name.startsWith('auth/') || name.startsWith('(mobile)/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];

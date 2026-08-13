@@ -16,7 +16,7 @@
     function handleSearchInput(): void {
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
-            router.get('/services', { search: searchQuery }, { preserveState: true, replace: true });
+            router.get('/driver-services', { search: searchQuery }, { preserveState: true, replace: true });
         }, 400);
     }
 

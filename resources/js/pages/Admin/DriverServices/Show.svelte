@@ -8,6 +8,8 @@
     const statuses = ['pending', 'approved', 'rejected'];
 
     let rejectionReason = $state(service.rejection_reason ?? '');
+    let isFeatured = $state(Boolean(service.is_featured));
+    let sortOrder = $state(service.sort_order ?? 0);
 
     function updateStatus(newStatus: string) {
         router.patch(
@@ -15,6 +17,8 @@
             {
                 status: newStatus,
                 rejection_reason: newStatus === 'rejected' ? rejectionReason : null,
+                is_featured: newStatus === 'approved' ? isFeatured : false,
+                sort_order: Number(sortOrder) || 0,
             },
             { preserveScroll: true },
         );
@@ -121,6 +125,20 @@
                             <label class="form-label small" for="rejection_reason">Rejection reason (optional)</label>
                             <textarea id="rejection_reason" class="form-control form-control-sm" rows="2" bind:value={rejectionReason}></textarea>
                         </div>
+
+                        <div class="form-check mb-2">
+                            <input id="is_featured" class="form-check-input" type="checkbox" bind:checked={isFeatured} disabled={service.status !== 'approved'}>
+                            <label class="form-check-label small" for="is_featured">Feature on landing page</label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small" for="sort_order">Landing order</label>
+                            <input id="sort_order" class="form-control form-control-sm" type="number" min="0" bind:value={sortOrder} disabled={service.status !== 'approved'}>
+                        </div>
+                        {#if service.status === 'approved'}
+                            <button onclick={() => updateStatus('approved')} class="btn btn-sm btn-primary w-100 mb-2">
+                                Save Landing Settings
+                            </button>
+                        {/if}
 
                         <hr>
                         <p class="small text-muted mb-2">Update status:</p>

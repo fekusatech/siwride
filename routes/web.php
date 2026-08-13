@@ -10,6 +10,7 @@ use App\Http\Controllers\DriverServiceBookingController;
 use App\Http\Controllers\DriverServiceListController;
 use App\Http\Controllers\RideSharingController;
 use App\Models\Activity;
+use App\Models\DriverService;
 use App\Models\RideSharingCity;
 use App\Models\VehicleCategory;
 use Illuminate\Support\Facades\Route;
@@ -20,12 +21,19 @@ Route::get('/', function () {
     $vehicleCategories = VehicleCategory::orderBy('id')->get();
     $locations = RideSharingCity::orderBy('name')->get();
     $services = Activity::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
+    $featuredDriverServices = DriverService::with('driver')
+        ->where('status', DriverService::STATUS_APPROVED)
+        ->where('is_featured', true)
+        ->orderBy('sort_order')
+        ->orderBy('id')
+        ->get();
 
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'vehicleCategories' => $vehicleCategories,
         'rideSharingLocations' => $locations,
         'services' => $services,
+        'featuredDriverServices' => $featuredDriverServices,
     ]);
 })->name('home');
 
@@ -121,7 +129,7 @@ Route::get('/activities/{slug}', [ActivityBookingController::class, 'show'])->na
 Route::post('/activities/{slug}/book', [ActivityBookingController::class, 'store'])->name('activities.book');
 Route::get('/activities/{bookingCode}/booking-success', [ActivityBookingController::class, 'success'])->name('activities.booking.success');
 
-Route::get('/services', [DriverServiceListController::class, 'index'])->name('driver-services.index');
+Route::get('/driver-services', [DriverServiceListController::class, 'index'])->name('driver-services.index');
 Route::get('/services/{slug}', [DriverServiceBookingController::class, 'show'])->name('driver-services.show');
 Route::post('/services/{slug}/book', [DriverServiceBookingController::class, 'store'])->name('driver-services.book');
 Route::get('/services/{bookingCode}/booking-success', [DriverServiceBookingController::class, 'success'])->name('driver-services.booking.success');

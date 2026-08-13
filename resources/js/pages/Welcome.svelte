@@ -48,10 +48,12 @@
         vehicleCategories = [],
         rideSharingLocations = [],
         services = [],
+        featuredDriverServices = [],
     } = $props<{
         vehicleCategories: any[];
         rideSharingLocations: { id: number; name: string }[];
         services?: any[];
+        featuredDriverServices?: any[];
     }>();
 
     const settings = $derived(page.props.settings as any);
@@ -626,6 +628,36 @@
             </div>
         </div>
     </section>
+
+    {#if featuredDriverServices.length > 0}
+        <section class="featured-driver-services" style="padding: 80px 0; background-color: #fff;">
+            <div class="container">
+                <div class="sec-title text-center">
+                    <div class="sec-title__tagline">Featured by Our Drivers<img src="/assets/images/shapes/sec-title-shape.png" alt="Siwride" /></div>
+                    <h3 class="sec-title__title">Driver Services</h3>
+                    <p class="sec-title__text" style="max-width: 600px; margin: 15px auto 0;">Book local experiences created and hosted by our trusted drivers.</p>
+                </div>
+                <div class="row gutter-y-30 justify-content-center">
+                    {#each featuredDriverServices as service}
+                        <div class="col-lg-4 col-md-6">
+                            <a href={`/services/${service.slug}`} class="d-block text-decoration-none" style="color: inherit;">
+                                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
+                                    <img src={service.image_url} alt={service.title} style="height: 220px; width: 100%; object-fit: cover;" />
+                                    <div class="card-body">
+                                        <h5 class="fw-bold mb-1">{service.title}</h5>
+                                        <div class="small text-muted mb-2"><i class="ti ti-steering-wheel me-1"></i>{service.driver?.name ?? 'Siwride Driver'}</div>
+                                        {#if service.price_per_pax}
+                                            <div class="fw-bold" style="color: var(--travhub-base, #d11f1f);">Rp {Number(service.price_per_pax).toLocaleString('id-ID')} <span class="fw-normal text-muted small">/ person</span></div>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        </section>
+    {/if}
 
     <section
         class="how-it-works"
