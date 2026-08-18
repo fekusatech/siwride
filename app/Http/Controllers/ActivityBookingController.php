@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentReminderMail;
 use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\Customer;
@@ -11,6 +12,8 @@ use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -119,6 +122,16 @@ class ActivityBookingController extends Controller
 
         try {
             $paymentUrl = $this->generateXenditPayment($booking, $activity);
+
+            // Send payment reminder email
+            if ($booking->customer_email) {
+                try {
+                    Mail::to($booking->customer_email)->send(new PaymentReminderMail($booking, $paymentUrl, true));
+                    Log::info("Payment reminder email sent to {$booking->customer_email} for activity booking {$booking->booking_code}");
+                } catch (\Exception $e) {
+                    Log::error("Failed to send payment reminder email for activity booking {$booking->booking_code}: {$e->getMessage()}");
+                }
+            }
 
             app(WhatsAppService::class)->sendGroupMessage(
                 "🏄 *New Activity Booking!*\n".
