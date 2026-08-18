@@ -8,7 +8,7 @@ use App\Services\RecaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -97,9 +97,13 @@ class CustomerAuthController extends Controller
         );
 
         // Send the reset link email
+        $resetUrl = url('/customer/reset-password?token='.$token.'&email='.urlencode($request->email));
         $emailSent = false;
         try {
-            \Mail::raw("Click the link below to reset your password:\n\n".url('/customer/reset-password?token='.$token.'&email='.urlencode($request->email))."\n\nThis link will expire in 60 minutes.\n\nIf you did not request a password reset, please ignore this email.", function ($message) use ($request) {
+            Mail::send('emails.password-reset', [
+                'email' => $request->email,
+                'resetUrl' => $resetUrl,
+            ], function ($message) use ($request) {
                 $message->to($request->email)
                     ->subject('Password Reset Request - SIWRide');
             });
