@@ -28,6 +28,8 @@
     let currentPage = $state(1);
 
     const getOrderType = (order: any) => {
+        if (order.is_activity) return 'Activity';
+        
         // Heuristics based on data since explicit 'service_type' column doesn't exist yet
         const pickup = (order.pickup_address || '').toLowerCase();
         const dropoff = (order.dropoff_address || '').toLowerCase();
@@ -193,6 +195,7 @@
                             <div class="d-flex flex-wrap align-items-center" style="gap: 10px;">
                                 <select bind:value={filterType} class="premium-select">
                                     <option value="all">All Types</option>
+                                    <option value="Activity">Activity</option>
                                     <option value="Airport Transfer">Airport Transfer</option>
                                     <option value="Sharing Ride">Sharing Ride</option>
                                     <option value="Hourly / Tour">Hourly / Tour</option>
@@ -278,6 +281,11 @@
                                                         <span class="badge badge-secondary" style="font-size: 0.75rem; font-weight: normal; background-color: #e2e8f0; color: #475569;">
                                                             {getOrderType(order)}
                                                         </span>
+                                                        {#if order.payment_status === 'pending'}
+                                                            <span class="badge badge-warning" style="font-size: 0.7rem; font-weight: 600; background-color: #fef3c7; color: #92400e;">
+                                                                Unpaid
+                                                            </span>
+                                                        {/if}
                                                         <span
                                                             class="status-badge mobile-badge d-md-none"
                                                             style="background-color: {statusInfo.bg}; color: {statusInfo.color};"
@@ -285,52 +293,65 @@
                                                             {statusInfo.text}
                                                         </span>
                                                     </div>
-                                                    <div class="route mt-2">
+                                                    {#if order.is_activity}
+                                                        <div class="route mt-2">
+                                                            <div class="route-point">
+                                                                <i class="fas fa-hiking text-primary"></i>
+                                                                <span><strong>Activity:</strong> {order.activity_title}</span>
+                                                            </div>
+                                                        </div>
+                                                    {:else}
                                                         <div
-                                                            class="route-point"
+                                                            class="route mt-2"
                                                         >
-                                                            <i
-                                                                class="fas fa-map-marker-alt text-primary"
-                                                            ></i>
-                                                            <span
-                                                                class="text-truncate-custom"
-                                                                title={order.pickup_address}
-                                                                ><strong>Pickup:</strong> {order.pickup_address}</span
+                                                            <div
+                                                                class="route-point"
                                                             >
-                                                        </div>
-                                                        {#if order.dropoff_address && order.dropoff_address !== order.pickup_address}
-                                                        <div
-                                                            class="route-arrow"
-                                                        >
-                                                            <i
-                                                                class="fas fa-long-arrow-alt-down"
-                                                            ></i>
-                                                        </div>
-                                                        <div
-                                                            class="route-point"
-                                                        >
-                                                            <i
-                                                                class="fas fa-flag-checkered text-success"
-                                                            ></i>
-                                                            <span
-                                                                class="text-truncate-custom"
-                                                                title={order.dropoff_address}
-                                                                ><strong>Dropoff:</strong> {order.dropoff_address}</span
+                                                                <i
+                                                                    class="fas fa-map-marker-alt text-primary"
+                                                                ></i>
+                                                                <span
+                                                                    class="text-truncate-custom"
+                                                                    title={order.pickup_address}
+                                                                    ><strong>Pickup:</strong> {order.pickup_address}</span
+                                                                >
+                                                            </div>
+                                                            {#if order.dropoff_address && order.dropoff_address !== order.pickup_address}
+                                                            <div
+                                                                class="route-arrow"
                                                             >
+                                                                <i
+                                                                    class="fas fa-long-arrow-alt-down"
+                                                                ></i>
+                                                            </div>
+                                                            <div
+                                                                class="route-point"
+                                                            >
+                                                                <i
+                                                                    class="fas fa-flag-checkered text-success"
+                                                                ></i>
+                                                                <span
+                                                                    class="text-truncate-custom"
+                                                                    title={order.dropoff_address}
+                                                                    ><strong>Dropoff:</strong> {order.dropoff_address}</span
+                                                                >
+                                                            </div>
+                                                            {/if}
                                                         </div>
-                                                        {/if}
-                                                    </div>
+                                                    {/if}
                                                     <div
                                                         class="order-meta mt-2"
                                                     >
-                                                        <span
-                                                            ><i
-                                                                class="fas fa-clock text-muted"
-                                                            ></i>
-                                                            {formatTime12(
-                                                                order.time,
-                                                            )}</span
-                                                        >
+                                                        {#if order.time}
+                                                            <span
+                                                                ><i
+                                                                    class="fas fa-clock text-muted"
+                                                                ></i>
+                                                                {formatTime12(
+                                                                    order.time,
+                                                                )}</span
+                                                            >
+                                                        {/if}
                                                         <span class="ml-3"
                                                             ><i
                                                                 class="fas fa-users text-muted"
@@ -355,25 +376,45 @@
                                                 >
                                                     {statusInfo.text}
                                                 </span>
-                                                <Link
-                                                    href="/booking/{order.booking_code}"
-                                                    class="btn-details mt-3"
-                                                    >View Details <i
-                                                        class="fas fa-chevron-right"
-                                                    ></i></Link
-                                                >
+                                                {#if order.is_activity}
+                                                    <Link
+                                                        href="/activities/booking/{order.booking_code}"
+                                                        class="btn-details mt-3"
+                                                        >View Details <i
+                                                            class="fas fa-chevron-right"
+                                                        ></i></Link
+                                                    >
+                                                {:else}
+                                                    <Link
+                                                        href="/booking/{order.booking_code}"
+                                                        class="btn-details mt-3"
+                                                        >View Details <i
+                                                            class="fas fa-chevron-right"
+                                                        ></i></Link
+                                                    >
+                                                {/if}
                                             </div>
                                             <!-- Mobile View Details -->
                                             <div
                                                 class="d-block d-md-none mt-3 w-100 border-top pt-2 text-center"
                                             >
-                                                <Link
-                                                    href="/booking/{order.booking_code}"
-                                                    class="btn-details-mobile"
-                                                    >View Details <i
-                                                        class="fas fa-chevron-right ml-1"
-                                                    ></i></Link
-                                                >
+                                                {#if order.is_activity}
+                                                    <Link
+                                                        href="/activities/booking/{order.booking_code}"
+                                                        class="btn-details-mobile"
+                                                        >View Details <i
+                                                            class="fas fa-chevron-right ml-1"
+                                                        ></i></Link
+                                                    >
+                                                {:else}
+                                                    <Link
+                                                        href="/booking/{order.booking_code}"
+                                                        class="btn-details-mobile"
+                                                        >View Details <i
+                                                            class="fas fa-chevron-right ml-1"
+                                                        ></i></Link
+                                                    >
+                                                {/if}
                                             </div>
                                         </div>
                                     {/each}

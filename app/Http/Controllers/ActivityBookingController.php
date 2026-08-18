@@ -192,6 +192,17 @@ class ActivityBookingController extends Controller
         ]);
     }
 
+    public function bookingDetail(string $bookingCode): Response
+    {
+        $booking = ActivityBooking::with('activity')
+            ->where('booking_code', $bookingCode)
+            ->firstOrFail();
+
+        return Inertia::render('customer/activity-booking-detail', [
+            'booking' => $booking,
+        ]);
+    }
+
     private function generateUniqueBookingCode(): string
     {
         do {
