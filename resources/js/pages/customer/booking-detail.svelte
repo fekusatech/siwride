@@ -668,8 +668,18 @@
                         {/if}
                         <div
                             class="ticket-footer text-center"
-                            style="border-top: 1px dashed #e2e8f0;"
+                            style="border-top: 1px dashed #e2e8f0; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;"
                         >
+                            {#if tripOrder.status === 'confirmed' || tripOrder.status === 'completed'}
+                                <a
+                                    href={`/booking/${tripOrder.booking_code}/download-pdf`}
+                                    class="travhub-btn"
+                                    style="background: #10b981; color: white;"
+                                >
+                                    <i class="fas fa-download mr-1"></i>
+                                    <span>Download Ticket</span>
+                                </a>
+                            {/if}
                             <Link href="/customer/profile" class="travhub-btn"
                                 ><span>Back to Dashboard</span></Link
                             >

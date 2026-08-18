@@ -1458,18 +1458,17 @@
         /* Since auto-fit dynamically places them, we hide borders if they overflow visually */
     }
 
-    /* Stretch button to ignore parent padding vertically and touch edges */
+    /* Button sizing — match height of input fields, no stretch */
     @media (min-width: 1070px) {
         :global(.hero-one__form .banner-form.hf-flex .banner-form__button) {
-            align-self: stretch;
-            margin-top: -20px !important;
-            margin-bottom: -20px !important;
+            align-self: center;
+            margin-top: 10px !important;
         }
         :global(
             .hero-one__form .banner-form.hf-flex .banner-form__button button
         ) {
-            height: 100%;
-            width: 100%;
+            height: 48px;
+            padding: 0 28px;
             align-items: center;
             justify-content: center;
             margin: 0;
@@ -1704,9 +1703,8 @@
     
     @media (min-width: 1070px) {
         :global(.hero-one__form .airport-transfer-wrapper .banner-form.hf-flex .banner-form__button) {
-            align-self: stretch;
-            margin-top: -65px !important; /* override the default -20px to reach the higher top padding */
-            margin-bottom: -20px !important;
+            align-self: center;
+            margin-top: 10px !important;
         }
     }
     @media (max-width: 575px) {

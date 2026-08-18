@@ -13,6 +13,7 @@ use App\Models\Zone;
 use App\Models\ZonePricingRule;
 use App\Services\GeoService;
 use App\Services\OrderCancellationService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
@@ -760,6 +761,26 @@ class CustomerOrderController extends Controller
         return Inertia::render('customer/booking-detail', [
             'order' => $order,
         ]);
+    }
+
+    /**
+     * Download booking ticket as PDF.
+     */
+    public function downloadPdf(string $bookingCode)
+    {
+        $baseCode = explode('-', $bookingCode)[0];
+
+        $order = Order::with(['vehicleCategory', 'linkedOrder.vehicleCategory'])
+            ->where('booking_code', $baseCode)
+            ->firstOrFail();
+
+        $pdf = Pdf::loadView('emails.booking-ticket-pdf', [
+            'order' => $order,
+        ]);
+
+        $pdf->setPaper('a4');
+
+        return $pdf->download("ticket-{$order->booking_code}.pdf");
     }
 
     /**

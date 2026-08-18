@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingConfirmedMail;
 use App\Models\ActivityBooking;
 use App\Models\DriverServiceBooking;
 use App\Models\Order;
@@ -11,6 +12,7 @@ use App\Support\DriverReferralAttribution;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class WebhookController extends Controller
 {
@@ -971,6 +973,16 @@ class WebhookController extends Controller
             'payment_status' => 'paid',
             'status' => 'confirmed',
         ]);
+
+        // Send booking confirmation email
+        if ($order->customer_email) {
+            try {
+                Mail::to($order->customer_email)->send(new BookingConfirmedMail($order));
+                Log::info("Xendit Webhook — booking confirmation email sent to {$order->customer_email} for order {$order->booking_code}");
+            } catch (\Exception $e) {
+                Log::error("Xendit Webhook — failed to send booking confirmation email for order {$order->booking_code}: {$e->getMessage()}");
+            }
+        }
 
         Log::info("Xendit Webhook — order {$order->booking_code} marked as paid and confirmed");
     }
