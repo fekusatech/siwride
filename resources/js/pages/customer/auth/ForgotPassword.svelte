@@ -1,11 +1,13 @@
 <script lang="ts">
-    import { useForm, Link } from '@inertiajs/svelte';
+    import { useForm, Link, page } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
+    import { onMount } from 'svelte';
 
-    let { status = '' }: { status?: string } = $props();
+    let status = $state('');
+    let showError = $state('');
 
     let form = useForm({
         email: '',
@@ -16,6 +18,19 @@
     const isFormValid = $derived(
         form.email.length > 0 && emailError === '',
     );
+
+    onMount(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('status') === 'sent') {
+            status = 'If an account with that email exists, a password reset link has been sent.';
+        }
+    });
+
+    $effect(() => {
+        if (form.errors.email) {
+            showError = form.errors.email;
+        }
+    });
 
     const validateEmail = (e: Event) => {
         const target = e.target as HTMLInputElement;
@@ -35,6 +50,8 @@
 
     const handleSubmit = (e: Event) => {
         e.preventDefault();
+        showError = '';
+        status = '';
         form.post('/customer/forgot-password', {
             onFinish: () => form.reset('email'),
         });
@@ -77,12 +94,12 @@
                             </div>
                         {/if}
 
-                        {#if form.errors.email}
+                        {#if showError}
                             <div
                                 class="mb-4"
                                 style="padding: 14px 16px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; color: #721c24; font-size: 14px;"
                             >
-                                {form.errors.email}
+                                {showError}
                             </div>
                         {/if}
 
@@ -112,10 +129,10 @@
                                         maxlength="50"
                                         placeholder="your.email@example.com"
                                         style="width: 100%; height: 60px; padding: 0 20px; border: 1px solid {emailError ||
-                                        form.errors.email
+                                        showError
                                             ? '#dc3545'
                                             : '#e1e1e1'}; border-radius: 5px; color: #1a1a1a;"
-                                        class:is-invalid={form.errors.email ||
+                                        class:is-invalid={showError ||
                                             emailError}
                                     />
                                     {#if emailError}

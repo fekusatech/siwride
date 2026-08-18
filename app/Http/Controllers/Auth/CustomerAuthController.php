@@ -83,7 +83,7 @@ class CustomerAuthController extends Controller
 
         if (! $customer || is_null($customer->password)) {
             // Don't reveal whether the email exists or not
-            return back()->with('status', 'If an account with that email exists, a password reset link has been sent.');
+            return inertia()->location('/customer/forgot-password?status=sent');
         }
 
         $token = Str::random(64);
@@ -107,7 +107,7 @@ class CustomerAuthController extends Controller
             \Log::error('Failed to send password reset email: '.$e->getMessage());
         }
 
-        return back()->with('status', 'If an account with that email exists, a password reset link has been sent.');
+        return inertia()->location('/customer/forgot-password?status=sent');
     }
 
     /**
