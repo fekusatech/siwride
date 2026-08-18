@@ -82,8 +82,7 @@ class CustomerAuthController extends Controller
         $customer = Customer::where('email', $request->email)->first();
 
         if (! $customer || is_null($customer->password)) {
-            // Don't reveal whether the email exists or not
-            return inertia()->location('/customer/forgot-password?status=sent');
+            return inertia()->location('/customer/forgot-password?status=not_found');
         }
 
         $token = Str::random(64);
@@ -98,16 +97,22 @@ class CustomerAuthController extends Controller
         );
 
         // Send the reset link email
+        $emailSent = false;
         try {
             \Mail::raw("Click the link below to reset your password:\n\n".url('/customer/reset-password?token='.$token.'&email='.urlencode($request->email))."\n\nThis link will expire in 60 minutes.\n\nIf you did not request a password reset, please ignore this email.", function ($message) use ($request) {
                 $message->to($request->email)
                     ->subject('Password Reset Request - SIWRide');
             });
+            $emailSent = true;
         } catch (\Exception $e) {
             \Log::error('Failed to send password reset email: '.$e->getMessage());
         }
 
-        return inertia()->location('/customer/forgot-password?status=sent');
+        if ($emailSent) {
+            return inertia()->location('/customer/forgot-password?status=sent');
+        }
+
+        return inertia()->location('/customer/forgot-password?status=failed');
     }
 
     /**

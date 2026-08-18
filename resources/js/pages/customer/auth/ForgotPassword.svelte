@@ -21,8 +21,13 @@
 
     onMount(() => {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('status') === 'sent') {
-            status = 'If an account with that email exists, a password reset link has been sent.';
+        const statusParam = params.get('status');
+        if (statusParam === 'sent') {
+            status = 'Password reset link has been sent to your email. Please check your inbox.';
+        } else if (statusParam === 'not_found') {
+            showError = 'No account found with this email address. Please check your email or register a new account.';
+        } else if (statusParam === 'failed') {
+            showError = 'Failed to send email. Please try again later.';
         }
     });
 
