@@ -3,6 +3,7 @@
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
+    import DatePicker from '@/components/DatePicker.svelte';
     import { useForm } from '@inertiajs/svelte';
 
     let { activity, relatedActivities = [], customer = null } = $props<{
@@ -215,16 +216,15 @@
                             <form onsubmit={submit}>
                                 <div class="mb-3">
                                     <label class="form-label fw-medium" for="booking_date">Activity Date <span class="text-danger">*</span></label>
-                                    <input
-                                        type="date"
-                                        class="form-control {form.errors.booking_date ? 'is-invalid' : ''}"
-                                        id="booking_date"
+                                    <DatePicker
                                         bind:value={form.booking_date}
-                                        min={today}
-                                        required
+                                        placeholder="Select activity date"
+                                        id="booking_date"
+                                        minDate={today}
+                                        required={true}
                                     />
                                     {#if form.errors.booking_date}
-                                        <div class="invalid-feedback">{form.errors.booking_date}</div>
+                                        <div class="invalid-feedback" style="display: block;">{form.errors.booking_date}</div>
                                     {/if}
                                 </div>
 
