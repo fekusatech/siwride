@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCustomerOrderRequest;
 use App\Mail\PaymentReminderMail;
 use App\Models\Activity;
+use App\Models\ActivityBooking;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Setting;
@@ -740,6 +741,18 @@ class CustomerOrderController extends Controller
         // Extract the base code in case the URL contains a compound code (e.g., SWABC-SWXYZ)
         $baseCode = explode('-', $bookingCode)[0];
 
+        // Check if this is an activity booking first
+        $activityBooking = ActivityBooking::with('activity')
+            ->where('booking_code', $baseCode)
+            ->first();
+
+        if ($activityBooking) {
+            return Inertia::render('customer/activity-booking-detail', [
+                'booking' => $activityBooking,
+            ]);
+        }
+
+        // Otherwise, find the order
         $order = Order::with(['customer', 'driver', 'vehicleCategory', 'linkedOrder.driver', 'linkedOrder.vehicleCategory'])
             ->where('booking_code', $baseCode)
             ->firstOrFail();

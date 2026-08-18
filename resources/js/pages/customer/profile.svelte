@@ -376,45 +376,25 @@
                                                 >
                                                     {statusInfo.text}
                                                 </span>
-                                                {#if order.is_activity}
-                                                    <Link
-                                                        href="/activities/booking/{order.booking_code}"
-                                                        class="btn-details mt-3"
-                                                        >View Details <i
-                                                            class="fas fa-chevron-right"
-                                                        ></i></Link
-                                                    >
-                                                {:else}
-                                                    <Link
-                                                        href="/booking/{order.booking_code}"
-                                                        class="btn-details mt-3"
-                                                        >View Details <i
-                                                            class="fas fa-chevron-right"
-                                                        ></i></Link
-                                                    >
-                                                {/if}
+                                                <Link
+                                                    href="/booking/{order.booking_code}"
+                                                    class="btn-details mt-3"
+                                                    >View Details <i
+                                                        class="fas fa-chevron-right"
+                                                    ></i></Link
+                                                >
                                             </div>
                                             <!-- Mobile View Details -->
                                             <div
                                                 class="d-block d-md-none mt-3 w-100 border-top pt-2 text-center"
                                             >
-                                                {#if order.is_activity}
-                                                    <Link
-                                                        href="/activities/booking/{order.booking_code}"
-                                                        class="btn-details-mobile"
-                                                        >View Details <i
-                                                            class="fas fa-chevron-right ml-1"
-                                                        ></i></Link
-                                                    >
-                                                {:else}
-                                                    <Link
-                                                        href="/booking/{order.booking_code}"
-                                                        class="btn-details-mobile"
-                                                        >View Details <i
-                                                            class="fas fa-chevron-right ml-1"
-                                                        ></i></Link
-                                                    >
-                                                {/if}
+                                                <Link
+                                                    href="/booking/{order.booking_code}"
+                                                    class="btn-details-mobile"
+                                                    >View Details <i
+                                                        class="fas fa-chevron-right ml-1"
+                                                    ></i></Link
+                                                >
                                             </div>
                                         </div>
                                     {/each}
