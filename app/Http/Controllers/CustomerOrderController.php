@@ -738,12 +738,13 @@ class CustomerOrderController extends Controller
      */
     public function show($bookingCode): Response|SymfonyResponse
     {
-        // Extract the base code in case the URL contains a compound code (e.g., SWABC-SWXYZ)
+        // Try full code first, then base code (for compound round-trip URLs)
         $baseCode = explode('-', $bookingCode)[0];
 
-        // Check if this is an activity booking first
+        // Check if this is an activity booking first (try full code, then base)
         $activityBooking = ActivityBooking::with('activity')
-            ->where('booking_code', $baseCode)
+            ->where('booking_code', $bookingCode)
+            ->orWhere('booking_code', $baseCode)
             ->first();
 
         if ($activityBooking) {
@@ -752,9 +753,10 @@ class CustomerOrderController extends Controller
             ]);
         }
 
-        // Otherwise, find the order
+        // Otherwise, find the order (try full code, then base)
         $order = Order::with(['customer', 'driver', 'vehicleCategory', 'linkedOrder.driver', 'linkedOrder.vehicleCategory'])
-            ->where('booking_code', $baseCode)
+            ->where('booking_code', $bookingCode)
+            ->orWhere('booking_code', $baseCode)
             ->firstOrFail();
 
         // If accessed the return trip directly, redirect to the parent outbound trip instead
