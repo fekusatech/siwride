@@ -6,11 +6,15 @@
     import Preloader from '@/components/Template/Preloader.svelte';
     import { onMount } from 'svelte';
 
+    const settings = $derived(page.props.settings as any);
+    const recaptchaEnabled = $derived(settings.recaptcha_enabled === '1');
+
     let status = $state('');
     let showError = $state('');
 
     let form = useForm({
         email: '',
+        'g-recaptcha-response': '',
     });
 
     let emailError = $state('');
@@ -18,6 +22,18 @@
     const isFormValid = $derived(
         form.email.length > 0 && emailError === '',
     );
+
+    function loadRecaptcha() {
+        if (!recaptchaEnabled || window.grecaptcha) {
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://www.google.com/recaptcha/api.js';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    }
 
     onMount(() => {
         const params = new URLSearchParams(window.location.search);
@@ -29,11 +45,22 @@
         } else if (statusParam === 'failed') {
             showError = 'Failed to send email. Please try again later.';
         }
+
+        window.handleForgotPasswordRecaptchaSuccess = (token: string) => {
+            form['g-recaptcha-response'] = token;
+        };
+        window.handleForgotPasswordRecaptchaExpired = () => {
+            form['g-recaptcha-response'] = '';
+        };
+        loadRecaptcha();
     });
 
     $effect(() => {
         if (form.errors.email) {
             showError = form.errors.email;
+        }
+        if (form.errors['g-recaptcha-response']) {
+            showError = form.errors['g-recaptcha-response'];
         }
     });
 
@@ -58,7 +85,13 @@
         showError = '';
         status = '';
         form.post('/customer/forgot-password', {
-            onFinish: () => form.reset('email'),
+            onFinish: () => {
+                form.reset('email', 'g-recaptcha-response');
+                if (recaptchaEnabled && window.grecaptcha) {
+                    window.grecaptcha.reset();
+                }
+                form['g-recaptcha-response'] = '';
+            },
         });
     };
 </script>
@@ -149,6 +182,29 @@
                                         </div>
                                     {/if}
                                 </div>
+
+                                {#if recaptchaEnabled}
+                                    <div
+                                        class="form-one__control form-one__control--full mb-4"
+                                    >
+                                        <div
+                                            class="g-recaptcha"
+                                            data-sitekey={settings.recaptcha_site_key}
+                                            data-callback="handleForgotPasswordRecaptchaSuccess"
+                                            data-expired-callback="handleForgotPasswordRecaptchaExpired"
+                                        ></div>
+                                        {#if form.errors['g-recaptcha-response']}
+                                            <div
+                                                class="text-danger mt-1"
+                                                style="font-size: 14px;"
+                                            >
+                                                {form.errors[
+                                                    'g-recaptcha-response'
+                                                ]}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                {/if}
 
                                 <div
                                     class="form-one__control form-one__control--full"

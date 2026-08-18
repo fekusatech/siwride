@@ -73,8 +73,10 @@ class CustomerAuthController extends Controller
     /**
      * Send a password reset link to the customer.
      */
-    public function sendResetLinkEmail(Request $request)
+    public function sendResetLinkEmail(Request $request, RecaptchaService $recaptchaService)
     {
+        $recaptchaService->validate($request);
+
         $request->validate([
             'email' => ['required', 'email'],
         ]);
