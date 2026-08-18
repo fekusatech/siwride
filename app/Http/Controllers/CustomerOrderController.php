@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCustomerOrderRequest;
+use App\Mail\PaymentReminderMail;
 use App\Models\Activity;
 use App\Models\Customer;
 use App\Models\Order;
@@ -20,6 +21,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -562,6 +565,16 @@ class CustomerOrderController extends Controller
 
         try {
             $redirectUrl = $this->generateXenditPayment($order);
+
+            // Send payment reminder email
+            if ($order->customer_email) {
+                try {
+                    Mail::to($order->customer_email)->send(new PaymentReminderMail($order, $redirectUrl));
+                    Log::info("Payment reminder email sent to {$order->customer_email} for order {$order->booking_code}");
+                } catch (\Exception $e) {
+                    Log::error("Failed to send payment reminder email for order {$order->booking_code}: {$e->getMessage()}");
+                }
+            }
 
             // If it returns an Inertia redirect (Inertia::location) for external URLs
             if (str_starts_with($redirectUrl, 'http') && ! str_starts_with($redirectUrl, url('/'))) {
