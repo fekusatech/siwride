@@ -8,6 +8,8 @@ use App\Services\RecaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -58,6 +60,121 @@ class CustomerAuthController extends Controller
     public function showRegisterForm()
     {
         return Inertia::render('customer/auth/Register');
+    }
+
+    /**
+     * Show the forgot password form.
+     */
+    public function showForgotPasswordForm()
+    {
+        return Inertia::render('customer/auth/ForgotPassword');
+    }
+
+    /**
+     * Send a password reset link to the customer.
+     */
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $customer = Customer::where('email', $request->email)->first();
+
+        if (! $customer || is_null($customer->password)) {
+            // Don't reveal whether the email exists or not
+            return back()->with('status', 'If an account with that email exists, a password reset link has been sent.');
+        }
+
+        $token = Str::random(64);
+
+        // Store the token in the password_reset_tokens table
+        \DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'token' => Hash::make($token),
+                'created_at' => now(),
+            ]
+        );
+
+        // Send the reset link email
+        try {
+            \Mail::raw("Click the link below to reset your password:\n\n".url('/customer/reset-password?token='.$token.'&email='.urlencode($request->email))."\n\nThis link will expire in 60 minutes.\n\nIf you did not request a password reset, please ignore this email.", function ($message) use ($request) {
+                $message->to($request->email)
+                    ->subject('Password Reset Request - SIWRide');
+            });
+        } catch (\Exception $e) {
+            \Log::error('Failed to send password reset email: '.$e->getMessage());
+        }
+
+        return back()->with('status', 'If an account with that email exists, a password reset link has been sent.');
+    }
+
+    /**
+     * Show the reset password form.
+     */
+    public function showResetPasswordForm(Request $request)
+    {
+        $token = $request->query('token');
+        $email = $request->query('email');
+
+        if (! $token || ! $email) {
+            return redirect()->route('customer.login');
+        }
+
+        return Inertia::render('customer/auth/ResetPassword', [
+            'token' => $token,
+            'email' => $email,
+        ]);
+    }
+
+    /**
+     * Reset the customer's password.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        $resetRecord = \DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (! $resetRecord || ! Hash::check($request->token, $resetRecord->token)) {
+            throw ValidationException::withMessages([
+                'email' => ['The password reset token is invalid or has expired.'],
+            ]);
+        }
+
+        // Check if token is expired (60 minutes)
+        if (now()->diffInMinutes($resetRecord->created_at) > 60) {
+            \DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->delete();
+
+            throw ValidationException::withMessages([
+                'email' => ['The password reset token has expired. Please request a new one.'],
+            ]);
+        }
+
+        // Update the password
+        $customer = Customer::where('email', $request->email)->first();
+
+        if ($customer) {
+            $customer->update([
+                'password' => Hash::make($request->password),
+            ]);
+        }
+
+        // Delete the reset token
+        \DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->delete();
+
+        return redirect()->route('customer.login')->with('status', 'Your password has been reset successfully. You can now log in.');
     }
 
     /**

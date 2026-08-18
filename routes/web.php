@@ -102,6 +102,10 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/customer/login', [CustomerAuthController::class, 'login']);
     Route::get('/customer/register', [CustomerAuthController::class, 'showRegisterForm'])->name('customer.register');
     Route::post('/customer/register', [CustomerAuthController::class, 'register']);
+    Route::get('/customer/forgot-password', [CustomerAuthController::class, 'showForgotPasswordForm'])->name('customer.forgot-password');
+    Route::post('/customer/forgot-password', [CustomerAuthController::class, 'sendResetLinkEmail']);
+    Route::get('/customer/reset-password', [CustomerAuthController::class, 'showResetPasswordForm'])->name('customer.reset-password');
+    Route::post('/customer/reset-password', [CustomerAuthController::class, 'resetPassword']);
 });
 
 use App\Http\Controllers\Admin\ActivityController;

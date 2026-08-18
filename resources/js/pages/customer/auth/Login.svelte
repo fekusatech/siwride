@@ -281,6 +281,12 @@
                                             >Remember me</span
                                         >
                                     </label>
+                                    <Link
+                                        href="/customer/forgot-password"
+                                        style="color: var(--travhub-base); font-weight: 600; font-size: 14px; text-decoration: none;"
+                                    >
+                                        Forgot password?
+                                    </Link>
                                 </div>
 
                                 {#if recaptchaEnabled}
