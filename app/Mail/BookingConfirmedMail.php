@@ -33,7 +33,7 @@ class BookingConfirmedMail extends Mailable
             : (float) $this->order->price;
 
         return new Content(
-            htmlView: 'emails.booking-confirmed',
+            view: 'emails.booking-confirmed',
             with: [
                 'order' => $this->order,
                 'linkedOrder' => $linkedOrder,

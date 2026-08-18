@@ -27,7 +27,7 @@ class ActivityBookingCompletedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            htmlView: 'emails.activity-booking-completed',
+            view: 'emails.activity-booking-completed',
             with: [
                 'booking' => $this->booking,
             ],

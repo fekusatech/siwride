@@ -35,7 +35,7 @@ class PaymentReminderMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            htmlView: 'emails.payment-reminder',
+            view: 'emails.payment-reminder',
             with: [
                 'order' => $this->order,
                 'paymentUrl' => $this->paymentUrl,
