@@ -235,6 +235,13 @@
             </li>
 
             <li class="side-nav-item">
+                <Link href="/admin/pack-tiers" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-stack-2"></i></span>
+                    <span class="menu-text"> Pack Tiers </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
                 <Link href="/admin/driver-referrals" class="side-nav-link">
                     <span class="menu-icon"><i class="ti ti-report-money"></i></span>
                     <span class="menu-text"> Driver Referrals </span>

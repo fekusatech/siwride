@@ -7,6 +7,7 @@ use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\Customer;
 use App\Models\Setting;
+use App\Services\PackTierService;
 use App\Services\VoucherService;
 use App\Services\WhatsAppService;
 use GuzzleHttp\Client;
@@ -46,6 +47,7 @@ class ActivityBookingController extends Controller
             'payment' => [
                 'dp_percent' => (float) Setting::getValue('dp_percent_default', 30),
             ],
+            'packTiers' => app(PackTierService::class)->allTiersForDisplay(),
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'email' => $customer->email,
@@ -104,7 +106,12 @@ class ActivityBookingController extends Controller
             $customer = Customer::create($customerData);
         }
 
-        $subtotal = round((float) $activity->price_per_pax * $validated['pax'], 2);
+        $basePricePerPax = (float) $activity->price_per_pax;
+        $tierData = app(PackTierService::class)->priceForPax($basePricePerPax, $validated['pax']);
+        $effectivePricePerPax = $tierData['price_per_pax'];
+        $tier = $tierData['tier'];
+
+        $subtotal = round($effectivePricePerPax * $validated['pax'], 2);
         $discountAmount = 0.0;
         $voucher = null;
         $voucherCode = strtoupper(trim($validated['voucher_code'] ?? ''));
@@ -130,7 +137,7 @@ class ActivityBookingController extends Controller
             'customer_id' => $customer->id,
             'booking_date' => $validated['booking_date'],
             'pax' => $validated['pax'],
-            'price_per_pax' => $activity->price_per_pax,
+            'price_per_pax' => $effectivePricePerPax,
             'total_price' => $totalAmount,
             'subtotal' => $subtotal,
             'discount_amount' => $discountAmount,
@@ -234,7 +241,11 @@ class ActivityBookingController extends Controller
             'email' => ['nullable', 'email'],
         ]);
 
-        $subtotal = round((float) $activity->price_per_pax * $validated['pax'], 2);
+        $basePricePerPax = (float) $activity->price_per_pax;
+        $tierData = app(PackTierService::class)->priceForPax($basePricePerPax, $validated['pax']);
+        $effectivePricePerPax = $tierData['price_per_pax'];
+
+        $subtotal = round($effectivePricePerPax * $validated['pax'], 2);
 
         try {
             $result = app(VoucherService::class)->validate(
@@ -255,6 +266,8 @@ class ActivityBookingController extends Controller
             'discount_amount' => $result['discount_amount'],
             'subtotal' => $subtotal,
             'total_amount' => round($subtotal - $result['discount_amount'], 2),
+            'price_per_pax' => $effectivePricePerPax,
+            'tier_label' => $tierData['tier']?->label,
         ]);
     }
 

@@ -6,10 +6,11 @@
     import DatePicker from '@/components/DatePicker.svelte';
     import { useForm } from '@inertiajs/svelte';
 
-    let { activity, relatedActivities = [], payment = { dp_percent: 30 }, customer = null } = $props<{
+    let { activity, relatedActivities = [], payment = { dp_percent: 30 }, packTiers = [], customer = null } = $props<{
         activity: any;
         relatedActivities?: any[];
         payment: { dp_percent: number };
+        packTiers?: any[];
         customer: { name: string; email: string; phone: string } | null;
     }>();
 
@@ -27,7 +28,22 @@
     let voucherDiscount = $state(0);
     let voucherMessage = $state('');
 
-    let subtotal = $derived(Number(activity.price_per_pax) * form.pax);
+    let basePricePerPax = $derived(Number(activity.price_per_pax));
+
+    let applicableTier = $derived.by(() => {
+        const pax = Number(form.pax) || 1;
+        return packTiers.find((t) => pax >= t.min_pax && (t.max_pax === null || pax <= t.max_pax)) ?? null;
+    });
+
+    let effectivePricePerPax = $derived.by(() => {
+        if (!applicableTier) return basePricePerPax;
+        if (applicableTier.discount_type === 'percent') {
+            return Math.round(basePricePerPax * (1 - applicableTier.discount_value / 100) * 100) / 100;
+        }
+        return Math.max(0, Math.round((basePricePerPax - applicableTier.discount_value) * 100) / 100);
+    });
+
+    let subtotal = $derived(Math.round(effectivePricePerPax * form.pax * 100) / 100);
     let totalAmount = $derived(Math.max(0, Math.round((subtotal - voucherDiscount) * 100) / 100));
     let dpAmount = $derived(Math.round(totalAmount * (payment.dp_percent / 100) * 100) / 100);
     let remainingCash = $derived(Math.round((totalAmount - dpAmount) * 100) / 100);
@@ -251,8 +267,13 @@
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <div>
-                                    <div class="fs-4 fw-bold" style="color: var(--travhub-base, #d11f1f);">{formatRp(Number(activity.price_per_pax))}</div>
-                                    <small class="text-muted">per person</small>
+                                    <div class="fs-4 fw-bold" style="color: var(--travhub-base, #d11f1f);">
+                                        {formatRp(effectivePricePerPax)}
+                                        {#if applicableTier}
+                                            <span class="fs-6 text-muted text-decoration-line-through fw-normal ms-1">{formatRp(basePricePerPax)}</span>
+                                        {/if}
+                                    </div>
+                                    <small class="text-muted">per person{#if applicableTier} · {applicableTier.label}{/if}</small>
                                 </div>
                             </div>
                             <div class="d-flex flex-wrap gap-3 small text-muted mb-4 pb-3 border-bottom">
@@ -384,9 +405,24 @@
                                     {/if}
                                 </div>
 
+                                {#if packTiers.length > 0}
+                                    <div class="mb-3 p-2 rounded-3 border border-dashed">
+                                        <div class="small text-muted mb-1"><i class="ti ti-stack-2 me-1"></i>Group Discount</div>
+                                        {#each packTiers as tier}
+                                            <div class="d-flex justify-content-between small {applicableTier?.id === tier.id ? 'fw-bold text-success' : 'text-muted'}">
+                                                <span>{tier.min_pax}{tier.max_pax ? '-' + tier.max_pax : '+'} pax</span>
+                                                <span>{tier.discount_label}</span>
+                                            </div>
+                                        {/each}
+                                    </div>
+                                {/if}
+
                                 <div class="border rounded-3 p-3 mb-4 bg-light">
                                     <div class="d-flex justify-content-between">
-                                        <span class="text-muted">Subtotal</span>
+                                        <span class="text-muted">
+                                            {formatRp(effectivePricePerPax)} × {form.pax} pax
+                                            {#if applicableTier}<span class="text-success small ms-1">({applicableTier.label})</span>{/if}
+                                        </span>
                                         <span class="fw-bold">{formatRp(subtotal)}</span>
                                     </div>
                                     {#if voucherDiscount > 0}

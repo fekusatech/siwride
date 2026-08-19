@@ -119,6 +119,7 @@ Route::middleware('guest:customer')->group(function () {
 
 use App\Http\Controllers\Admin\DriverWalletController as AdminDriverWalletController;
 use App\Http\Controllers\Admin\DriverWithdrawalController;
+use App\Http\Controllers\Admin\PackTierController;
 use App\Http\Controllers\Admin\RideSharing\CityController;
 use App\Http\Controllers\Admin\RideSharing\RouteController;
 use App\Http\Controllers\Admin\RideSharing\RoutePathController;
@@ -212,6 +213,8 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function () {
     Route::patch('admin/service-reassignments/{reassignment}/approve', [ServiceReassignmentController::class, 'approve'])->name('admin.service-reassignments.approve');
     Route::patch('admin/service-reassignments/{reassignment}/reject', [ServiceReassignmentController::class, 'reject'])->name('admin.service-reassignments.reject');
     Route::resource('admin/service-reassignments', ServiceReassignmentController::class)->only(['index', 'show'])->names('admin.service-reassignments');
+
+    Route::resource('admin/pack-tiers', PackTierController::class)->except(['create', 'edit', 'show'])->names('admin.pack-tiers');
 
     Route::patch('admin/promos/{voucher}/toggle', [VoucherController::class, 'toggleActive'])->name('admin.promos.toggle');
     Route::resource('admin/promos', VoucherController::class)->parameters(['promos' => 'voucher'])->names('admin.promos');
