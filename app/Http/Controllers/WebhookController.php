@@ -3,19 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Mail\BookingConfirmedMail;
+use App\Mail\DriverServiceAssignedMail;
 use App\Models\ActivityBooking;
 use App\Models\DriverServiceBooking;
+use App\Models\DriverWalletTransaction;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Models\Transaction;
+use App\Services\DriverWalletService;
 use App\Support\DriverReferralAttribution;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class WebhookController extends Controller
 {
+    public function __construct(
+        private DriverWalletService $driverWalletService,
+    ) {}
+
     /**
      * Verify the Xendit callback token from the request header.
      */
@@ -163,11 +171,68 @@ class WebhookController extends Controller
             return;
         }
 
-        $booking->update([
-            'payment_status' => DriverServiceBooking::PAYMENT_PAID,
-            'status' => DriverServiceBooking::STATUS_CONFIRMED,
-        ]);
-        DriverReferralAttribution::qualify($booking);
+        $assignedDriver = DB::transaction(function () use ($booking) {
+            $lockedBooking = DriverServiceBooking::query()
+                ->with('driverService.driver')
+                ->whereKey($booking->getKey())
+                ->lockForUpdate()
+                ->first();
+
+            if (! $lockedBooking) {
+                return null;
+            }
+
+            $wasPaid = $lockedBooking->payment_status === DriverServiceBooking::PAYMENT_PAID;
+            $driver = $lockedBooking->driverService?->driver;
+
+            $lockedBooking->update([
+                'payment_status' => DriverServiceBooking::PAYMENT_PAID,
+                'status' => DriverServiceBooking::STATUS_CONFIRMED,
+                'assigned_driver_id' => $lockedBooking->assigned_driver_id ?? $driver?->getKey(),
+                'assignment_status' => $lockedBooking->assignment_status ?? ($driver ? 'assigned' : null),
+            ]);
+
+            if (! $wasPaid) {
+                DriverReferralAttribution::qualify($lockedBooking);
+            }
+
+            if ($driver && (float) $lockedBooking->dp_amount > 0) {
+                $wallet = $this->driverWalletService->getOrCreateWallet($driver);
+                $this->driverWalletService->credit(
+                    $wallet,
+                    $lockedBooking->dp_amount,
+                    DriverWalletTransaction::TYPE_DP_PAYMENT,
+                    $lockedBooking->booking_code,
+                    "DP payment for service booking {$lockedBooking->booking_code}",
+                );
+            }
+
+            return $lockedBooking->wasChanged('assigned_driver_id') ? $driver : null;
+        }, attempts: 5);
+
+        if ($assignedDriver) {
+            try {
+                Mail::to($assignedDriver)->send(new DriverServiceAssignedMail($booking->fresh(['driverService'])));
+            } catch (\Throwable $exception) {
+                Log::error('Failed to send driver service assignment email', [
+                    'booking_code' => $booking->booking_code,
+                    'driver_id' => $assignedDriver->getKey(),
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        if ($booking->customer_email) {
+            try {
+                Mail::to($booking->customer_email)->send(new BookingConfirmedMail($booking));
+                Log::info("Xendit Webhook — booking confirmation email sent to {$booking->customer_email} for service booking {$booking->booking_code}");
+            } catch (\Throwable $exception) {
+                Log::error('Failed to send service booking confirmation email', [
+                    'booking_code' => $booking->booking_code,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
 
         Log::info("Xendit Webhook — driver service booking {$booking->booking_code} marked as paid");
     }

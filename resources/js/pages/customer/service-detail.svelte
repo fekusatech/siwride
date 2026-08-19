@@ -5,8 +5,9 @@
     import Preloader from '@/components/Template/Preloader.svelte';
     import { useForm } from '@inertiajs/svelte';
 
-    let { service, customer = null } = $props<{
+    let { service, payment, customer = null } = $props<{
         service: any;
+        payment: { dp_percent: number };
         customer: { name: string; email: string; phone: string } | null;
     }>();
 
@@ -17,9 +18,67 @@
         customer_email: customer?.email || '',
         customer_phone: customer?.phone || '',
         notes: '',
+        voucher_code: '',
     });
 
-    let totalPrice = $derived(Number(service.price_per_pax) * form.pax);
+    let voucherState: 'idle' | 'loading' | 'valid' | 'invalid' = $state('idle');
+    let voucherDiscount = $state(0);
+    let voucherMessage = $state('');
+
+    let subtotal = $derived(Number(service.price_per_pax) * form.pax);
+    let totalAmount = $derived(Math.max(0, Math.round((subtotal - voucherDiscount) * 100) / 100));
+    let dpAmount = $derived(Math.round(totalAmount * (payment.dp_percent / 100) * 100) / 100);
+    let remainingCash = $derived(Math.round((totalAmount - dpAmount) * 100) / 100);
+
+    async function applyVoucher() {
+        const code = (form.voucher_code ?? '').trim().toUpperCase();
+        if (!code) return;
+
+        voucherState = 'loading';
+        voucherMessage = '';
+
+        try {
+            const response = await fetch(`/services/${service.slug}/validate-voucher`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ code, pax: form.pax, email: form.customer_email }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.valid) {
+                voucherState = 'valid';
+                voucherDiscount = Number(data.discount_amount);
+                form.voucher_code = data.code;
+                voucherMessage = `-${formatRp(voucherDiscount)} (${data.code})`;
+            } else {
+                voucherState = 'invalid';
+                voucherDiscount = 0;
+                voucherMessage = data.message ?? 'Kode promo tidak valid.';
+            }
+        } catch {
+            voucherState = 'invalid';
+            voucherDiscount = 0;
+            voucherMessage = 'Gagal memvalidasi kode promo. Coba lagi.';
+        }
+    }
+
+    function removeVoucher() {
+        voucherState = 'idle';
+        voucherDiscount = 0;
+        voucherMessage = '';
+        form.voucher_code = '';
+    }
+
+    let prevPax = $state(form.pax);
+    $effect(() => {
+        if (form.pax !== prevPax) {
+            prevPax = form.pax;
+            if (voucherState === 'valid') {
+                removeVoucher();
+            }
+        }
+    });
 
     let allImages = (service.gallery_urls?.length
         ? [service.image_url, ...service.gallery_urls]
@@ -287,10 +346,75 @@
                                     <textarea class="form-control" id="notes" rows="2" bind:value={form.notes} placeholder="Any allergies, special needs..."></textarea>
                                 </div>
 
+                                <div class="mb-4">
+                                    <label class="form-label fw-medium" for="voucher_code">Promo Code</label>
+                                    <div class="input-group">
+                                        <input
+                                            type="text"
+                                            class="form-control text-uppercase {voucherState === 'valid' ? 'is-valid' : voucherState === 'invalid' ? 'is-invalid' : ''}"
+                                            id="voucher_code"
+                                            bind:value={form.voucher_code}
+                                            placeholder="Masukkan kode promo"
+                                            maxlength="20"
+                                            disabled={voucherState === 'loading' || voucherState === 'valid'}
+                                        />
+                                        {#if voucherState === 'valid'}
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-secondary"
+                                                onclick={removeVoucher}
+                                                title="Hapus kode promo"
+                                            >
+                                                <i class="ti ti-x"></i>
+                                            </button>
+                                        {:else}
+                                            <button
+                                                type="button"
+                                                class="btn {voucherState === 'invalid' ? 'btn-outline-danger' : 'btn-outline-secondary'}"
+                                                onclick={applyVoucher}
+                                                disabled={voucherState === 'loading' || !(form.voucher_code ?? '').trim()}
+                                            >
+                                                {#if voucherState === 'loading'}
+                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                {:else}
+                                                    Apply
+                                                {/if}
+                                            </button>
+                                        {/if}
+                                    </div>
+                                    {#if voucherState === 'valid'}
+                                        <div class="text-success small mt-1 fw-medium">
+                                            <i class="ti ti-circle-check me-1"></i>{voucherMessage}
+                                        </div>
+                                    {:else if voucherState === 'invalid'}
+                                        <div class="text-danger small mt-1">
+                                            <i class="ti ti-alert-triangle me-1"></i>{voucherMessage}
+                                        </div>
+                                    {/if}
+                                </div>
+
                                 <div class="border rounded-3 p-3 mb-4 bg-light">
                                     <div class="d-flex justify-content-between">
-                                        <span class="text-muted">{formatRp(Number(service.price_per_pax))} × {form.pax} pax</span>
-                                        <span class="fw-bold">{formatRp(totalPrice)}</span>
+                                        <span class="text-muted">Subtotal</span>
+                                        <span class="fw-bold">{formatRp(subtotal)}</span>
+                                    </div>
+                                    {#if voucherDiscount > 0}
+                                        <div class="d-flex justify-content-between mt-2 text-success">
+                                            <span>Diskon promo ({form.voucher_code})</span>
+                                            <span class="fw-bold">-{formatRp(voucherDiscount)}</span>
+                                        </div>
+                                    {/if}
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span class="text-muted">Total</span>
+                                        <span class="fw-bold">{formatRp(totalAmount)}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2 text-success">
+                                        <span>Bayar sekarang (DP {payment.dp_percent}%)</span>
+                                        <span class="fw-bold">{formatRp(dpAmount)}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span class="text-muted">Sisa tunai ke driver</span>
+                                        <span class="fw-bold">{formatRp(remainingCash)}</span>
                                     </div>
                                 </div>
 
@@ -305,7 +429,7 @@
                                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                             Processing...
                                         {:else}
-                                            Book Now — {formatRp(totalPrice)}
+                                        Book Now — DP {formatRp(dpAmount)}
                                         {/if}
                                     </span>
                                 </button>

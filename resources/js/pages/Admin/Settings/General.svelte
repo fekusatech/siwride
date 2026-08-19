@@ -19,6 +19,9 @@
         xendit_webhook_token: setting.xendit_webhook_token ?? '',
         referral_commission_amount: setting.referral_commission_amount ?? '50000',
         referral_window_days: setting.referral_window_days ?? '30',
+        dp_percent_default: setting.dp_percent_default ?? '30',
+        platform_commission_percent: setting.platform_commission_percent ?? '10',
+        min_withdrawal_amount: setting.min_withdrawal_amount ?? '100000',
     });
 
     let logoPreview = $state<string | null>(null);
@@ -365,6 +368,68 @@
                                         <small class="text-muted mt-1 d-block">
                                             Found in Xendit Dashboard → Settings → Webhooks → Verification Token
                                         </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4 opacity-50" />
+
+                            <!-- Payments -->
+                            <div class="mb-4">
+                                <div class="form-label fw-bold mb-1">Payments</div>
+                                <div class="text-muted small mb-3">
+                                    Configure service booking deposits, platform commission, and driver withdrawal limits.
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="dp_percent_default" class="form-label fw-bold">Default DP (%)</label>
+                                        <input
+                                            id="dp_percent_default"
+                                            name="dp_percent_default"
+                                            type="number"
+                                            min="10"
+                                            max="100"
+                                            step="0.01"
+                                            class="form-control"
+                                            bind:value={form.dp_percent_default}
+                                        />
+                                        {#if form.errors.dp_percent_default}
+                                            <div class="text-danger small mt-1">{form.errors.dp_percent_default}</div>
+                                        {/if}
+                                        <small class="text-muted mt-1 d-block">Allowed range: 10%–100%.</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="platform_commission_percent" class="form-label fw-bold">Platform Commission (%)</label>
+                                        <input
+                                            id="platform_commission_percent"
+                                            name="platform_commission_percent"
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                            class="form-control"
+                                            bind:value={form.platform_commission_percent}
+                                        />
+                                        {#if form.errors.platform_commission_percent}
+                                            <div class="text-danger small mt-1">{form.errors.platform_commission_percent}</div>
+                                        {/if}
+                                        <small class="text-muted mt-1 d-block">Allowed range: 0%–100%.</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="min_withdrawal_amount" class="form-label fw-bold">Minimum Withdrawal (IDR)</label>
+                                        <input
+                                            id="min_withdrawal_amount"
+                                            name="min_withdrawal_amount"
+                                            type="number"
+                                            min="0"
+                                            step="1000"
+                                            class="form-control"
+                                            bind:value={form.min_withdrawal_amount}
+                                        />
+                                        {#if form.errors.min_withdrawal_amount}
+                                            <div class="text-danger small mt-1">{form.errors.min_withdrawal_amount}</div>
+                                        {/if}
                                     </div>
                                 </div>
                             </div>

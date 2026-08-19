@@ -168,6 +168,14 @@
                 </Link>
             </li>
 
+            <li class="side-nav-item">
+                <Link href="/admin/withdrawals" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-cash"></i></span
+                    >
+                    <span class="menu-text"> Withdrawals </span>
+                </Link>
+            </li>
+
             <li class="side-nav-title mt-2">Master Data</li>
 
             <li class="side-nav-item">
@@ -220,9 +228,25 @@
             </li>
 
             <li class="side-nav-item">
+                <Link href="/admin/service-reassignments" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-arrows-exchange"></i></span>
+                    <span class="menu-text"> Reassignments </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
                 <Link href="/admin/driver-referrals" class="side-nav-link">
                     <span class="menu-icon"><i class="ti ti-report-money"></i></span>
                     <span class="menu-text"> Driver Referrals </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-title mt-2">Marketing</li>
+
+            <li class="side-nav-item">
+                <Link href="/admin/promos" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-percentage"></i></span>
+                    <span class="menu-text"> Promos </span>
                 </Link>
             </li>
 

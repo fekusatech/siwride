@@ -65,6 +65,9 @@
                         </p>
 
                         <Link href="/" class="btn btn-primary px-5">Back to Home</Link>
+                        <Link href={`/services/${booking.booking_code}/booking-detail`} class="btn btn-outline-primary px-4 mt-2">
+                            <i class="fas fa-eye me-2"></i>Track Booking
+                        </Link>
                     </div>
                 </div>
             </div>

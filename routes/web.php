@@ -5,7 +5,11 @@ use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
 use App\Http\Controllers\Driver\DashboardController as DriverDashboardController;
 use App\Http\Controllers\Driver\DriverAuthController;
+use App\Http\Controllers\Driver\ServiceBookingController as DriverServiceBookingActionController;
+use App\Http\Controllers\Driver\ServiceBookingReassignController as DriverServiceBookingReassignController;
 use App\Http\Controllers\Driver\ServiceController as DriverServiceManageController;
+use App\Http\Controllers\Driver\WalletController as DriverWalletController;
+use App\Http\Controllers\Driver\WithdrawalController;
 use App\Http\Controllers\DriverServiceBookingController;
 use App\Http\Controllers\DriverServiceListController;
 use App\Http\Controllers\RideSharingController;
@@ -54,6 +58,11 @@ Route::middleware('guest:driver')->group(function () {
 Route::middleware('auth:driver')->prefix('driver')->name('driver.')->group(function () {
     Route::post('/logout', [DriverAuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DriverDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/wallet', [DriverWalletController::class, 'index'])->name('wallet');
+    Route::post('/service-bookings/{bookingCode}/accept', [DriverServiceBookingActionController::class, 'accept'])->name('service-bookings.accept');
+    Route::post('/service-bookings/{bookingCode}/cash-received', [DriverServiceBookingActionController::class, 'cashReceived'])->name('service-bookings.cash-received');
+    Route::post('/service-bookings/{bookingCode}/reassign', [DriverServiceBookingReassignController::class, 'request'])->name('service-bookings.reassign');
+    Route::post('/withdrawals', [WithdrawalController::class, 'store'])->name('withdrawals.store');
     Route::resource('services', DriverServiceManageController::class)->except(['show', 'destroy']);
 });
 
@@ -108,16 +117,16 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/customer/reset-password', [CustomerAuthController::class, 'resetPassword']);
 });
 
-use App\Http\Controllers\Admin\ActivityController;
-use App\Http\Controllers\Admin\DriverReferralController;
-use App\Http\Controllers\Admin\DriverServiceBookingController as AdminDriverServiceBookingController;
-use App\Http\Controllers\Admin\DriverServiceController as AdminDriverServiceController;
+use App\Http\Controllers\Admin\DriverWalletController as AdminDriverWalletController;
+use App\Http\Controllers\Admin\DriverWithdrawalController;
 use App\Http\Controllers\Admin\RideSharing\CityController;
 use App\Http\Controllers\Admin\RideSharing\RouteController;
 use App\Http\Controllers\Admin\RideSharing\RoutePathController;
 use App\Http\Controllers\Admin\RideSharing\RoutePriceController;
 use App\Http\Controllers\Admin\RideSharing\ScheduleController;
+use App\Http\Controllers\Admin\ServiceReassignmentController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\CustomerProfileController;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -137,7 +146,9 @@ Route::get('/activities/booking/{bookingCode}', [ActivityBookingController::clas
 Route::get('/driver-services', [DriverServiceListController::class, 'index'])->name('driver-services.index');
 Route::get('/services/{slug}', [DriverServiceBookingController::class, 'show'])->name('driver-services.show');
 Route::post('/services/{slug}/book', [DriverServiceBookingController::class, 'store'])->name('driver-services.book');
+Route::post('/services/{slug}/validate-voucher', [DriverServiceBookingController::class, 'validateVoucher'])->middleware('throttle:10,1')->name('driver-services.validate-voucher');
 Route::get('/services/{bookingCode}/booking-success', [DriverServiceBookingController::class, 'success'])->name('driver-services.booking.success');
+Route::get('/services/{bookingCode}/booking-detail', [DriverServiceBookingController::class, 'detail'])->name('driver-services.booking.detail');
 
 Route::get('/booking', [CustomerOrderController::class, 'services'])->name('booking');
 Route::get('/booking/airport-transfer', [CustomerOrderController::class, 'index'])->name('booking.airport-transfer');
@@ -196,6 +207,21 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function () {
 
     Route::patch('admin/driver-service-bookings/{driverServiceBooking}/status', [AdminDriverServiceBookingController::class, 'updateStatus'])->name('admin.driver-service-bookings.update-status');
     Route::resource('admin/driver-service-bookings', AdminDriverServiceBookingController::class)->only(['index', 'show'])->names('admin.driver-service-bookings');
+
+    Route::patch('admin/service-reassignments/{reassignment}/approve', [ServiceReassignmentController::class, 'approve'])->name('admin.service-reassignments.approve');
+    Route::patch('admin/service-reassignments/{reassignment}/reject', [ServiceReassignmentController::class, 'reject'])->name('admin.service-reassignments.reject');
+    Route::resource('admin/service-reassignments', ServiceReassignmentController::class)->only(['index', 'show'])->names('admin.service-reassignments');
+
+    Route::patch('admin/promos/{voucher}/toggle', [VoucherController::class, 'toggleActive'])->name('admin.promos.toggle');
+    Route::resource('admin/promos', VoucherController::class)->parameters(['promos' => 'voucher'])->names('admin.promos');
+
+    Route::get('admin/withdrawals', [DriverWithdrawalController::class, 'index'])->name('admin.withdrawals.index');
+    Route::patch('admin/withdrawals/{withdrawal}/approve', [DriverWithdrawalController::class, 'approve'])->name('admin.withdrawals.approve');
+    Route::patch('admin/withdrawals/{withdrawal}/reject', [DriverWithdrawalController::class, 'reject'])->name('admin.withdrawals.reject');
+    Route::patch('admin/withdrawals/{withdrawal}/mark-paid', [DriverWithdrawalController::class, 'markPaid'])->name('admin.withdrawals.mark-paid');
+
+    Route::get('admin/driver-wallets/{user}', [AdminDriverWalletController::class, 'show'])->name('admin.driver-wallets.show');
+    Route::post('admin/driver-wallets/{user}/adjustment', [AdminDriverWalletController::class, 'storeAdjustment'])->name('admin.driver-wallets.adjustment');
 
     Route::patch('admin/driver-referrals/{driverReferral}/mark-paid', [DriverReferralController::class, 'markPaid'])->name('admin.driver-referrals.mark-paid');
     Route::resource('admin/driver-referrals', DriverReferralController::class)->only(['index'])->names('admin.driver-referrals');

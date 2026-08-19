@@ -18,6 +18,95 @@
         </tr>
     </table>
 
+    @if(isset($isService) && $isService)
+        {{-- Service Booking Details --}}
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 20px;">
+            <tr>
+                <td>
+                    <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin: 0 0 10px 0; font-weight: 600;">Service Booking Details</p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tr>
+                            <td width="50%" style="padding: 6px 0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #94a3b8; margin: 0 0 2px 0;">Service</p>
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #1e293b; margin: 0; font-weight: 600;">{{ $order->driverService->title ?? 'Service' }}</p>
+                            </td>
+                            <td width="50%" style="padding: 6px 0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #94a3b8; margin: 0 0 2px 0;">Date</p>
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #1e293b; margin: 0; font-weight: 600;">{{ \Carbon\Carbon::parse($order->booking_date)->format('d M Y') }}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="50%" style="padding: 6px 0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #94a3b8; margin: 0 0 2px 0;">Participants</p>
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #1e293b; margin: 0; font-weight: 600;">{{ $order->pax }} Pax</p>
+                            </td>
+                            <td width="50%" style="padding: 6px 0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #94a3b8; margin: 0 0 2px 0;">Price per Person</p>
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #1e293b; margin: 0; font-weight: 600;">IDR {{ number_format($order->price_per_pax, 0, ',', '.') }}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        {{-- Payment Breakdown --}}
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
+            <tr>
+                <td style="padding: 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin: 0 0 8px 0; font-weight: 600;">Payment Summary</p>
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tr>
+                            <td style="padding: 3px 0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; margin: 0;">Subtotal ({{ $order->pax }} pax × IDR {{ number_format($order->price_per_pax, 0, ',', '.') }})</p>
+                            </td>
+                            <td style="padding: 3px 0; text-align: right;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #1e293b; margin: 0; font-weight: 600;">IDR {{ number_format($order->subtotal, 0, ',', '.') }}</p>
+                            </td>
+                        </tr>
+                        @if($order->voucher_code)
+                        <tr>
+                            <td style="padding: 3px 0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #16a34a; margin: 0;">Discount ({{ $order->voucher_code }})</p>
+                            </td>
+                            <td style="padding: 3px 0; text-align: right;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #16a34a; margin: 0; font-weight: 600;">− IDR {{ number_format($order->discount_amount, 0, ',', '.') }}</p>
+                            </td>
+                        </tr>
+                        @endif
+                        <tr>
+                            <td style="padding: 3px 0; border-top: 1px solid #e2e8f0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #1e293b; margin: 0; font-weight: 700;">Total</p>
+                            </td>
+                            <td style="padding: 3px 0; border-top: 1px solid #e2e8f0; text-align: right;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #1e293b; margin: 0; font-weight: 800;">IDR {{ number_format($order->total_amount, 0, ',', '.') }}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 3px 0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #dc2626; margin: 0; font-weight: 600;">Dibayar sekarang (DP {{ rtrim(rtrim(number_format($order->dp_percent, 2, '.', ''), '0'), '.') }}%)</p>
+                            </td>
+                            <td style="padding: 3px 0; text-align: right;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #dc2626; margin: 0; font-weight: 700;">IDR {{ number_format($order->dp_amount, 0, ',', '.') }}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 3px 0;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; margin: 0;">Sisa tunai ke driver</p>
+                            </td>
+                            <td style="padding: 3px 0; text-align: right;">
+                                <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b; margin: 0; font-weight: 600;">IDR {{ number_format($order->remaining_cash, 0, ',', '.') }}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    @else
     {{-- Route Info --}}
     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 20px;">
         <tr>
@@ -154,12 +243,13 @@
             </td>
         </tr>
     </table>
+    @endif
 
     {{-- CTA --}}
     <table cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
             <td style="text-align: center; padding: 0 0 10px 0;">
-                <a href="{{ url('/booking/' . $order->booking_code) }}" style="display: inline-block; padding: 14px 32px; background-color: #dc2626; color: #ffffff; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 8px;">
+                <a href="{{ (isset($isService) && $isService) ? url('/services/' . $order->booking_code . '/booking-detail') : url('/booking/' . $order->booking_code) }}" style="display: inline-block; padding: 14px 32px; background-color: #dc2626; color: #ffffff; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 8px;">
                     View Booking Details
                 </a>
             </td>

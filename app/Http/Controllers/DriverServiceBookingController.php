@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentReminderMail;
 use App\Models\Customer;
 use App\Models\DriverService;
 use App\Models\DriverServiceBooking;
 use App\Models\Setting;
+use App\Services\VoucherService;
 use App\Support\DriverReferralAttribution;
 use GuzzleHttp\Client;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -29,6 +34,9 @@ class DriverServiceBookingController extends Controller
 
         return Inertia::render('customer/service-detail', [
             'service' => $service->load('driver'),
+            'payment' => [
+                'dp_percent' => (float) ($service->dp_percent ?? Setting::getValue('dp_percent_default', 30)),
+            ],
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'email' => $customer->email,
@@ -48,6 +56,7 @@ class DriverServiceBookingController extends Controller
             'customer_email' => ['required', 'email'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
             'notes' => ['nullable', 'string'],
+            'voucher_code' => ['nullable', 'string', 'max:20'],
             'create_account' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:8'],
         ]);
@@ -86,7 +95,25 @@ class DriverServiceBookingController extends Controller
             $customer = Customer::create($customerData);
         }
 
-        $totalPrice = $service->price_per_pax * $validated['pax'];
+        $subtotal = round((float) $service->price_per_pax * $validated['pax'], 2);
+        $discountAmount = 0.0;
+        $voucher = null;
+        $voucherCode = strtoupper(trim($validated['voucher_code'] ?? ''));
+
+        if ($voucherCode !== '') {
+            $voucherResult = app(VoucherService::class)->validate(
+                $voucherCode,
+                $subtotal,
+                $validated['customer_email'],
+            );
+            $voucher = $voucherResult['voucher'];
+            $discountAmount = $voucherResult['discount_amount'];
+        }
+
+        $totalAmount = round($subtotal - $discountAmount, 2);
+        $dpPercent = (float) ($service->dp_percent ?? Setting::getValue('dp_percent_default', 30));
+        $dpAmount = round($totalAmount * ($dpPercent / 100), 2);
+        $remainingCash = round($totalAmount - $dpAmount, 2);
 
         $booking = DriverServiceBooking::create([
             'booking_code' => $this->generateUniqueBookingCode(),
@@ -95,7 +122,14 @@ class DriverServiceBookingController extends Controller
             'booking_date' => $validated['booking_date'],
             'pax' => $validated['pax'],
             'price_per_pax' => $service->price_per_pax,
-            'total_price' => $totalPrice,
+            'total_price' => $totalAmount,
+            'subtotal' => $subtotal,
+            'discount_amount' => $discountAmount,
+            'voucher_code' => $voucher?->code,
+            'total_amount' => $totalAmount,
+            'dp_percent' => $dpPercent,
+            'dp_amount' => $dpAmount,
+            'remaining_cash' => $remainingCash,
             'customer_name' => $validated['customer_name'],
             'customer_phone' => $validated['customer_phone'] ?? null,
             'customer_email' => $validated['customer_email'],
@@ -106,12 +140,30 @@ class DriverServiceBookingController extends Controller
 
         DriverReferralAttribution::attributeService($booking);
 
+        if ($voucher !== null) {
+            app(VoucherService::class)->redeem(
+                $voucher,
+                $booking,
+                $validated['customer_email'],
+                $subtotal,
+            );
+        }
+
         if ($request->boolean('create_account')) {
             Auth::guard('customer')->login($customer);
         }
 
         try {
             $paymentUrl = $this->generateXenditPayment($booking, $service);
+
+            try {
+                Mail::to($booking->customer_email)->send(new PaymentReminderMail($booking, $paymentUrl, isService: true));
+            } catch (\Throwable $exception) {
+                Log::error('Failed to send service booking payment reminder email', [
+                    'booking_code' => $booking->booking_code,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
 
             return inertia()->location($paymentUrl);
         } catch (\Exception $e) {
@@ -133,9 +185,16 @@ class DriverServiceBookingController extends Controller
 
         $req = new CreateInvoiceRequest([
             'external_id' => $booking->booking_code.'_'.time(),
-            'amount' => (float) $booking->total_price,
+            'amount' => (float) $booking->dp_amount,
             'payer_email' => $booking->customer_email,
-            'description' => "Service Booking: {$service->title} — {$booking->booking_code}",
+            'description' => sprintf(
+                'Service Booking: %s — %s, DP %s%% dari total Rp %s - sisa tunai ke driver Rp %s',
+                $service->title,
+                $booking->booking_code,
+                rtrim(rtrim(number_format((float) $booking->dp_percent, 2, '.', ''), '0'), '.'),
+                number_format((float) $booking->total_amount, 0, ',', '.'),
+                number_format((float) $booking->remaining_cash, 0, ',', '.'),
+            ),
             'success_redirect_url' => $successUrl,
             'failure_redirect_url' => $failureUrl,
         ]);
@@ -151,6 +210,40 @@ class DriverServiceBookingController extends Controller
         return $invoiceUrl;
     }
 
+    public function validateVoucher(Request $request, string $slug): JsonResponse
+    {
+        $service = DriverService::where('slug', $slug)->where('status', DriverService::STATUS_APPROVED)->firstOrFail();
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:20'],
+            'pax' => ['required', 'integer', 'min:1'],
+            'email' => ['nullable', 'email'],
+        ]);
+
+        $subtotal = round((float) $service->price_per_pax * $validated['pax'], 2);
+
+        try {
+            $result = app(VoucherService::class)->validate(
+                strtoupper(trim($validated['code'])),
+                $subtotal,
+                $validated['email'] ?? null,
+            );
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'valid' => false,
+                'message' => $exception->errors()['voucher_code'][0] ?? 'Voucher tidak valid.',
+            ], 422);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'code' => $result['voucher']->code,
+            'discount_amount' => $result['discount_amount'],
+            'subtotal' => $subtotal,
+            'total_amount' => round($subtotal - $result['discount_amount'], 2),
+        ]);
+    }
+
     public function success(string $bookingCode): Response
     {
         $booking = DriverServiceBooking::with('driverService')
@@ -159,6 +252,26 @@ class DriverServiceBookingController extends Controller
 
         return Inertia::render('customer/service-booking-success', [
             'booking' => $booking,
+        ]);
+    }
+
+    public function detail(string $bookingCode): Response
+    {
+        $booking = DriverServiceBooking::with(['driverService', 'assignedDriver'])
+            ->where('booking_code', $bookingCode)
+            ->firstOrFail();
+
+        return Inertia::render('customer/service-booking-detail', [
+            'booking' => $booking,
+            'assigned_driver' => $booking->assignedDriver !== null && $booking->status === DriverServiceBooking::STATUS_CONFIRMED
+                ? [
+                    'id' => $booking->assignedDriver->getKey(),
+                    'name' => $booking->assignedDriver->name,
+                    'email' => $booking->assignedDriver->email,
+                    'phone' => $booking->assignedDriver->phone,
+                    'image' => $booking->assignedDriver->image,
+                ]
+                : null,
         ]);
     }
 

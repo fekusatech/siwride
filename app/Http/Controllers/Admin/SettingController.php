@@ -27,6 +27,9 @@ class SettingController extends Controller
                 'xendit_webhook_token' => null,
                 'referral_commission_amount' => '50000',
                 'referral_window_days' => '30',
+                'dp_percent_default' => '30',
+                'platform_commission_percent' => '10',
+                'min_withdrawal_amount' => '100000',
                 'updated_at' => Setting::query()->max('updated_at'),
             ]),
         ]);
@@ -46,6 +49,9 @@ class SettingController extends Controller
             'xendit_webhook_token' => ['nullable', 'string', 'max:500'],
             'referral_commission_amount' => ['required', 'numeric', 'min:0'],
             'referral_window_days' => ['required', 'integer', 'min:1'],
+            'dp_percent_default' => ['required', 'numeric', 'between:10,100'],
+            'platform_commission_percent' => ['required', 'numeric', 'between:0,100'],
+            'min_withdrawal_amount' => ['required', 'numeric', 'min:0'],
         ]);
 
         if ($validated['recaptcha_enabled']) {
@@ -71,6 +77,9 @@ class SettingController extends Controller
         Setting::setValue('xendit_webhook_token', $validated['xendit_webhook_token'] ?? '');
         Setting::setValue('referral_commission_amount', (string) $validated['referral_commission_amount']);
         Setting::setValue('referral_window_days', (string) $validated['referral_window_days']);
+        Setting::setValue('dp_percent_default', (string) $validated['dp_percent_default']);
+        Setting::setValue('platform_commission_percent', (string) $validated['platform_commission_percent']);
+        Setting::setValue('min_withdrawal_amount', (string) $validated['min_withdrawal_amount']);
 
         $currentLogo = Setting::getValue('logo');
         if ($request->hasFile('logo')) {

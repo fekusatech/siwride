@@ -2,7 +2,9 @@
     import DriverLayout from '@/layouts/DriverLayout.svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Pagination from '@/components/Pagination.svelte';
-    import { Link } from '@inertiajs/svelte';
+import { Link } from '@inertiajs/svelte';
+    import { router } from '@inertiajs/svelte';
+    import { wallet as walletRoute } from '@/routes/driver';
 
     let { serviceCounts, earnings, orders, serviceBookings } = $props<{
         serviceCounts: { pending: number; approved: number; rejected: number };
@@ -20,6 +22,16 @@
 
     function formatRp(amount: number): string {
         return 'Rp ' + Number(amount).toLocaleString('id-ID');
+    }
+
+    function acceptBooking(bookingCode: string): void {
+        router.post(`/driver/service-bookings/${bookingCode}/accept`, {}, { preserveScroll: true });
+    }
+
+    function completeBooking(bookingCode: string): void {
+        if (window.confirm('Confirm that cash has been received from the customer?')) {
+            router.post(`/driver/service-bookings/${bookingCode}/cash-received`, {}, { preserveScroll: true });
+        }
     }
 </script>
 
@@ -64,6 +76,9 @@
             <Link href="/driver/services/create" class="btn btn-primary">
                 <i class="ti ti-plus me-1"></i> New Service
             </Link>
+            <Link href={walletRoute.url()} class="btn btn-outline-primary ms-2">
+                <i class="ti ti-wallet me-1"></i> View Wallet
+            </Link>
         </div>
     </div>
 
@@ -81,6 +96,7 @@
                             <th>Total</th>
                             <th>Status</th>
                             <th>Payment</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -93,9 +109,18 @@
                                 <td>{formatRp(Number(booking.total_price))}</td>
                                 <td><span class="badge {statusColors[booking.status] ?? ''}">{booking.status}</span></td>
                                 <td>{booking.payment_status}</td>
+                                <td>
+                                    {#if booking.payment_status === 'paid' && booking.status === 'confirmed' && booking.assignment_status === 'assigned'}
+                                        <button type="button" class="btn btn-sm btn-primary" onclick={() => acceptBooking(booking.booking_code)}>Accept</button>
+                                    {:else if booking.payment_status === 'paid' && booking.status === 'confirmed' && booking.assignment_status === 'accepted'}
+                                        <button type="button" class="btn btn-sm btn-success" onclick={() => completeBooking(booking.booking_code)}>Cash Received - Complete</button>
+                                    {:else}
+                                        <span class="text-muted small">—</span>
+                                    {/if}
+                                </td>
                             </tr>
                         {:else}
-                            <tr><td colspan="7" class="text-center py-4 text-muted">No service bookings yet.</td></tr>
+                            <tr><td colspan="8" class="text-center py-4 text-muted">No service bookings yet.</td></tr>
                         {/each}
                     </tbody>
                 </table>
