@@ -74,9 +74,15 @@ Route::get('/login-admin', function () {
     return Inertia::render('Admin/Login');
 })->name('admin.login');
 
+use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AppVersionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\DriverReferralController;
+use App\Http\Controllers\Admin\DriverServiceBookingController as AdminDriverServiceBookingController;
+use App\Http\Controllers\Admin\DriverServiceController as AdminDriverServiceController;
+use App\Http\Controllers\Admin\DriverWalletController as AdminDriverWalletController;
+use App\Http\Controllers\Admin\DriverWithdrawalController;
 use App\Http\Controllers\Admin\FrontendSettingController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -117,8 +123,6 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/customer/reset-password', [CustomerAuthController::class, 'resetPassword']);
 });
 
-use App\Http\Controllers\Admin\DriverWalletController as AdminDriverWalletController;
-use App\Http\Controllers\Admin\DriverWithdrawalController;
 use App\Http\Controllers\Admin\PackTierController;
 use App\Http\Controllers\Admin\RideSharing\CityController;
 use App\Http\Controllers\Admin\RideSharing\RouteController;
