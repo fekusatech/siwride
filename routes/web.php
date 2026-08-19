@@ -140,6 +140,7 @@ Route::get('/locations/search', [LocationSearchController::class, 'search'])->na
 Route::get('/locations/geocode', [LocationSearchController::class, 'geocode'])->name('locations.geocode');
 Route::get('/activities/{slug}', [ActivityBookingController::class, 'show'])->name('activities.show');
 Route::post('/activities/{slug}/book', [ActivityBookingController::class, 'store'])->name('activities.book');
+Route::post('/activities/{slug}/validate-voucher', [ActivityBookingController::class, 'validateVoucher'])->name('activities.validate-voucher');
 Route::get('/activities/{bookingCode}/booking-success', [ActivityBookingController::class, 'success'])->name('activities.booking.success');
 Route::get('/activities/booking/{bookingCode}', [ActivityBookingController::class, 'bookingDetail'])->name('activities.booking.detail');
 

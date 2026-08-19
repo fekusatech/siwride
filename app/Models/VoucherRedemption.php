@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class VoucherRedemption extends Model
 {
     protected $fillable = [
         'voucher_id',
         'booking_id',
+        'booking_type',
         'email',
         'discount_amount',
     ];
@@ -26,8 +28,8 @@ class VoucherRedemption extends Model
         return $this->belongsTo(Voucher::class);
     }
 
-    public function booking(): BelongsTo
+    public function booking(): MorphTo
     {
-        return $this->belongsTo(DriverServiceBooking::class);
+        return $this->morphTo();
     }
 }

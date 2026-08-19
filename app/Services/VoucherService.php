@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\ActivityBooking;
 use App\Models\DriverServiceBooking;
 use App\Models\Voucher;
 use App\Models\VoucherRedemption;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -87,8 +89,10 @@ class VoucherService
     /**
      * Atomically increments used_count and records a redemption. Throws if
      * the usage limit is already reached (race-safe).
+     *
+     * @param  DriverServiceBooking|ActivityBooking  $booking
      */
-    public function redeem(Voucher $voucher, DriverServiceBooking $booking, string $email, float $subtotal): VoucherRedemption
+    public function redeem(Voucher $voucher, Model $booking, string $email, float $subtotal): VoucherRedemption
     {
         $discountAmount = $this->discountAmount($voucher, $subtotal);
 
@@ -110,6 +114,7 @@ class VoucherService
             return VoucherRedemption::create([
                 'voucher_id' => $voucher->id,
                 'booking_id' => $booking->id,
+                'booking_type' => $booking->getMorphClass(),
                 'email' => $email,
                 'discount_amount' => $discountAmount,
             ]);

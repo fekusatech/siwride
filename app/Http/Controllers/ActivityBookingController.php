@@ -7,8 +7,10 @@ use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\Customer;
 use App\Models\Setting;
+use App\Services\VoucherService;
 use App\Services\WhatsAppService;
 use GuzzleHttp\Client;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -41,6 +43,9 @@ class ActivityBookingController extends Controller
         return Inertia::render('customer/activity-detail', [
             'activity' => $activity,
             'relatedActivities' => $relatedActivities,
+            'payment' => [
+                'dp_percent' => (float) Setting::getValue('dp_percent_default', 30),
+            ],
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'email' => $customer->email,
@@ -60,6 +65,7 @@ class ActivityBookingController extends Controller
             'customer_email' => ['required', 'email'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
             'notes' => ['nullable', 'string'],
+            'voucher_code' => ['nullable', 'string', 'max:50'],
             'create_account' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:8'],
         ]);
@@ -98,7 +104,25 @@ class ActivityBookingController extends Controller
             $customer = Customer::create($customerData);
         }
 
-        $totalPrice = $activity->price_per_pax * $validated['pax'];
+        $subtotal = round((float) $activity->price_per_pax * $validated['pax'], 2);
+        $discountAmount = 0.0;
+        $voucher = null;
+        $voucherCode = strtoupper(trim($validated['voucher_code'] ?? ''));
+
+        if ($voucherCode !== '') {
+            $voucherResult = app(VoucherService::class)->validate(
+                $voucherCode,
+                $subtotal,
+                $validated['customer_email'],
+            );
+            $voucher = $voucherResult['voucher'];
+            $discountAmount = $voucherResult['discount_amount'];
+        }
+
+        $totalAmount = round($subtotal - $discountAmount, 2);
+        $dpPercent = (float) Setting::getValue('dp_percent_default', 30);
+        $dpAmount = round($totalAmount * ($dpPercent / 100), 2);
+        $remainingCash = round($totalAmount - $dpAmount, 2);
 
         $booking = ActivityBooking::create([
             'booking_code' => $this->generateUniqueBookingCode(),
@@ -107,7 +131,13 @@ class ActivityBookingController extends Controller
             'booking_date' => $validated['booking_date'],
             'pax' => $validated['pax'],
             'price_per_pax' => $activity->price_per_pax,
-            'total_price' => $totalPrice,
+            'total_price' => $totalAmount,
+            'subtotal' => $subtotal,
+            'discount_amount' => $discountAmount,
+            'voucher_code' => $voucher?->code,
+            'dp_percent' => $dpPercent,
+            'dp_amount' => $dpAmount,
+            'remaining_cash' => $remainingCash,
             'customer_name' => $validated['customer_name'],
             'customer_phone' => $validated['customer_phone'] ?? null,
             'customer_email' => $validated['customer_email'],
@@ -115,6 +145,15 @@ class ActivityBookingController extends Controller
             'status' => ActivityBooking::STATUS_PENDING,
             'payment_status' => ActivityBooking::PAYMENT_PENDING,
         ]);
+
+        if ($voucher !== null) {
+            app(VoucherService::class)->redeem(
+                $voucher,
+                $booking,
+                $validated['customer_email'],
+                $subtotal,
+            );
+        }
 
         if ($request->boolean('create_account')) {
             Auth::guard('customer')->login($customer);
@@ -139,7 +178,11 @@ class ActivityBookingController extends Controller
                 "Activity: {$activity->title}\n".
                 "Date: {$booking->booking_date->format('d M Y')}\n".
                 "Pax: {$booking->pax}\n".
+                'Subtotal: Rp '.number_format((float) $booking->subtotal, 0, ',', '.')."\n".
+                ($booking->discount_amount > 0 ? 'Discount: Rp '.number_format((float) $booking->discount_amount, 0, ',', '.')."\n" : '').
                 'Total: Rp '.number_format((float) $booking->total_price, 0, ',', '.')."\n".
+                'DP ('.$booking->dp_percent.'%): Rp '.number_format((float) $booking->dp_amount, 0, ',', '.')."\n".
+                'Sisa tunai: Rp '.number_format((float) $booking->remaining_cash, 0, ',', '.')."\n".
                 "Customer: {$booking->customer_name} ({$booking->customer_phone})"
             );
 
@@ -163,9 +206,9 @@ class ActivityBookingController extends Controller
 
         $req = new CreateInvoiceRequest([
             'external_id' => $booking->booking_code.'_'.time(),
-            'amount' => (float) $booking->total_price,
+            'amount' => (float) $booking->dp_amount,
             'payer_email' => $booking->customer_email,
-            'description' => "Activity Booking: {$activity->title} — {$booking->booking_code}",
+            'description' => "Activity Booking DP ({$booking->dp_percent}%): {$activity->title} — {$booking->booking_code}",
             'success_redirect_url' => $successUrl,
             'failure_redirect_url' => $failureUrl,
         ]);
@@ -179,6 +222,40 @@ class ActivityBookingController extends Controller
         ]);
 
         return $invoiceUrl;
+    }
+
+    public function validateVoucher(Request $request, string $slug): JsonResponse
+    {
+        $activity = Activity::where('slug', $slug)->where('is_active', true)->firstOrFail();
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:50'],
+            'pax' => ['required', 'integer', 'min:1'],
+            'email' => ['nullable', 'email'],
+        ]);
+
+        $subtotal = round((float) $activity->price_per_pax * $validated['pax'], 2);
+
+        try {
+            $result = app(VoucherService::class)->validate(
+                strtoupper(trim($validated['code'])),
+                $subtotal,
+                $validated['email'] ?? null,
+            );
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'valid' => false,
+                'message' => $exception->errors()['voucher_code'][0] ?? 'Voucher tidak valid.',
+            ], 422);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'code' => $result['voucher']->code,
+            'discount_amount' => $result['discount_amount'],
+            'subtotal' => $subtotal,
+            'total_amount' => round($subtotal - $result['discount_amount'], 2),
+        ]);
     }
 
     public function success(string $bookingCode): Response

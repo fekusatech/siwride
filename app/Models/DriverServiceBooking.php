@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class DriverServiceBooking extends Model
 {
@@ -85,5 +86,10 @@ class DriverServiceBooking extends Model
     public function assignedDriver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_driver_id');
+    }
+
+    public function redemptions(): MorphMany
+    {
+        return $this->morphMany(VoucherRedemption::class, 'booking');
     }
 }
