@@ -626,6 +626,18 @@
                     </div>
                 {/each}
             </div>
+
+            <div class="text-center mt-4">
+                <a
+                    href="/catalog"
+                    class="btn btn-lg"
+                    style="background: var(--travhub-base, #e52029); color: #fff; padding: 14px 40px; font-weight: 700; border-radius: 50px; text-decoration: none; transition: 0.3s;"
+                    onmouseenter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                    onmouseleave={(e) => (e.currentTarget.style.opacity = '1')}
+                >
+                    Lihat Semua <i class="ti ti-arrow-right ms-2"></i>
+                </a>
+            </div>
         </div>
     </section>
 

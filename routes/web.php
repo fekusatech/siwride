@@ -93,6 +93,7 @@ use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\ZoneController;
 use App\Http\Controllers\Admin\ZonePricingRuleController;
 use App\Http\Controllers\Auth\CustomerAuthController;
+use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\LocationSearchController;
 use App\Http\Controllers\PublicClaimController;
@@ -102,6 +103,7 @@ Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name(
 
 Route::inertia('/about', 'customer/about')->name('about');
 Route::inertia('/services', 'customer/services')->name('services');
+Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 Route::inertia('/area-coverage', 'customer/area-coverage')->name('area-coverage');
 Route::get('/vehicles', [CustomerVehicleController::class, 'index'])->name('vehicles');
 Route::get('/vehicles/{slug}', [CustomerVehicleController::class, 'show'])->name('vehicles.slug');
