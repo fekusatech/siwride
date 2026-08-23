@@ -8,6 +8,7 @@
     let { driver, services } = $props<{
         driver: {
             id: number;
+            slug: string;
             name: string;
             image: string | null;
             joined_at: string | null;
@@ -54,9 +55,33 @@
                 .filter((duration): duration is string => Boolean(duration)),
         ).size,
     );
+    const profileTitle = $derived(`${driver.name} - Driver Profile`);
+    const profileDescription = $derived(
+        `Explore ${services.length} driver service${services.length === 1 ? '' : 's'} by ${driver.name} in Bali on Siwride. View package details, duration, pricing, and book your journey.`,
+    );
+    const profileUrl = $derived(
+        typeof window !== 'undefined'
+            ? window.location.href.split('?')[0]
+            : page.url,
+    );
+    const profileImage = $derived(
+        driver.image || settings?.logo || '/assets/images/og/siwride-og-image.png',
+    );
 </script>
 
-<AppHead title={`${driver.name} - Siwride Driver`} />
+<AppHead title={profileTitle}>
+    <meta name="description" content={profileDescription} head-key="description" />
+    <link rel="canonical" href={profileUrl} head-key="canonical" />
+    <meta property="og:type" content="profile" head-key="og:type" />
+    <meta property="og:title" content={profileTitle} head-key="og:title" />
+    <meta property="og:description" content={profileDescription} head-key="og:description" />
+    <meta property="og:url" content={profileUrl} head-key="og:url" />
+    <meta property="og:image" content={profileImage} head-key="og:image" />
+    <meta name="twitter:card" content="summary_large_image" head-key="twitter:card" />
+    <meta name="twitter:title" content={profileTitle} head-key="twitter:title" />
+    <meta name="twitter:description" content={profileDescription} head-key="twitter:description" />
+    <meta name="twitter:image" content={profileImage} head-key="twitter:image" />
+</AppHead>
 
 <Preloader />
 <div class="custom-cursor__cursor"></div>
