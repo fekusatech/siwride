@@ -68,10 +68,6 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('/driver/{slug}', [DriverProfileController::class, 'show'])
-    ->name('drivers.profile')
-    ->where('slug', '[a-z0-9-]+');
-
 Route::get('/ride-sharing', [RideSharingController::class, 'index'])->name('ride-sharing');
 
 Route::get('/dokumentasi', function () {
@@ -85,6 +81,10 @@ Route::middleware('guest:driver')->group(function () {
     Route::get('/driver/login', [DriverAuthController::class, 'showLoginForm'])->name('driver.login');
     Route::post('/driver/login', [DriverAuthController::class, 'login']);
 });
+
+Route::get('/driver/{slug}', [DriverProfileController::class, 'show'])
+    ->name('drivers.profile')
+    ->where('slug', '[a-z0-9-]+');
 
 Route::middleware('auth:driver')->prefix('driver')->name('driver.')->group(function () {
     Route::post('/logout', [DriverAuthController::class, 'logout'])->name('logout');
