@@ -10,6 +10,7 @@ use App\Http\Controllers\Driver\ServiceBookingReassignController as DriverServic
 use App\Http\Controllers\Driver\ServiceController as DriverServiceManageController;
 use App\Http\Controllers\Driver\WalletController as DriverWalletController;
 use App\Http\Controllers\Driver\WithdrawalController;
+use App\Http\Controllers\DriverProfileController;
 use App\Http\Controllers\DriverServiceBookingController;
 use App\Http\Controllers\DriverServiceListController;
 use App\Http\Controllers\RideSharingController;
@@ -24,22 +25,51 @@ use Laravel\Fortify\Features;
 Route::get('/', function () {
     $vehicleCategories = VehicleCategory::orderBy('id')->get();
     $locations = RideSharingCity::orderBy('name')->get();
-    $services = Activity::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
-    $featuredDriverServices = DriverService::with('driver')
-        ->where('status', DriverService::STATUS_APPROVED)
-        ->where('is_featured', true)
+
+    $activities = Activity::where('is_active', true)
         ->orderBy('sort_order')
         ->orderBy('id')
-        ->get();
+        ->get()
+        ->map(fn (Activity $a) => [
+            'type' => 'activity',
+            'slug' => $a->slug,
+            'title' => $a->title,
+            'description' => $a->description,
+            'image_url' => $a->image_url,
+            'price_per_pax' => $a->price_per_pax ? (float) $a->price_per_pax : null,
+            'driver_id' => null,
+            'url' => "/activities/{$a->slug}",
+        ]);
+
+    $driverServices = DriverService::with('driver:id,firstname,lastname,image')
+        ->where('status', DriverService::STATUS_APPROVED)
+        ->orderByDesc('is_featured')
+        ->orderBy('sort_order')
+        ->orderBy('id')
+        ->get()
+        ->map(fn (DriverService $s) => [
+            'type' => 'service',
+            'slug' => $s->slug,
+            'title' => $s->title,
+            'description' => $s->description,
+            'image_url' => $s->image_url,
+            'price_per_pax' => $s->price_per_pax ? (float) $s->price_per_pax : null,
+            'driver_id' => $s->driver?->id,
+            'driver_name' => $s->driver?->name,
+            'url' => "/services/{$s->slug}",
+        ]);
 
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'vehicleCategories' => $vehicleCategories,
         'rideSharingLocations' => $locations,
-        'services' => $services,
-        'featuredDriverServices' => $featuredDriverServices,
+        'services' => $activities->concat($driverServices)->values(),
     ]);
 })->name('home');
+
+Route::get('/drivers/{user}', [DriverProfileController::class, 'show'])
+    ->name('drivers.profile')
+    ->whereNumber('user');
 
 Route::get('/ride-sharing', [RideSharingController::class, 'index'])->name('ride-sharing');
 

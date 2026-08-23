@@ -16,7 +16,12 @@
     let heroReturnDate = $state('');
 
     const heroReturnDateError = $derived.by(() => {
-        if (heroTripType === 'round_trip' && heroDate && heroReturnDate && heroReturnDate < heroDate) {
+        if (
+            heroTripType === 'round_trip' &&
+            heroDate &&
+            heroReturnDate &&
+            heroReturnDate < heroDate
+        ) {
             return 'Return date cannot be before departure date.';
         }
         return null;
@@ -48,12 +53,10 @@
         vehicleCategories = [],
         rideSharingLocations = [],
         services = [],
-        featuredDriverServices = [],
     } = $props<{
         vehicleCategories: any[];
         rideSharingLocations: { id: number; name: string }[];
         services?: any[];
-        featuredDriverServices?: any[];
     }>();
 
     const settings = $derived(page.props.settings as any);
@@ -184,7 +187,9 @@
                         <div class="hero-trip-type-toggle">
                             <button
                                 type="button"
-                                class="hero-trip-btn {heroTripType === 'one_way' ? 'hero-trip-btn--active' : ''}"
+                                class="hero-trip-btn {heroTripType === 'one_way'
+                                    ? 'hero-trip-btn--active'
+                                    : ''}"
                                 onclick={() => (heroTripType = 'one_way')}
                             >
                                 <i class="fas fa-long-arrow-alt-right"></i>
@@ -192,14 +197,21 @@
                             </button>
                             <button
                                 type="button"
-                                class="hero-trip-btn {heroTripType === 'round_trip' ? 'hero-trip-btn--active' : ''}"
+                                class="hero-trip-btn {heroTripType ===
+                                'round_trip'
+                                    ? 'hero-trip-btn--active'
+                                    : ''}"
                                 onclick={() => (heroTripType = 'round_trip')}
                             >
                                 <i class="fas fa-exchange-alt"></i>
                                 Round-Trip
                             </button>
                         </div>
-                        <input type="hidden" name="trip_type" value={heroTripType} />
+                        <input
+                            type="hidden"
+                            name="trip_type"
+                            value={heroTripType}
+                        />
                         <div class="banner-form hf-flex align-items-center">
                             <!-- Pickup -->
                             <div class="banner-form__control">
@@ -267,7 +279,9 @@
                                     class="banner-form__control banner-form__control--date hero-return-date"
                                 >
                                     <i class="icon icon-calendar-1"></i>
-                                    <label for="hero_return_date">Return Date *</label>
+                                    <label for="hero_return_date"
+                                        >Return Date *</label
+                                    >
                                     <input
                                         type="hidden"
                                         name="return_date"
@@ -283,7 +297,13 @@
                                         minDate={heroDate}
                                     />
                                     {#if heroReturnDateError}
-                                        <p style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><i class="fas fa-exclamation-circle"></i> {heroReturnDateError}</p>
+                                        <p
+                                            style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"
+                                        >
+                                            <i class="fas fa-exclamation-circle"
+                                            ></i>
+                                            {heroReturnDateError}
+                                        </p>
                                     {/if}
                                 </div>
                             {/if}
@@ -555,7 +575,9 @@
                     class="sec-title__text bw-split-in-up-fast"
                     style="max-width: 600px; margin: 15px auto 0;"
                 >
-                    From quick trips to full-day explorations, we provide a variety of reliable transportation solutions tailored for your needs.
+                    From quick trips to full-day explorations, we provide a
+                    variety of reliable transportation solutions tailored for
+                    your needs.
                 </p>
             </div>
 
@@ -567,7 +589,7 @@
                         data-wow-delay={index * 100 + 'ms'}
                     >
                         <a
-                            href={service.link_url || '#/'}
+                            href={service.url || '#/'}
                             class="service-card d-block"
                             style="text-decoration: none; color: inherit; background: #fff; border-radius: 12px; overflow: hidden; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; display: flex; flex-direction: column;"
                             role="presentation"
@@ -599,7 +621,9 @@
                                 class="service-card__content"
                                 style="padding: 25px 20px 25px; position: relative; z-index: 1;"
                             >
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px;"
+                                >
                                     <h4
                                         style="font-size: 18px; font-weight: 700; margin-bottom: 0; line-height: 1.3;"
                                     >
@@ -610,12 +634,44 @@
                                     </h4>
                                     <span
                                         style="display: inline-flex; align-items: center; color: var(--travhub-base, #e52029); font-weight: 700; font-size: 14px; transition: 0.3s; white-space: nowrap;"
-                                        onmouseenter={(e) => (e.currentTarget.style.transform = 'translateX(3px)')}
-                                        onmouseleave={(e) => (e.currentTarget.style.transform = 'translateX(0)')}
+                                        onmouseenter={(e) =>
+                                            (e.currentTarget.style.transform =
+                                                'translateX(3px)')}
+                                        onmouseleave={(e) =>
+                                            (e.currentTarget.style.transform =
+                                                'translateX(0)')}
                                     >
-                                        Book <i class="ti ti-arrow-right ms-1"></i>
+                                        Book <i class="ti ti-arrow-right ms-1"
+                                        ></i>
                                     </span>
                                 </div>
+                                {#if service.type === 'service'}
+                                    <div style="margin-bottom: 8px;">
+                                        {#if service.driver_id}
+                                            <a
+                                                href={`/drivers/${service.driver_id}`}
+                                                class="badge bg-light text-dark border text-decoration-none"
+                                                style="font-size: 11px; padding: 4px 10px;"
+                                                onclick={(e) =>
+                                                    e.stopPropagation()}
+                                            >
+                                                <i
+                                                    class="ti ti-steering-wheel me-1"
+                                                ></i>{service.driver_name ??
+                                                    'Siwride Driver'}
+                                            </a>
+                                        {:else}
+                                            <span
+                                                class="badge bg-light text-dark border"
+                                                style="font-size: 11px; padding: 4px 10px;"
+                                            >
+                                                <i
+                                                    class="ti ti-steering-wheel me-1"
+                                                ></i>Siwride Driver
+                                            </span>
+                                        {/if}
+                                    </div>
+                                {/if}
                                 <p
                                     style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"
                                 >
@@ -632,7 +688,8 @@
                     href="/catalog"
                     class="btn btn-lg"
                     style="background: var(--travhub-base, #e52029); color: #fff; padding: 14px 40px; font-weight: 700; border-radius: 50px; text-decoration: none; transition: 0.3s;"
-                    onmouseenter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                    onmouseenter={(e) =>
+                        (e.currentTarget.style.opacity = '0.9')}
                     onmouseleave={(e) => (e.currentTarget.style.opacity = '1')}
                 >
                     Lihat Semua <i class="ti ti-arrow-right ms-2"></i>
@@ -640,36 +697,6 @@
             </div>
         </div>
     </section>
-
-    {#if featuredDriverServices.length > 0}
-        <section class="featured-driver-services" style="padding: 80px 0; background-color: #fff;">
-            <div class="container">
-                <div class="sec-title text-center">
-                    <div class="sec-title__tagline">Featured by Our Drivers<img src="/assets/images/shapes/sec-title-shape.png" alt="Siwride" /></div>
-                    <h3 class="sec-title__title">Driver Services</h3>
-                    <p class="sec-title__text" style="max-width: 600px; margin: 15px auto 0;">Book local experiences created and hosted by our trusted drivers.</p>
-                </div>
-                <div class="row gutter-y-30 justify-content-center">
-                    {#each featuredDriverServices as service}
-                        <div class="col-lg-4 col-md-6">
-                            <a href={`/services/${service.slug}`} class="d-block text-decoration-none" style="color: inherit;">
-                                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                                    <img src={service.image_url} alt={service.title} style="height: 220px; width: 100%; object-fit: cover;" />
-                                    <div class="card-body">
-                                        <h5 class="fw-bold mb-1">{service.title}</h5>
-                                        <div class="small text-muted mb-2"><i class="ti ti-steering-wheel me-1"></i>{service.driver?.name ?? 'Siwride Driver'}</div>
-                                        {#if service.price_per_pax}
-                                            <div class="fw-bold" style="color: var(--travhub-base, #d11f1f);">Rp {Number(service.price_per_pax).toLocaleString('id-ID')} <span class="fw-normal text-muted small">/ person</span></div>
-                                        {/if}
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    {/each}
-                </div>
-            </div>
-        </section>
-    {/if}
 
     <section
         class="how-it-works"
@@ -1049,8 +1076,6 @@
             </div>
         </div>
     </section>
-
-    
 
     <section class="service-area" style="padding: 100px 0; background: #fff;">
         <div class="container">
@@ -1712,9 +1737,14 @@
         color: #fff !important;
         box-shadow: 0 4px 12px rgba(229, 32, 41, 0.25);
     }
-    
+
     @media (min-width: 1070px) {
-        :global(.hero-one__form .airport-transfer-wrapper .banner-form.hf-flex .banner-form__button) {
+        :global(
+            .hero-one__form
+                .airport-transfer-wrapper
+                .banner-form.hf-flex
+                .banner-form__button
+        ) {
             align-self: center;
             margin-top: 10px !important;
         }

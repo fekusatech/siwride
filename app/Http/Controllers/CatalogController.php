@@ -49,6 +49,7 @@ class CatalogController extends Controller
                     'min_pax' => $s->min_pax,
                     'max_pax' => $s->max_pax,
                     'driver_name' => $s->driver?->name ?? 'Siwride Driver',
+                    'driver_id' => $s->driver?->id,
                     'detail_url' => "/services/{$s->slug}",
                 ]);
         }
