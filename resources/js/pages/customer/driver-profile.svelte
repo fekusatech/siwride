@@ -36,6 +36,24 @@
     function formatPrice(price: number): string {
         return `Rp ${price.toLocaleString('id-ID')}`;
     }
+
+    const pricedServices = $derived(
+        services.filter((service) => service.price_per_pax !== null),
+    );
+    const lowestPrice = $derived(
+        pricedServices.length
+            ? Math.min(
+                  ...pricedServices.map((service) => service.price_per_pax!),
+              )
+            : null,
+    );
+    const durationOptions = $derived(
+        new Set(
+            services
+                .map((service) => service.duration_label)
+                .filter((duration): duration is string => Boolean(duration)),
+        ).size,
+    );
 </script>
 
 <AppHead title={`${driver.name} - Siwride Driver`} />
@@ -48,7 +66,7 @@
     <Header />
 
     <!-- Page Header -->
-    <section class="page-header">
+    <section class="page-header driver-page-header">
         <div class="page-header__bg"></div>
         <div class="page-header__shape-one"></div>
         <div class="page-header__shape-two"></div>
@@ -63,11 +81,10 @@
     </section>
 
     <!-- Driver Info -->
-    <section class="pt-60 pb-0">
+    <section class="driver-overview">
         <div class="container">
             <div
-                class="d-flex flex-column flex-md-row align-items-center gap-4 p-4 rounded"
-                style="background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05);"
+                class="driver-profile-card d-flex flex-column flex-lg-row align-items-center gap-4 p-4 p-lg-5 rounded-4"
             >
                 <img
                     src={driver.image || PLACEHOLDER_IMAGE}
@@ -75,43 +92,50 @@
                     class="rounded-circle"
                     style="width: 110px; height: 110px; object-fit: cover; border: 4px solid var(--travhub-base, #e52029);"
                 />
-                <div class="text-center text-md-start flex-grow-1">
+                <div class="text-center text-lg-start flex-grow-1">
+                    <span class="driver-profile-card__eyebrow">Driver Siwride</span>
                     <h3 class="mb-1 fw-bold">{driver.name}</h3>
-                    <p class="text-muted mb-2">
-                        <i class="ti ti-steering-wheel me-1"></i>Driver Siwride
+                    <p class="text-muted mb-3">
                         {#if driver.joined_at}
-                            <span class="ms-3"
-                                ><i class="ti ti-calendar me-1"></i>Bergabung {driver.joined_at}</span
-                            >
+                            <i class="ti ti-calendar me-1"></i>Bergabung sejak {driver.joined_at}
                         {/if}
                     </p>
-                    <div
-                        class="d-flex gap-3 justify-content-center justify-content-md-start flex-wrap"
-                    >
-                        <span
-                            class="badge bg-light text-dark border"
-                            style="font-size: 13px; padding: 8px 14px;"
-                        >
-                            <i class="ti ti-list-check me-1"
-                            ></i>{driver.total_services} service aktif
-                        </span>
-                        <span
-                            class="badge bg-light text-dark border"
-                            style="font-size: 13px; padding: 8px 14px;"
-                        >
-                            <i class="ti ti-circle-check me-1"
-                            ></i>{driver.completed_bookings} trip selesai
-                        </span>
+                    <p class="driver-profile-card__intro mb-0">
+                        Pilih layanan perjalanan yang sesuai dari driver ini dan lihat detail paketnya.
+                    </p>
+                </div>
+                <a href="#driver-services" class="travhub-btn driver-profile-card__cta">
+                    <span>Lihat layanan</span>
+                </a>
+                <div class="driver-stats w-100">
+                    <div class="driver-stat">
+                        <i class="ti ti-list-check"></i>
+                        <div><strong>{driver.total_services}</strong><span>Layanan aktif</span></div>
                     </div>
+                    <div class="driver-stat">
+                        <i class="ti ti-circle-check"></i>
+                        <div><strong>{driver.completed_bookings}</strong><span>Trip selesai</span></div>
+                    </div>
+                    <div class="driver-stat">
+                        <i class="ti ti-clock"></i>
+                        <div><strong>{durationOptions || '-'}</strong><span>Pilihan durasi</span></div>
+                    </div>
+                    {#if lowestPrice !== null}
+                        <div class="driver-stat">
+                            <i class="ti ti-wallet"></i>
+                            <div><strong>{formatPrice(lowestPrice)}</strong><span>Harga mulai / orang</span></div>
+                        </div>
+                    {/if}
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Services Grid -->
-    <section class="services-section pt-60 pb-120">
+    <section class="services-section driver-services" id="driver-services">
         <div class="container">
-            <div class="sec-title text-center mb-5">
+            <div class="driver-services__heading d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+                <div class="sec-title mb-0">
                 <div class="sec-title__tagline bw-split-in-right">
                     Layanan<img
                         src="/assets/images/shapes/sec-title-shape.png"
@@ -121,6 +145,8 @@
                 <h3 class="sec-title__title bw-split-in-left">
                     Services by {driver.name}
                 </h3>
+                </div>
+                <p class="driver-services__count mb-1">{services.length} paket tersedia</p>
             </div>
 
             <div class="row gutter-y-30">
@@ -146,7 +172,7 @@
                                         src={service.image_url ||
                                             PLACEHOLDER_IMAGE}
                                         alt={service.title}
-                                        style="height: 200px; width: 100%; object-fit: cover;"
+                                        style="height: 175px; width: 100%; object-fit: cover;"
                                     />
                                     {#if service.is_featured}
                                         <span
@@ -164,6 +190,12 @@
                                         <div class="small text-muted mb-2">
                                             <i class="ti ti-clock me-1"
                                             ></i>{service.duration_label}
+                                        </div>
+                                    {/if}
+                                    {#if service.min_pax || service.max_pax}
+                                        <div class="small text-muted mb-2">
+                                            <i class="ti ti-users me-1"></i>
+                                            {service.min_pax ?? 1}{service.max_pax ? `-${service.max_pax}` : ''} orang
                                         </div>
                                     {/if}
                                     <p
@@ -222,11 +254,130 @@
 </div>
 
 <style>
+    .driver-page-header {
+        padding-top: 72px;
+        padding-bottom: 78px;
+    }
+
+    .driver-overview {
+        padding: 34px 0 0;
+    }
+
+    .driver-profile-card {
+        position: relative;
+        background: #fff;
+        box-shadow: 0 12px 35px rgba(28, 34, 43, 0.08);
+    }
+
+    .driver-profile-card > img {
+        flex: 0 0 auto;
+    }
+
+    .driver-profile-card__eyebrow {
+        display: inline-block;
+        margin-bottom: 8px;
+        color: var(--travhub-base, #e52029);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .driver-profile-card__intro {
+        max-width: 520px;
+        color: #69727d;
+        line-height: 1.6;
+    }
+
+    .driver-profile-card__cta {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .driver-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        padding-top: 22px;
+        border-top: 1px solid #edf0f2;
+    }
+
+    .driver-stat {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .driver-stat > i {
+        flex: 0 0 auto;
+        color: var(--travhub-base, #e52029);
+        font-size: 22px;
+    }
+
+    .driver-stat div {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+    }
+
+    .driver-stat strong {
+        overflow: hidden;
+        color: #252b35;
+        font-size: 15px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .driver-stat span {
+        color: #87909b;
+        font-size: 12px;
+    }
+
+    .driver-services {
+        padding: 56px 0 110px;
+    }
+
+    .driver-services__count {
+        color: #87909b;
+        font-size: 14px;
+    }
+
     .card:hover img {
         transform: scale(1.05);
     }
 
     .card img {
         transition: transform 0.5s ease;
+    }
+
+    @media (max-width: 991px) {
+        .driver-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 575px) {
+        .driver-page-header {
+            padding-top: 58px;
+            padding-bottom: 62px;
+        }
+
+        .driver-overview {
+            padding-top: 24px;
+        }
+
+        .driver-profile-card {
+            padding: 24px 20px !important;
+        }
+
+        .driver-profile-card__cta {
+            width: 100%;
+            text-align: center;
+        }
+
+        .driver-stats {
+            gap: 16px 10px;
+        }
     }
 </style>
