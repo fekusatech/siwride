@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PackTier extends Model
 {
@@ -14,6 +15,7 @@ class PackTier extends Model
     public const TYPE_FLAT = 'flat';
 
     protected $fillable = [
+        'activity_id',
         'label',
         'min_pax',
         'max_pax',
@@ -26,12 +28,18 @@ class PackTier extends Model
     protected function casts(): array
     {
         return [
+            'activity_id' => 'integer',
             'min_pax' => 'integer',
             'max_pax' => 'integer',
             'discount_value' => 'decimal:2',
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function activity(): BelongsTo
+    {
+        return $this->belongsTo(Activity::class);
     }
 
     /**

@@ -8,19 +8,29 @@ class PackTierService
 {
     /**
      * Find the applicable tier for a given pax count.
+     * Activity-specific tiers take precedence over global tiers (activity_id null).
      * Returns null if no tier matches (use base price).
      */
-    public function tierForPax(int $pax): ?PackTier
+    public function tierForPax(int $pax, ?int $activityId = null): ?PackTier
     {
-        return PackTier::query()
+        $baseQuery = fn () => PackTier::query()
             ->where('is_active', true)
             ->where('min_pax', '<=', $pax)
             ->where(function ($query) use ($pax) {
                 $query->whereNull('max_pax')
                     ->orWhere('max_pax', '>=', $pax);
             })
-            ->orderBy('min_pax', 'desc')
-            ->first();
+            ->orderBy('min_pax', 'desc');
+
+        if ($activityId !== null) {
+            $query = $baseQuery();
+
+            $scoped = (clone $query)->where('activity_id', $activityId)->first();
+
+            return $scoped ?? $query->whereNull('activity_id')->first();
+        }
+
+        return $baseQuery()->first();
     }
 
     /**
@@ -28,9 +38,9 @@ class PackTierService
      *
      * @return array{price_per_pax: float, tier: ?PackTier, base_price: float}
      */
-    public function priceForPax(float $basePrice, int $pax): array
+    public function priceForPax(float $basePrice, int $pax, ?int $activityId = null): array
     {
-        $tier = $this->tierForPax($pax);
+        $tier = $this->tierForPax($pax, $activityId);
 
         return [
             'price_per_pax' => $tier ? $tier->pricePerPax($basePrice) : $basePrice,
@@ -44,10 +54,18 @@ class PackTierService
      *
      * @return array<int, array>
      */
-    public function allTiersForDisplay(): array
+    public function allTiersForDisplay(?int $activityId = null): array
     {
         return PackTier::query()
             ->where('is_active', true)
+            ->where(function ($query) use ($activityId) {
+                $query->whereNull('activity_id');
+
+                if ($activityId !== null) {
+                    $query->orWhere('activity_id', $activityId);
+                }
+            })
+            ->orderByRaw('activity_id IS NOT NULL DESC')
             ->orderBy('min_pax')
             ->get()
             ->map(fn (PackTier $tier) => [
@@ -58,6 +76,7 @@ class PackTierService
                 'discount_type' => $tier->discount_type,
                 'discount_value' => (float) $tier->discount_value,
                 'discount_label' => $tier->discountLabel(),
+                'activity_id' => $tier->activity_id,
             ])
             ->all();
     }

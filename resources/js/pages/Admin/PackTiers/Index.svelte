@@ -4,14 +4,16 @@
     import Pagination from '@/components/Pagination.svelte';
     import { router, page } from '@inertiajs/svelte';
 
-    let { tiers } = $props<{
+    let { tiers, activities } = $props<{
         tiers: { data: any[]; links: any[] };
+        activities: { id: number; title: string }[];
     }>();
 
     let showForm = $state(false);
     let editingId = $state<number | null>(null);
 
     let form = $state({
+        activity_id: null as number | null,
         label: '',
         min_pax: 4,
         max_pax: null as number | null,
@@ -23,6 +25,7 @@
 
     function resetForm() {
         form = {
+            activity_id: null,
             label: '',
             min_pax: 4,
             max_pax: null,
@@ -41,6 +44,7 @@
 
     function openEdit(tier: any) {
         form = {
+            activity_id: tier.activity_id ?? null,
             label: tier.label,
             min_pax: tier.min_pax,
             max_pax: tier.max_pax,
@@ -79,7 +83,7 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h4 class="mb-0">Pack Tiers</h4>
-                <p class="text-muted mb-0">Atur diskon group berdasarkan jumlah pax (berlaku untuk semua activity)</p>
+                <p class="text-muted mb-0">Atur diskon group berdasarkan jumlah pax — global (semua activity) atau khusus per activity</p>
             </div>
             <button type="button" class="btn btn-primary" onclick={openCreate}>
                 <i class="ti ti-plus me-1"></i>Add Tier
@@ -108,6 +112,15 @@
                             <div class="col-md-6">
                                 <label class="form-label">Label</label>
                                 <input type="text" class="form-control" bind:value={form.label} placeholder="Group 4-5 pax" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Activity</label>
+                                <select class="form-select" bind:value={form.activity_id}>
+                                    <option value={null}>Global — semua activity</option>
+                                    {#each activities as activity}
+                                        <option value={activity.id}>{activity.title}</option>
+                                    {/each}
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Min Pax</label>
@@ -159,6 +172,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th>Label</th>
+                                <th>Activity</th>
                                 <th>Min Pax</th>
                                 <th>Max Pax</th>
                                 <th>Discount</th>
@@ -170,6 +184,13 @@
                             {#each tiers.data as tier}
                                 <tr>
                                     <td class="fw-medium">{tier.label}</td>
+                                    <td>
+                                        {#if tier.activity_title}
+                                            <span class="badge bg-primary-subtle text-primary">{tier.activity_title}</span>
+                                        {:else}
+                                            <span class="badge bg-secondary-subtle text-secondary">Global</span>
+                                        {/if}
+                                    </td>
                                     <td>{tier.min_pax}</td>
                                     <td>{tier.max_pax ?? '∞'}</td>
                                     <td>
@@ -193,7 +214,7 @@
                                 </tr>
                             {:else}
                                 <tr>
-                                    <td colspan="6" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <div class="text-muted">Belum ada pack tier. Klik "Add Tier" untuk membuat.</div>
                                     </td>
                                 </tr>

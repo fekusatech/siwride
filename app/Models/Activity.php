@@ -84,4 +84,9 @@ class Activity extends Model
     {
         return $this->hasMany(ActivityBooking::class);
     }
+
+    public function packTiers(): HasMany
+    {
+        return $this->hasMany(PackTier::class);
+    }
 }

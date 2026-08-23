@@ -41,6 +41,7 @@ class DatabaseSeeder extends Seeder
             ZoneSeeder::class,
             ZonePricingSeeder::class,
             ActivitySeeder::class,
+            PackTierSeeder::class,
             TourPackageSeeder::class,
         ]);
 

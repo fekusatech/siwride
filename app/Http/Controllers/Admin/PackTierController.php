@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Activity;
 use App\Models\PackTier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,11 +16,15 @@ class PackTierController extends Controller
     {
         return Inertia::render('Admin/PackTiers/Index', [
             'tiers' => PackTier::query()
+                ->with('activity:id,title')
+                ->orderByRaw('activity_id IS NULL DESC')
                 ->orderBy('min_pax')
                 ->paginate(20)
                 ->withQueryString()
                 ->through(fn (PackTier $tier) => [
                     'id' => $tier->id,
+                    'activity_id' => $tier->activity_id,
+                    'activity_title' => $tier->activity?->title,
                     'label' => $tier->label,
                     'min_pax' => $tier->min_pax,
                     'max_pax' => $tier->max_pax,
@@ -29,12 +34,17 @@ class PackTierController extends Controller
                     'sort_order' => $tier->sort_order,
                     'is_active' => $tier->is_active,
                 ]),
+            'activities' => Activity::query()
+                ->where('is_active', true)
+                ->orderBy('title')
+                ->get(['id', 'title']),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'activity_id' => ['nullable', 'integer', 'exists:activities,id'],
             'label' => ['required', 'string', 'max:100'],
             'min_pax' => ['required', 'integer', 'min:1'],
             'max_pax' => ['nullable', 'integer', 'gte:min_pax'],
@@ -52,6 +62,7 @@ class PackTierController extends Controller
     public function update(Request $request, PackTier $packTier): RedirectResponse
     {
         $validated = $request->validate([
+            'activity_id' => ['nullable', 'integer', 'exists:activities,id'],
             'label' => ['required', 'string', 'max:100'],
             'min_pax' => ['required', 'integer', 'min:1'],
             'max_pax' => ['nullable', 'integer', 'gte:min_pax'],

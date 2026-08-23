@@ -47,7 +47,7 @@ class ActivityBookingController extends Controller
             'payment' => [
                 'dp_percent' => (float) Setting::getValue('dp_percent_default', 30),
             ],
-            'packTiers' => app(PackTierService::class)->allTiersForDisplay(),
+            'packTiers' => app(PackTierService::class)->allTiersForDisplay($activity->id),
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'email' => $customer->email,
@@ -107,7 +107,7 @@ class ActivityBookingController extends Controller
         }
 
         $basePricePerPax = (float) $activity->price_per_pax;
-        $tierData = app(PackTierService::class)->priceForPax($basePricePerPax, $validated['pax']);
+        $tierData = app(PackTierService::class)->priceForPax($basePricePerPax, $validated['pax'], $activity->id);
         $effectivePricePerPax = $tierData['price_per_pax'];
         $tier = $tierData['tier'];
 
@@ -242,7 +242,7 @@ class ActivityBookingController extends Controller
         ]);
 
         $basePricePerPax = (float) $activity->price_per_pax;
-        $tierData = app(PackTierService::class)->priceForPax($basePricePerPax, $validated['pax']);
+        $tierData = app(PackTierService::class)->priceForPax($basePricePerPax, $validated['pax'], $activity->id);
         $effectivePricePerPax = $tierData['price_per_pax'];
 
         $subtotal = round($effectivePricePerPax * $validated['pax'], 2);

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Activity;
 use App\Models\PackTier;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -15,6 +16,7 @@ class PackTierFactory extends Factory
     public function definition(): array
     {
         return [
+            'activity_id' => null,
             'label' => fake()->words(2, true),
             'min_pax' => 4,
             'max_pax' => 5,
@@ -23,5 +25,10 @@ class PackTierFactory extends Factory
             'sort_order' => 0,
             'is_active' => true,
         ];
+    }
+
+    public function forActivity(Activity $activity): static
+    {
+        return $this->state(fn () => ['activity_id' => $activity->id]);
     }
 }
