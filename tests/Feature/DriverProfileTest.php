@@ -27,6 +27,8 @@ it('shows public driver profile by slug with approved services', function () {
 
     $this->get(route('drivers.profile', ['slug' => $slug]))
         ->assertOk()
+        ->assertSee('/assets/css/travhub.css')
+        ->assertDontSee('/assets-admin/css/app.min.css')
         ->assertInertia(fn ($page) => $page
             ->component('customer/driver-profile')
             ->where('driver.id', $driver->id)
