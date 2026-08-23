@@ -186,7 +186,7 @@
                         <p class="text-muted fs-5 mb-3">
                             Hosted by
                             <a
-                                href={`/drivers/${service.driver.id}`}
+                                href={`/driver/${service.driver.slug}`}
                                 class="fw-semibold text-decoration-none"
                                 style="color: var(--travhub-base, #d11f1f);"
                             >

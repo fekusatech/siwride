@@ -11,9 +11,12 @@ use Inertia\Response;
 
 class DriverProfileController extends Controller
 {
-    public function show(Request $request, User $user): Response
+    public function show(Request $request, string $slug): Response
     {
-        abort_unless($user->isDriver(), 404);
+        $user = User::query()
+            ->where('slug', $slug)
+            ->where('role', 'driver')
+            ->firstOrFail();
 
         $services = DriverService::query()
             ->where('driver_id', $user->id)
@@ -43,6 +46,7 @@ class DriverProfileController extends Controller
         return Inertia::render('customer/driver-profile', [
             'driver' => [
                 'id' => $user->id,
+                'slug' => $user->ensureDriverSlug(),
                 'name' => $user->name,
                 'image' => $user->image ? asset('storage/'.$user->image) : null,
                 'joined_at' => $user->created_at?->format('M Y'),

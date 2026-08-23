@@ -649,7 +649,7 @@
                                     <div style="margin-bottom: 8px;">
                                         {#if service.driver_id}
                                             <a
-                                                href={`/drivers/${service.driver_id}`}
+                                                href={`/driver/${service.driver_slug}`}
                                                 class="badge bg-light text-dark border text-decoration-none"
                                                 style="font-size: 11px; padding: 4px 10px;"
                                                 onclick={(e) =>

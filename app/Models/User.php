@@ -11,10 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['uid', 'firstname', 'lastname', 'email', 'phone', 'password', 'image', 'status', 'role', 'nid', 'nik', 'nik_image', 'sim', 'sim_image'])]
+#[Fillable(['uid', 'firstname', 'lastname', 'email', 'phone', 'password', 'image', 'status', 'role', 'nid', 'nik', 'nik_image', 'sim', 'sim_image', 'slug'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -54,6 +55,28 @@ class User extends Authenticatable
     public function getNameAttribute(): string
     {
         return "{$this->firstname} {$this->lastname}";
+    }
+
+    /**
+     * Generate and persist a unique URL slug for public driver profiles.
+     */
+    public function ensureDriverSlug(): string
+    {
+        if ($this->slug) {
+            return $this->slug;
+        }
+
+        $base = Str::slug($this->name) ?: 'driver';
+        $slug = $base;
+        $counter = 2;
+
+        while (static::where('slug', $slug)->whereKeyNot($this->getKey())->exists()) {
+            $slug = $base.'-'.$counter++;
+        }
+
+        $this->update(['slug' => $slug]);
+
+        return $slug;
     }
 
     public function isAdmin(): bool

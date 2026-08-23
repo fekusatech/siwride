@@ -272,7 +272,7 @@
                                     {#if item.driver_name}
                                         <p class="text-muted small mb-2">
                                             <a
-                                                href={`/drivers/${item.driver_id}`}
+                                                href={`/driver/${item.driver_slug}`}
                                                 class="text-decoration-none text-muted"
                                                 onclick={(e) =>
                                                     e.stopPropagation()}

@@ -41,7 +41,7 @@ Route::get('/', function () {
             'url' => "/activities/{$a->slug}",
         ]);
 
-    $driverServices = DriverService::with('driver:id,firstname,lastname,image')
+    $driverServices = DriverService::with('driver:id,firstname,lastname,image,slug')
         ->where('status', DriverService::STATUS_APPROVED)
         ->orderByDesc('is_featured')
         ->orderBy('sort_order')
@@ -55,6 +55,7 @@ Route::get('/', function () {
             'image_url' => $s->image_url,
             'price_per_pax' => $s->price_per_pax ? (float) $s->price_per_pax : null,
             'driver_id' => $s->driver?->id,
+            'driver_slug' => $s->driver?->slug,
             'driver_name' => $s->driver?->name,
             'url' => "/services/{$s->slug}",
         ]);
@@ -67,9 +68,9 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('/drivers/{user}', [DriverProfileController::class, 'show'])
+Route::get('/driver/{slug}', [DriverProfileController::class, 'show'])
     ->name('drivers.profile')
-    ->whereNumber('user');
+    ->where('slug', '[a-z0-9-]+');
 
 Route::get('/ride-sharing', [RideSharingController::class, 'index'])->name('ride-sharing');
 
