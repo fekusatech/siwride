@@ -13,7 +13,7 @@ class CatalogController extends Controller
     public function index(Request $request): Response
     {
         $search = $request->input('search', '');
-        $type = $request->input('type', '');
+        $type = $request->string('type')->toString();
         $sort = $request->input('sort', 'newest');
         $minPrice = (float) ($request->input('min_price') ?? 0);
         $maxPrice = (float) ($request->input('max_price') ?? 0);
