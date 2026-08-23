@@ -5,7 +5,11 @@
     import Preloader from '@/components/Template/Preloader.svelte';
     import { useForm } from '@inertiajs/svelte';
 
-    let { service, payment, customer = null } = $props<{
+    let {
+        service,
+        payment,
+        customer = null,
+    } = $props<{
         service: any;
         payment: { dp_percent: number };
         customer: { name: string; email: string; phone: string } | null;
@@ -26,9 +30,15 @@
     let voucherMessage = $state('');
 
     let subtotal = $derived(Number(service.price_per_pax) * form.pax);
-    let totalAmount = $derived(Math.max(0, Math.round((subtotal - voucherDiscount) * 100) / 100));
-    let dpAmount = $derived(Math.round(totalAmount * (payment.dp_percent / 100) * 100) / 100);
-    let remainingCash = $derived(Math.round((totalAmount - dpAmount) * 100) / 100);
+    let totalAmount = $derived(
+        Math.max(0, Math.round((subtotal - voucherDiscount) * 100) / 100),
+    );
+    let dpAmount = $derived(
+        Math.round(totalAmount * (payment.dp_percent / 100) * 100) / 100,
+    );
+    let remainingCash = $derived(
+        Math.round((totalAmount - dpAmount) * 100) / 100,
+    );
 
     async function applyVoucher() {
         const code = (form.voucher_code ?? '').trim().toUpperCase();
@@ -38,11 +48,21 @@
         voucherMessage = '';
 
         try {
-            const response = await fetch(`/services/${service.slug}/validate-voucher`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ code, pax: form.pax, email: form.customer_email }),
-            });
+            const response = await fetch(
+                `/services/${service.slug}/validate-voucher`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        code,
+                        pax: form.pax,
+                        email: form.customer_email,
+                    }),
+                },
+            );
 
             const data = await response.json();
 
@@ -80,9 +100,10 @@
         }
     });
 
-    let allImages = (service.gallery_urls?.length
-        ? [service.image_url, ...service.gallery_urls]
-        : [service.image_url]
+    let allImages = (
+        service.gallery_urls?.length
+            ? [service.image_url, ...service.gallery_urls]
+            : [service.image_url]
     ).filter(Boolean);
     let mainImage = $state(allImages[0]);
     let extraThumbs = allImages.slice(1, 5);
@@ -136,7 +157,10 @@
                                             src={url}
                                             alt={service.title}
                                             class="w-100 h-100"
-                                            style="object-fit: cover; outline: {mainImage === url ? '3px solid var(--travhub-base, #d11f1f)' : 'none'}; outline-offset: -3px;"
+                                            style="object-fit: cover; outline: {mainImage ===
+                                            url
+                                                ? '3px solid var(--travhub-base, #d11f1f)'
+                                                : 'none'}; outline-offset: -3px;"
                                         />
                                         {#if i === 3 && remainingPhotoCount > 0}
                                             <div
@@ -159,33 +183,74 @@
                 <div class="col-lg-7">
                     <h2 class="fw-bold mb-1">{service.title}</h2>
                     {#if service.driver}
-                        <p class="text-muted fs-5 mb-3">Hosted by {service.driver.name}</p>
+                        <p class="text-muted fs-5 mb-3">
+                            Hosted by
+                            <a
+                                href={`/drivers/${service.driver.id}`}
+                                class="fw-semibold text-decoration-none"
+                                style="color: var(--travhub-base, #d11f1f);"
+                            >
+                                {service.driver.name}
+                                <i
+                                    class="ti ti-arrow-right ms-1"
+                                    style="font-size: 14px;"
+                                ></i>
+                            </a>
+                        </p>
                     {/if}
 
                     <!-- Quick specs -->
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         {#if service.duration_label}
-                            <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                                <i class="ti ti-clock fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
+                            <div
+                                class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white"
+                            >
+                                <i
+                                    class="ti ti-clock fs-4"
+                                    style="color: var(--travhub-base, #d11f1f);"
+                                ></i>
                                 <div>
-                                    <div class="small text-muted lh-1">Duration</div>
-                                    <div class="fw-medium">{service.duration_label}</div>
+                                    <div class="small text-muted lh-1">
+                                        Duration
+                                    </div>
+                                    <div class="fw-medium">
+                                        {service.duration_label}
+                                    </div>
                                 </div>
                             </div>
                         {/if}
-                        <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                            <i class="ti ti-users fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
+                        <div
+                            class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white"
+                        >
+                            <i
+                                class="ti ti-users fs-4"
+                                style="color: var(--travhub-base, #d11f1f);"
+                            ></i>
                             <div>
-                                <div class="small text-muted lh-1">Participants</div>
-                                <div class="fw-medium">Min {service.min_pax}{#if service.max_pax} · Max {service.max_pax}{/if}</div>
+                                <div class="small text-muted lh-1">
+                                    Participants
+                                </div>
+                                <div class="fw-medium">
+                                    Min {service.min_pax}{#if service.max_pax}
+                                        · Max {service.max_pax}{/if}
+                                </div>
                             </div>
                         </div>
                         {#if service.meeting_point}
-                            <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                                <i class="ti ti-map-pin fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
+                            <div
+                                class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white"
+                            >
+                                <i
+                                    class="ti ti-map-pin fs-4"
+                                    style="color: var(--travhub-base, #d11f1f);"
+                                ></i>
                                 <div>
-                                    <div class="small text-muted lh-1">Meeting Point</div>
-                                    <div class="fw-medium">{service.meeting_point}</div>
+                                    <div class="small text-muted lh-1">
+                                        Meeting Point
+                                    </div>
+                                    <div class="fw-medium">
+                                        {service.meeting_point}
+                                    </div>
                                 </div>
                             </div>
                         {/if}
@@ -197,8 +262,13 @@
                             <div class="row g-2">
                                 {#each service.highlights as item}
                                     <div class="col-md-6">
-                                        <div class="d-flex align-items-start gap-2">
-                                            <i class="ti ti-sparkles mt-1" style="color: var(--travhub-base, #d11f1f);"></i>
+                                        <div
+                                            class="d-flex align-items-start gap-2"
+                                        >
+                                            <i
+                                                class="ti ti-sparkles mt-1"
+                                                style="color: var(--travhub-base, #d11f1f);"
+                                            ></i>
                                             <span>{item}</span>
                                         </div>
                                     </div>
@@ -218,11 +288,15 @@
                         <div class="row mb-4">
                             {#if service.includes?.length}
                                 <div class="col-md-6 mb-3 mb-md-0">
-                                    <h5 class="fw-bold mb-2">What's Included</h5>
+                                    <h5 class="fw-bold mb-2">
+                                        What's Included
+                                    </h5>
                                     <ul class="list-unstyled">
                                         {#each service.includes as item}
                                             <li class="mb-2">
-                                                <i class="ti ti-circle-check text-success me-2"></i>{item}
+                                                <i
+                                                    class="ti ti-circle-check text-success me-2"
+                                                ></i>{item}
                                             </li>
                                         {/each}
                                     </ul>
@@ -234,7 +308,9 @@
                                     <ul class="list-unstyled">
                                         {#each service.excludes as item}
                                             <li class="mb-2 text-muted">
-                                                <i class="ti ti-circle-x text-danger me-2"></i>{item}
+                                                <i
+                                                    class="ti ti-circle-x text-danger me-2"
+                                                ></i>{item}
                                             </li>
                                         {/each}
                                     </ul>
@@ -247,7 +323,8 @@
                         <div class="mb-4 pt-2 border-top">
                             <h5 class="fw-bold mb-2 mt-3">Meeting Point</h5>
                             <p class="text-muted mb-0">
-                                <i class="ti ti-map-pin me-2"></i>{service.meeting_point}
+                                <i class="ti ti-map-pin me-2"
+                                ></i>{service.meeting_point}
                             </p>
                         </div>
                     {/if}
@@ -255,42 +332,80 @@
 
                 <!-- Right: Booking Form -->
                 <div class="col-lg-5">
-                    <div class="card shadow border-0 rounded-3 sticky-top" style="top: 100px;">
+                    <div
+                        class="card shadow border-0 rounded-3 sticky-top"
+                        style="top: 100px;"
+                    >
                         <div class="card-body p-4">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div
+                                class="d-flex align-items-center justify-content-between mb-2"
+                            >
                                 <div>
-                                    <div class="fs-4 fw-bold" style="color: var(--travhub-base, #d11f1f);">{formatRp(Number(service.price_per_pax))}</div>
+                                    <div
+                                        class="fs-4 fw-bold"
+                                        style="color: var(--travhub-base, #d11f1f);"
+                                    >
+                                        {formatRp(
+                                            Number(service.price_per_pax),
+                                        )}
+                                    </div>
                                     <small class="text-muted">per person</small>
                                 </div>
                             </div>
-                            <div class="d-flex flex-wrap gap-3 small text-muted mb-4 pb-3 border-bottom">
+                            <div
+                                class="d-flex flex-wrap gap-3 small text-muted mb-4 pb-3 border-bottom"
+                            >
                                 {#if service.duration_label}
-                                    <span><i class="ti ti-clock me-1"></i>{service.duration_label}</span>
+                                    <span
+                                        ><i class="ti ti-clock me-1"
+                                        ></i>{service.duration_label}</span
+                                    >
                                 {/if}
-                                <span><i class="ti ti-users me-1"></i>Min {service.min_pax}{#if service.max_pax} · Max {service.max_pax}{/if} pax</span>
+                                <span
+                                    ><i class="ti ti-users me-1"></i>Min {service.min_pax}{#if service.max_pax}
+                                        · Max {service.max_pax}{/if} pax</span
+                                >
                             </div>
 
                             <form onsubmit={submit}>
                                 <div class="mb-3">
-                                    <label class="form-label fw-medium" for="booking_date">Date <span class="text-danger">*</span></label>
+                                    <label
+                                        class="form-label fw-medium"
+                                        for="booking_date"
+                                        >Date <span class="text-danger">*</span
+                                        ></label
+                                    >
                                     <input
                                         type="date"
-                                        class="form-control {form.errors.booking_date ? 'is-invalid' : ''}"
+                                        class="form-control {form.errors
+                                            .booking_date
+                                            ? 'is-invalid'
+                                            : ''}"
                                         id="booking_date"
                                         bind:value={form.booking_date}
                                         min={today}
                                         required
                                     />
                                     {#if form.errors.booking_date}
-                                        <div class="invalid-feedback">{form.errors.booking_date}</div>
+                                        <div class="invalid-feedback">
+                                            {form.errors.booking_date}
+                                        </div>
                                     {/if}
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-medium" for="pax">Number of Participants <span class="text-danger">*</span></label>
+                                    <label
+                                        class="form-label fw-medium"
+                                        for="pax"
+                                        >Number of Participants <span
+                                            class="text-danger">*</span
+                                        ></label
+                                    >
                                     <input
                                         type="number"
-                                        class="form-control {form.errors.pax ? 'is-invalid' : ''}"
+                                        class="form-control {form.errors.pax
+                                            ? 'is-invalid'
+                                            : ''}"
                                         id="pax"
                                         bind:value={form.pax}
                                         min={service.min_pax ?? 1}
@@ -298,40 +413,67 @@
                                         required
                                     />
                                     {#if form.errors.pax}
-                                        <div class="invalid-feedback">{form.errors.pax}</div>
+                                        <div class="invalid-feedback">
+                                            {form.errors.pax}
+                                        </div>
                                     {/if}
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-medium" for="customer_name">Your Name <span class="text-danger">*</span></label>
+                                    <label
+                                        class="form-label fw-medium"
+                                        for="customer_name"
+                                        >Your Name <span class="text-danger"
+                                            >*</span
+                                        ></label
+                                    >
                                     <input
                                         type="text"
-                                        class="form-control {form.errors.customer_name ? 'is-invalid' : ''}"
+                                        class="form-control {form.errors
+                                            .customer_name
+                                            ? 'is-invalid'
+                                            : ''}"
                                         id="customer_name"
                                         bind:value={form.customer_name}
                                         required
                                     />
                                     {#if form.errors.customer_name}
-                                        <div class="invalid-feedback">{form.errors.customer_name}</div>
+                                        <div class="invalid-feedback">
+                                            {form.errors.customer_name}
+                                        </div>
                                     {/if}
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-medium" for="customer_email">Email <span class="text-danger">*</span></label>
+                                    <label
+                                        class="form-label fw-medium"
+                                        for="customer_email"
+                                        >Email <span class="text-danger">*</span
+                                        ></label
+                                    >
                                     <input
                                         type="email"
-                                        class="form-control {form.errors.customer_email ? 'is-invalid' : ''}"
+                                        class="form-control {form.errors
+                                            .customer_email
+                                            ? 'is-invalid'
+                                            : ''}"
                                         id="customer_email"
                                         bind:value={form.customer_email}
                                         required
                                     />
                                     {#if form.errors.customer_email}
-                                        <div class="invalid-feedback">{form.errors.customer_email}</div>
+                                        <div class="invalid-feedback">
+                                            {form.errors.customer_email}
+                                        </div>
                                     {/if}
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-medium" for="customer_phone">Phone / WhatsApp</label>
+                                    <label
+                                        class="form-label fw-medium"
+                                        for="customer_phone"
+                                        >Phone / WhatsApp</label
+                                    >
                                     <input
                                         type="tel"
                                         class="form-control"
@@ -342,21 +484,40 @@
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="form-label fw-medium" for="notes">Special Requests</label>
-                                    <textarea class="form-control" id="notes" rows="2" bind:value={form.notes} placeholder="Any allergies, special needs..."></textarea>
+                                    <label
+                                        class="form-label fw-medium"
+                                        for="notes">Special Requests</label
+                                    >
+                                    <textarea
+                                        class="form-control"
+                                        id="notes"
+                                        rows="2"
+                                        bind:value={form.notes}
+                                        placeholder="Any allergies, special needs..."
+                                    ></textarea>
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="form-label fw-medium" for="voucher_code">Promo Code</label>
+                                    <label
+                                        class="form-label fw-medium"
+                                        for="voucher_code">Promo Code</label
+                                    >
                                     <div class="input-group">
                                         <input
                                             type="text"
-                                            class="form-control text-uppercase {voucherState === 'valid' ? 'is-valid' : voucherState === 'invalid' ? 'is-invalid' : ''}"
+                                            class="form-control text-uppercase {voucherState ===
+                                            'valid'
+                                                ? 'is-valid'
+                                                : voucherState === 'invalid'
+                                                  ? 'is-invalid'
+                                                  : ''}"
                                             id="voucher_code"
                                             bind:value={form.voucher_code}
                                             placeholder="Masukkan kode promo"
                                             maxlength="20"
-                                            disabled={voucherState === 'loading' || voucherState === 'valid'}
+                                            disabled={voucherState ===
+                                                'loading' ||
+                                                voucherState === 'valid'}
                                         />
                                         {#if voucherState === 'valid'}
                                             <button
@@ -370,12 +531,22 @@
                                         {:else}
                                             <button
                                                 type="button"
-                                                class="btn {voucherState === 'invalid' ? 'btn-outline-danger' : 'btn-outline-secondary'}"
+                                                class="btn {voucherState ===
+                                                'invalid'
+                                                    ? 'btn-outline-danger'
+                                                    : 'btn-outline-secondary'}"
                                                 onclick={applyVoucher}
-                                                disabled={voucherState === 'loading' || !(form.voucher_code ?? '').trim()}
+                                                disabled={voucherState ===
+                                                    'loading' ||
+                                                    !(
+                                                        form.voucher_code ?? ''
+                                                    ).trim()}
                                             >
                                                 {#if voucherState === 'loading'}
-                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                    <span
+                                                        class="spinner-border spinner-border-sm"
+                                                        role="status"
+                                                    ></span>
                                                 {:else}
                                                     Apply
                                                 {/if}
@@ -383,12 +554,16 @@
                                         {/if}
                                     </div>
                                     {#if voucherState === 'valid'}
-                                        <div class="text-success small mt-1 fw-medium">
-                                            <i class="ti ti-circle-check me-1"></i>{voucherMessage}
+                                        <div
+                                            class="text-success small mt-1 fw-medium"
+                                        >
+                                            <i class="ti ti-circle-check me-1"
+                                            ></i>{voucherMessage}
                                         </div>
                                     {:else if voucherState === 'invalid'}
                                         <div class="text-danger small mt-1">
-                                            <i class="ti ti-alert-triangle me-1"></i>{voucherMessage}
+                                            <i class="ti ti-alert-triangle me-1"
+                                            ></i>{voucherMessage}
                                         </div>
                                     {/if}
                                 </div>
@@ -396,46 +571,80 @@
                                 <div class="border rounded-3 p-3 mb-4 bg-light">
                                     <div class="d-flex justify-content-between">
                                         <span class="text-muted">Subtotal</span>
-                                        <span class="fw-bold">{formatRp(subtotal)}</span>
+                                        <span class="fw-bold"
+                                            >{formatRp(subtotal)}</span
+                                        >
                                     </div>
                                     {#if voucherDiscount > 0}
-                                        <div class="d-flex justify-content-between mt-2 text-success">
-                                            <span>Diskon promo ({form.voucher_code})</span>
-                                            <span class="fw-bold">-{formatRp(voucherDiscount)}</span>
+                                        <div
+                                            class="d-flex justify-content-between mt-2 text-success"
+                                        >
+                                            <span
+                                                >Diskon promo ({form.voucher_code})</span
+                                            >
+                                            <span class="fw-bold"
+                                                >-{formatRp(
+                                                    voucherDiscount,
+                                                )}</span
+                                            >
                                         </div>
                                     {/if}
-                                    <div class="d-flex justify-content-between mt-2">
+                                    <div
+                                        class="d-flex justify-content-between mt-2"
+                                    >
                                         <span class="text-muted">Total</span>
-                                        <span class="fw-bold">{formatRp(totalAmount)}</span>
+                                        <span class="fw-bold"
+                                            >{formatRp(totalAmount)}</span
+                                        >
                                     </div>
-                                    <div class="d-flex justify-content-between mt-2 text-success">
-                                        <span>Bayar sekarang (DP {payment.dp_percent}%)</span>
-                                        <span class="fw-bold">{formatRp(dpAmount)}</span>
+                                    <div
+                                        class="d-flex justify-content-between mt-2 text-success"
+                                    >
+                                        <span
+                                            >Bayar sekarang (DP {payment.dp_percent}%)</span
+                                        >
+                                        <span class="fw-bold"
+                                            >{formatRp(dpAmount)}</span
+                                        >
                                     </div>
-                                    <div class="d-flex justify-content-between mt-2">
-                                        <span class="text-muted">Sisa tunai ke driver</span>
-                                        <span class="fw-bold">{formatRp(remainingCash)}</span>
+                                    <div
+                                        class="d-flex justify-content-between mt-2"
+                                    >
+                                        <span class="text-muted"
+                                            >Sisa tunai ke driver</span
+                                        >
+                                        <span class="fw-bold"
+                                            >{formatRp(remainingCash)}</span
+                                        >
                                     </div>
                                 </div>
 
                                 <button
                                     type="submit"
                                     class="travhub-btn w-100 fw-bold"
-                                    style="padding: 16px 25px; opacity: {form.processing ? 0.7 : 1};"
+                                    style="padding: 16px 25px; opacity: {form.processing
+                                        ? 0.7
+                                        : 1};"
                                     disabled={form.processing}
                                 >
                                     <span>
                                         {#if form.processing}
-                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            <span
+                                                class="spinner-border spinner-border-sm me-2"
+                                                role="status"
+                                            ></span>
                                             Processing...
                                         {:else}
-                                        Book Now — DP {formatRp(dpAmount)}
+                                            Book Now — DP {formatRp(dpAmount)}
                                         {/if}
                                     </span>
                                 </button>
 
-                                <p class="text-muted text-center small mt-3 mb-0">
-                                    You will be redirected to Xendit to complete payment.
+                                <p
+                                    class="text-muted text-center small mt-3 mb-0"
+                                >
+                                    You will be redirected to Xendit to complete
+                                    payment.
                                 </p>
                             </form>
                         </div>
@@ -451,7 +660,8 @@
 <style>
     :global(.page-wrapper .form-control:focus) {
         border-color: var(--travhub-base, #d11f1f);
-        box-shadow: 0 0 0 0.2rem rgba(var(--travhub-base-rgb, 209, 31, 31), 0.15);
+        box-shadow: 0 0 0 0.2rem
+            rgba(var(--travhub-base-rgb, 209, 31, 31), 0.15);
     }
 
     .gallery-row {
