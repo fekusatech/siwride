@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\DriverService;
 use App\Models\DriverServiceBooking;
 use App\Models\Setting;
+use App\Services\PackTierService;
 use App\Services\VoucherService;
 use App\Support\DriverReferralAttribution;
 use GuzzleHttp\Client;
@@ -37,6 +38,7 @@ class DriverServiceBookingController extends Controller
             'payment' => [
                 'dp_percent' => (float) ($service->dp_percent ?? Setting::getValue('dp_percent_default', 30)),
             ],
+            'packTiers' => app(PackTierService::class)->allTiersForDisplay(driverServiceId: $service->id),
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'email' => $customer->email,
@@ -95,7 +97,13 @@ class DriverServiceBookingController extends Controller
             $customer = Customer::create($customerData);
         }
 
-        $subtotal = round((float) $service->price_per_pax * $validated['pax'], 2);
+        $pricing = app(PackTierService::class)->priceForPax(
+            (float) $service->price_per_pax,
+            $validated['pax'],
+            driverServiceId: $service->id,
+        );
+        $effectivePricePerPax = $pricing['price_per_pax'];
+        $subtotal = round($effectivePricePerPax * $validated['pax'], 2);
         $discountAmount = 0.0;
         $voucher = null;
         $voucherCode = strtoupper(trim($validated['voucher_code'] ?? ''));
@@ -121,7 +129,7 @@ class DriverServiceBookingController extends Controller
             'customer_id' => $customer->id,
             'booking_date' => $validated['booking_date'],
             'pax' => $validated['pax'],
-            'price_per_pax' => $service->price_per_pax,
+            'price_per_pax' => $effectivePricePerPax,
             'total_price' => $totalAmount,
             'subtotal' => $subtotal,
             'discount_amount' => $discountAmount,
@@ -220,7 +228,12 @@ class DriverServiceBookingController extends Controller
             'email' => ['nullable', 'email'],
         ]);
 
-        $subtotal = round((float) $service->price_per_pax * $validated['pax'], 2);
+        $pricing = app(PackTierService::class)->priceForPax(
+            (float) $service->price_per_pax,
+            $validated['pax'],
+            driverServiceId: $service->id,
+        );
+        $subtotal = round($pricing['price_per_pax'] * $validated['pax'], 2);
 
         try {
             $result = app(VoucherService::class)->validate(

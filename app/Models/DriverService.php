@@ -98,4 +98,9 @@ class DriverService extends Model
     {
         return $this->hasMany(DriverReferral::class);
     }
+
+    public function packTiers(): HasMany
+    {
+        return $this->hasMany(PackTier::class)->orderBy('min_pax');
+    }
 }

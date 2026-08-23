@@ -16,6 +16,7 @@ class PackTier extends Model
 
     protected $fillable = [
         'activity_id',
+        'driver_service_id',
         'label',
         'min_pax',
         'max_pax',
@@ -29,6 +30,7 @@ class PackTier extends Model
     {
         return [
             'activity_id' => 'integer',
+            'driver_service_id' => 'integer',
             'min_pax' => 'integer',
             'max_pax' => 'integer',
             'discount_value' => 'decimal:2',
@@ -40,6 +42,11 @@ class PackTier extends Model
     public function activity(): BelongsTo
     {
         return $this->belongsTo(Activity::class);
+    }
+
+    public function driverService(): BelongsTo
+    {
+        return $this->belongsTo(DriverService::class);
     }
 
     /**

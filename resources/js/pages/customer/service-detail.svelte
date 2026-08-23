@@ -8,10 +8,12 @@
     let {
         service,
         payment,
+        packTiers = [],
         customer = null,
     } = $props<{
         service: any;
         payment: { dp_percent: number };
+        packTiers: any[];
         customer: { name: string; email: string; phone: string } | null;
     }>();
 
@@ -29,7 +31,25 @@
     let voucherDiscount = $state(0);
     let voucherMessage = $state('');
 
-    let subtotal = $derived(Number(service.price_per_pax) * form.pax);
+    function tierPrice(tier: any): number {
+        const basePrice = Number(service.price_per_pax);
+
+        return tier.discount_type === 'percent'
+            ? Math.round(basePrice * (1 - Number(tier.discount_value) / 100) * 100) / 100
+            : Math.max(0, basePrice - Number(tier.discount_value));
+    }
+
+    let selectedPackTier = $derived(
+        packTiers.find(
+            (tier) =>
+                form.pax >= tier.min_pax &&
+                (tier.max_pax === null || form.pax <= tier.max_pax),
+        ),
+    );
+    let effectivePricePerPax = $derived(
+        selectedPackTier ? tierPrice(selectedPackTier) : Number(service.price_per_pax),
+    );
+    let subtotal = $derived(effectivePricePerPax * form.pax);
     let totalAmount = $derived(
         Math.max(0, Math.round((subtotal - voucherDiscount) * 100) / 100),
     );
@@ -345,13 +365,28 @@
                                         class="fs-4 fw-bold"
                                         style="color: var(--travhub-base, #d11f1f);"
                                     >
-                                        {formatRp(
-                                            Number(service.price_per_pax),
-                                        )}
+                                        {formatRp(effectivePricePerPax)}
                                     </div>
-                                    <small class="text-muted">per person</small>
+                                    {#if selectedPackTier}
+                                        <small class="text-success fw-semibold">{selectedPackTier.discount_label}</small>
+                                        <div><small class="text-muted text-decoration-line-through">{formatRp(Number(service.price_per_pax))}</small></div>
+                                    {:else}
+                                        <small class="text-muted">per person</small>
+                                    {/if}
                                 </div>
                             </div>
+                            {#if packTiers.length}
+                                <div class="rounded-3 bg-light p-3 mb-4 border">
+                                    <div class="fw-semibold mb-2"><i class="ti ti-discount-2 me-1 text-danger"></i>Pack Discount</div>
+                                    <div class="d-flex flex-column gap-1 small text-muted">
+                                        {#each packTiers as tier}
+                                            <span>
+                                                {tier.min_pax}{tier.max_pax ? `-${tier.max_pax}` : '+'} pax: <strong class="text-dark">{tier.discount_label}</strong>
+                                            </span>
+                                        {/each}
+                                    </div>
+                                </div>
+                            {/if}
                             <div
                                 class="d-flex flex-wrap gap-3 small text-muted mb-4 pb-3 border-bottom"
                             >

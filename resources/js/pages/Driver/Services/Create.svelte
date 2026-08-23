@@ -11,6 +11,28 @@
         return arr.join('\n');
     }
 
+    type PackTier = {
+        label: string;
+        min_pax: number;
+        max_pax: number | string;
+        discount_type: 'percent' | 'flat';
+        discount_value: number | string;
+        sort_order: number;
+        is_active: boolean;
+    };
+
+    function emptyPackTier(sortOrder: number): PackTier {
+        return {
+            label: '',
+            min_pax: 2,
+            max_pax: '',
+            discount_type: 'percent',
+            discount_value: 0,
+            sort_order: sortOrder,
+            is_active: true,
+        };
+    }
+
     let form = useForm({
         title: service?.title || '',
         description: service?.description || '',
@@ -22,8 +44,27 @@
         includes: arrayToLines(service?.includes),
         excludes: arrayToLines(service?.excludes),
         highlights: arrayToLines(service?.highlights),
+        pack_tiers: (service?.pack_tiers ?? []).map((tier: any, index: number) => ({
+            label: tier.label || '',
+            min_pax: tier.min_pax || 2,
+            max_pax: tier.max_pax ?? '',
+            discount_type: tier.discount_type || 'percent',
+            discount_value: tier.discount_value ?? 0,
+            sort_order: tier.sort_order ?? index,
+            is_active: tier.is_active ?? true,
+        })) as PackTier[],
         gallery: [] as File[],
     });
+
+    function addPackTier() {
+        form.pack_tiers = [...form.pack_tiers, emptyPackTier(form.pack_tiers.length)];
+    }
+
+    function removePackTier(index: number) {
+        form.pack_tiers = form.pack_tiers
+            .filter((_, tierIndex) => tierIndex !== index)
+            .map((tier, tierIndex) => ({ ...tier, sort_order: tierIndex }));
+    }
 
     type GalleryItem =
         | { kind: 'existing'; path: string; url: string }
@@ -89,6 +130,7 @@
                 price_per_pax: form.price_per_pax,
                 min_pax: form.min_pax,
                 max_pax: form.max_pax,
+                pack_tiers: form.pack_tiers,
                 duration_label: form.duration_label,
                 meeting_point: form.meeting_point,
                 includes: form.includes,
@@ -147,6 +189,57 @@
                     <div class="col-md-4">
                         <label class="form-label" for="max_pax">Max Pax (blank = unlimited)</label>
                         <input type="number" class="form-control" id="max_pax" bind:value={form.max_pax} min="1">
+                    </div>
+                </div>
+
+                <div class="card border bg-light-subtle mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+                            <div>
+                                <h5 class="fw-bold mb-1">Pack Discount</h5>
+                                <p class="text-muted small mb-0">Berikan harga khusus berdasarkan jumlah peserta.</p>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick={addPackTier}>
+                                <i class="ti ti-plus me-1"></i> Add Tier
+                            </button>
+                        </div>
+                        {#if form.errors.pack_tiers}<div class="text-danger small mb-2">{form.errors.pack_tiers}</div>{/if}
+                        {#if form.pack_tiers.length === 0}
+                            <div class="text-muted small py-2">Belum ada diskon pack. Harga dasar akan digunakan.</div>
+                        {:else}
+                            {#each form.pack_tiers as tier, index}
+                                <div class="row g-2 align-items-end border-top pt-3 mt-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label small" for="tier-label-{index}">Label</label>
+                                        <input id="tier-label-{index}" type="text" class="form-control form-control-sm" bind:value={tier.label} placeholder="e.g. Group 4+">
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small" for="tier-min-{index}">Min pax</label>
+                                        <input id="tier-min-{index}" type="number" class="form-control form-control-sm" min="1" bind:value={tier.min_pax}>
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small" for="tier-max-{index}">Max pax</label>
+                                        <input id="tier-max-{index}" type="number" class="form-control form-control-sm" min="1" bind:value={tier.max_pax} placeholder="∞">
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small" for="tier-type-{index}">Discount</label>
+                                        <select id="tier-type-{index}" class="form-select form-select-sm" bind:value={tier.discount_type}>
+                                            <option value="percent">Percent (%)</option>
+                                            <option value="flat">Nominal (IDR)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small" for="tier-value-{index}">Value</label>
+                                        <input id="tier-value-{index}" type="number" class="form-control form-control-sm" min="0" bind:value={tier.discount_value}>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick={() => removePackTier(index)} aria-label="Remove discount tier">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            {/each}
+                        {/if}
                     </div>
                 </div>
 

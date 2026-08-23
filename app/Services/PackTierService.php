@@ -11,7 +11,7 @@ class PackTierService
      * Activity-specific tiers take precedence over global tiers (activity_id null).
      * Returns null if no tier matches (use base price).
      */
-    public function tierForPax(int $pax, ?int $activityId = null): ?PackTier
+    public function tierForPax(int $pax, ?int $activityId = null, ?int $driverServiceId = null): ?PackTier
     {
         $baseQuery = fn () => PackTier::query()
             ->where('is_active', true)
@@ -21,6 +21,14 @@ class PackTierService
                     ->orWhere('max_pax', '>=', $pax);
             })
             ->orderBy('min_pax', 'desc');
+
+        if ($driverServiceId !== null) {
+            $query = $baseQuery();
+
+            $scoped = (clone $query)->where('driver_service_id', $driverServiceId)->first();
+
+            return $scoped ?? $query->whereNull('activity_id')->whereNull('driver_service_id')->first();
+        }
 
         if ($activityId !== null) {
             $query = $baseQuery();
@@ -38,9 +46,9 @@ class PackTierService
      *
      * @return array{price_per_pax: float, tier: ?PackTier, base_price: float}
      */
-    public function priceForPax(float $basePrice, int $pax, ?int $activityId = null): array
+    public function priceForPax(float $basePrice, int $pax, ?int $activityId = null, ?int $driverServiceId = null): array
     {
-        $tier = $this->tierForPax($pax, $activityId);
+        $tier = $this->tierForPax($pax, $activityId, $driverServiceId);
 
         return [
             'price_per_pax' => $tier ? $tier->pricePerPax($basePrice) : $basePrice,
@@ -54,18 +62,22 @@ class PackTierService
      *
      * @return array<int, array>
      */
-    public function allTiersForDisplay(?int $activityId = null): array
+    public function allTiersForDisplay(?int $activityId = null, ?int $driverServiceId = null): array
     {
         return PackTier::query()
             ->where('is_active', true)
-            ->where(function ($query) use ($activityId) {
-                $query->whereNull('activity_id');
+            ->where(function ($query) use ($activityId, $driverServiceId) {
+                $query->whereNull('activity_id')->whereNull('driver_service_id');
 
                 if ($activityId !== null) {
                     $query->orWhere('activity_id', $activityId);
                 }
+
+                if ($driverServiceId !== null) {
+                    $query->orWhere('driver_service_id', $driverServiceId);
+                }
             })
-            ->orderByRaw('activity_id IS NOT NULL DESC')
+            ->orderByRaw('(activity_id IS NOT NULL OR driver_service_id IS NOT NULL) DESC')
             ->orderBy('min_pax')
             ->get()
             ->map(fn (PackTier $tier) => [
@@ -77,6 +89,7 @@ class PackTierService
                 'discount_value' => (float) $tier->discount_value,
                 'discount_label' => $tier->discountLabel(),
                 'activity_id' => $tier->activity_id,
+                'driver_service_id' => $tier->driver_service_id,
             ])
             ->all();
     }

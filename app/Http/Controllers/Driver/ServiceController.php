@@ -47,7 +47,8 @@ class ServiceController extends Controller
         $validated['gallery'] = $gallery ?: null;
         $validated['image'] = $gallery[0] ?? null;
 
-        DriverService::create($validated);
+        $service = DriverService::create($validated);
+        $this->syncPackTiers($service, $request->input('pack_tiers', []));
 
         return redirect()->route('driver.services.index')->with('success', 'Service submitted for review.');
     }
@@ -57,7 +58,7 @@ class ServiceController extends Controller
         $this->authorizeOwnService($service);
 
         return Inertia::render('Driver/Services/Create', [
-            'service' => $service,
+            'service' => $service->load('packTiers'),
         ]);
     }
 
@@ -114,6 +115,7 @@ class ServiceController extends Controller
         $validated['image'] = $gallery[0] ?? null;
 
         $service->update($validated);
+        $this->syncPackTiers($service, $request->input('pack_tiers', []));
 
         return redirect()->route('driver.services.index')->with('success', 'Service updated.');
     }
@@ -133,6 +135,14 @@ class ServiceController extends Controller
             'includes' => ['nullable', 'string'],
             'excludes' => ['nullable', 'string'],
             'highlights' => ['nullable', 'string'],
+            'pack_tiers' => ['nullable', 'array', 'max:20'],
+            'pack_tiers.*.label' => ['required', 'string', 'max:100'],
+            'pack_tiers.*.min_pax' => ['required', 'integer', 'min:1'],
+            'pack_tiers.*.max_pax' => ['nullable', 'integer', 'gte:pack_tiers.*.min_pax'],
+            'pack_tiers.*.discount_type' => ['required', 'in:percent,flat'],
+            'pack_tiers.*.discount_value' => ['required', 'numeric', 'min:0'],
+            'pack_tiers.*.sort_order' => ['nullable', 'integer', 'min:0'],
+            'pack_tiers.*.is_active' => ['nullable', 'boolean'],
         ];
 
         if ($isUpdate) {
@@ -142,7 +152,31 @@ class ServiceController extends Controller
             $rules['gallery_order.*'] = ['string'];
         }
 
-        return $request->validate($rules);
+        $validated = $request->validate($rules);
+        unset($validated['pack_tiers']);
+
+        return $validated;
+    }
+
+    private function syncPackTiers(DriverService $service, mixed $tiers): void
+    {
+        $service->packTiers()->delete();
+
+        if (! is_array($tiers)) {
+            return;
+        }
+
+        $service->packTiers()->createMany(
+            collect($tiers)->map(fn (array $tier, int $index) => [
+                'label' => $tier['label'],
+                'min_pax' => $tier['min_pax'],
+                'max_pax' => $tier['max_pax'] ?? null,
+                'discount_type' => $tier['discount_type'],
+                'discount_value' => $tier['discount_value'],
+                'sort_order' => $tier['sort_order'] ?? $index,
+                'is_active' => $tier['is_active'] ?? true,
+            ])->all(),
+        );
     }
 
     private function parseLines(?string $value): ?array
