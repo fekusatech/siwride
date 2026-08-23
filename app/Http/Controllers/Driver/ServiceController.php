@@ -128,6 +128,7 @@ class ServiceController extends Controller
             'gallery' => ['nullable', 'array'],
             'gallery.*' => ['image', 'max:2048'],
             'price_per_pax' => ['nullable', 'numeric', 'min:0'],
+            'dp_percent' => ['nullable', 'numeric', 'between:0,100'],
             'min_pax' => ['nullable', 'integer', 'min:1'],
             'max_pax' => ['nullable', 'integer', 'min:1'],
             'duration_label' => ['nullable', 'string', 'max:100'],

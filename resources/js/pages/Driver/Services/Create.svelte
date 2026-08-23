@@ -37,6 +37,7 @@
         title: service?.title || '',
         description: service?.description || '',
         price_per_pax: service?.price_per_pax || '',
+        dp_percent: service?.dp_percent ?? 30,
         min_pax: service?.min_pax || 1,
         max_pax: service?.max_pax || '',
         duration_label: service?.duration_label || '',
@@ -128,6 +129,7 @@
                 title: form.title,
                 description: form.description,
                 price_per_pax: form.price_per_pax,
+                dp_percent: form.dp_percent,
                 min_pax: form.min_pax,
                 max_pax: form.max_pax,
                 pack_tiers: form.pack_tiers,
@@ -177,16 +179,22 @@
                 </div>
 
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label" for="price_per_pax">Price per Pax (IDR) <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" id="price_per_pax" bind:value={form.price_per_pax} min="0" required>
                         {#if form.errors.price_per_pax}<div class="text-danger mt-1 small">{form.errors.price_per_pax}</div>{/if}
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label class="form-label" for="dp_percent">DP (%)</label>
+                        <input type="number" class="form-control" id="dp_percent" bind:value={form.dp_percent} min="0" max="100" step="0.01">
+                        <small class="text-muted">Default 30%. Isi 0–100%.</small>
+                        {#if form.errors.dp_percent}<div class="text-danger mt-1 small">{form.errors.dp_percent}</div>{/if}
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label" for="min_pax">Min Pax</label>
                         <input type="number" class="form-control" id="min_pax" bind:value={form.min_pax} min="1">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label" for="max_pax">Max Pax (blank = unlimited)</label>
                         <input type="number" class="form-control" id="max_pax" bind:value={form.max_pax} min="1">
                     </div>
