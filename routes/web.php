@@ -82,10 +82,6 @@ Route::middleware('guest:driver')->group(function () {
     Route::post('/driver/login', [DriverAuthController::class, 'login']);
 });
 
-Route::get('/driver/{slug}', [DriverProfileController::class, 'show'])
-    ->name('drivers.profile')
-    ->where('slug', '[a-z0-9-]+');
-
 Route::middleware('auth:driver')->prefix('driver')->name('driver.')->group(function () {
     Route::post('/logout', [DriverAuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DriverDashboardController::class, 'index'])->name('dashboard');
@@ -96,6 +92,10 @@ Route::middleware('auth:driver')->prefix('driver')->name('driver.')->group(funct
     Route::post('/withdrawals', [WithdrawalController::class, 'store'])->name('withdrawals.store');
     Route::resource('services', DriverServiceManageController::class)->except(['show', 'destroy']);
 });
+
+Route::get('/driver/{slug}', [DriverProfileController::class, 'show'])
+    ->name('drivers.profile')
+    ->where('slug', '[a-z0-9-]+');
 
 // Route::get('/login', function () {
 //     return Inertia::render('Admin/Login');
