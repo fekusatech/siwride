@@ -2,6 +2,7 @@
     import { type Snippet } from 'svelte';
     import { Link, page, router } from '@inertiajs/svelte';
     import { wallet as walletRoute } from '@/routes/driver';
+    import { profile as profileRoute } from '@/routes/driver';
 
     let { children }: { children: Snippet } = $props();
 
@@ -28,6 +29,7 @@
                 <Link href="/driver/dashboard" class="nav-link text-white-50">Dashboard</Link>
                 <Link href={walletRoute.url()} class="nav-link text-white-50">Wallet</Link>
                 <Link href="/driver/services" class="nav-link text-white-50">My Services</Link>
+                <Link href={profileRoute.url()} class="nav-link text-white-50">Profile</Link>
                 <Link href="/driver/services/create" class="nav-link text-white-50">New Service</Link>
                 <span class="text-white-50 small d-none d-md-inline">{driver?.name}</span>
                 <button type="button" class="btn btn-sm btn-outline-light" onclick={logout}>Logout</button>

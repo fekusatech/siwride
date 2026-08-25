@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
 use App\Http\Controllers\Driver\DashboardController as DriverDashboardController;
 use App\Http\Controllers\Driver\DriverAuthController;
+use App\Http\Controllers\Driver\ProfileController as DriverSelfServiceProfileController;
 use App\Http\Controllers\Driver\ServiceBookingController as DriverServiceBookingActionController;
 use App\Http\Controllers\Driver\ServiceBookingReassignController as DriverServiceBookingReassignController;
 use App\Http\Controllers\Driver\ServiceController as DriverServiceManageController;
@@ -86,6 +87,9 @@ Route::middleware('auth:driver')->prefix('driver')->name('driver.')->group(funct
     Route::post('/logout', [DriverAuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DriverDashboardController::class, 'index'])->name('dashboard');
     Route::get('/wallet', [DriverWalletController::class, 'index'])->name('wallet');
+    Route::get('/profile', [DriverSelfServiceProfileController::class, 'edit'])->name('profile');
+    Route::put('/profile', [DriverSelfServiceProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [DriverSelfServiceProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/service-bookings/{bookingCode}/accept', [DriverServiceBookingActionController::class, 'accept'])->name('service-bookings.accept');
     Route::post('/service-bookings/{bookingCode}/cash-received', [DriverServiceBookingActionController::class, 'cashReceived'])->name('service-bookings.cash-received');
     Route::post('/service-bookings/{bookingCode}/reassign', [DriverServiceBookingReassignController::class, 'request'])->name('service-bookings.reassign');
