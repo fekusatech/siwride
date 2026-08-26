@@ -16,8 +16,12 @@ class ProfileController extends Controller
 {
     public function edit(): Response
     {
+        $user = Auth::guard('driver')->user();
+
         return Inertia::render('Driver/Profile', [
-            'user' => Auth::guard('driver')->user(),
+            'user' => $user,
+            'public_profile_url' => url('/driver/'.$user->ensureDriverSlug()),
+            'slug' => $user->slug,
         ]);
     }
 
@@ -30,6 +34,7 @@ class ProfileController extends Controller
             'lastname' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'phone' => ['nullable', 'string', 'max:20'],
+            'slug' => ['nullable', 'string', 'max:100', 'alpha_dash', 'unique:users,slug,'.$user->id],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
