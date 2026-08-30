@@ -13,11 +13,11 @@ use App\Models\TourPackage;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
 use App\Models\ZonePricingRule;
+use App\Services\CustomerOrderPaymentService;
 use App\Services\GeoService;
 use App\Services\OrderCancellationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,12 +29,11 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use Xendit\Configuration;
-use Xendit\Invoice\CreateInvoiceRequest;
-use Xendit\Invoice\InvoiceApi;
 
 class CustomerOrderController extends Controller
 {
+    public function __construct(private CustomerOrderPaymentService $payments) {}
+
     /**
      * Display the service selection page — lets customers choose between
      * Airport Transfer, Tour, Sharing Ride, or Hourly Service.
@@ -565,7 +564,7 @@ class CustomerOrderController extends Controller
         }
 
         try {
-            $redirectUrl = $this->generateXenditPayment($order);
+            $redirectUrl = $this->payments->createInvoice($order);
 
             // Send payment reminder email
             if ($order->customer_email) {
@@ -588,64 +587,6 @@ class CustomerOrderController extends Controller
             return redirect()->route('booking.show', $order->booking_code)
                 ->with('error', 'Failed to create payment invoice: '.$e->getMessage());
         }
-    }
-
-    /**
-     * Generate Xendit Payment and return redirect URL
-     */
-    private function generateXenditPayment(Order $order): string
-    {
-        $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
-        Configuration::setXenditKey($xenditKey);
-
-        $paymentReference = null;
-        $expiry = now()->addHours(24);
-
-        // Khusus untuk local development di Windows/XAMPP yang sering bermasalah dengan SSL
-        $guzzleClient = new Client([
-            'verify' => app()->environment('local') ? false : true,
-        ]);
-
-        $apiInstance = new InvoiceApi($guzzleClient);
-
-        $invoiceAmount = (float) $order->price;
-
-        if ($order->trip_type === 'round_trip' && $order->linked_order_id && ! $order->is_return_trip) {
-            $linkedOrder = Order::find($order->linked_order_id);
-            if ($linkedOrder) {
-                $invoiceAmount += (float) $linkedOrder->price;
-            }
-        }
-
-        $successUrl = route('booking.show', $order->booking_code).'?payment=success';
-        $failureUrl = route('booking.show', $order->booking_code).'?payment=failed';
-
-        $req = new CreateInvoiceRequest([
-            'external_id' => $order->booking_code.'_'.time(),
-            'amount' => $invoiceAmount,
-            'payer_email' => $order->customer_email,
-            'description' => 'Payment for Booking '.$order->booking_code,
-            'success_redirect_url' => $successUrl,
-            'failure_redirect_url' => $failureUrl,
-        ]);
-
-        $result = $apiInstance->createInvoice($req);
-
-        // Xendit Invoice URL
-        $paymentReference = $result->getInvoiceUrl();
-
-        $order->update([
-            'payment_method' => 'Xendit Invoice',
-            'payment_reference' => $paymentReference,
-            'payment_status' => 'pending',
-            'payment_expiry' => $expiry,
-        ]);
-
-        if (str_starts_with($paymentReference, 'http')) {
-            return $paymentReference;
-        }
-
-        return route('booking.payment-success', ['code' => $order->booking_code]);
     }
 
     /**
@@ -723,7 +664,7 @@ class CustomerOrderController extends Controller
             ->firstOrFail();
 
         try {
-            $redirectUrl = $this->generateXenditPayment($order);
+            $redirectUrl = $this->payments->createInvoice($order);
 
             return response()->json(['payment_url' => $redirectUrl]);
         } catch (\Exception $e) {

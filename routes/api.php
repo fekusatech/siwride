@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Api\AppVersionController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Customer\BookingController as CustomerBookingController;
+use App\Http\Controllers\Api\Customer\CatalogController as CustomerCatalogController;
+use App\Http\Controllers\Api\Customer\LocationController as CustomerLocationController;
+use App\Http\Controllers\Api\Customer\PriceEstimateController as CustomerPriceEstimateController;
 use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\EarningController;
 use App\Http\Controllers\Api\HelpController;
@@ -25,6 +29,21 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     // Public Routes
     Route::post('/app/check-version', [AppVersionController::class, 'check']);
+
+    Route::prefix('customer')->group(function () {
+        Route::middleware('throttle:60,1')->group(function () {
+            Route::get('/catalog', CustomerCatalogController::class);
+            Route::get('/locations', CustomerLocationController::class);
+        });
+
+        Route::middleware('throttle:10,1')->group(function () {
+            Route::post('/price-estimates', CustomerPriceEstimateController::class);
+            Route::post('/bookings', [CustomerBookingController::class, 'store']);
+            Route::post('/bookings/track', [CustomerBookingController::class, 'track']);
+            Route::post('/bookings/{bookingCode}/retry-payment', [CustomerBookingController::class, 'retryPayment']);
+            Route::post('/bookings/{bookingCode}/cancel', [CustomerBookingController::class, 'cancel']);
+        });
+    });
 
     // Public Auth Routes
     Route::prefix('auth')->group(function () {
