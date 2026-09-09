@@ -5,10 +5,22 @@ import '../models/booking.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
 
+/// Same WhatsApp line used by `App\Services\WhatsAppService` on the backend
+/// (see `database/seeders/SettingSeeder.php`: `company_phone`).
+const _supportWhatsAppNumber = '6281138105600';
+
 class SuccessPage extends StatelessWidget {
   const SuccessPage({required this.booking, super.key});
 
   final Booking booking;
+
+  Future<void> _contactSupport() async {
+    final message = Uri.encodeComponent(
+      'Hi SIWRIDE, I need help with my booking ${booking.bookingCode}.',
+    );
+    final uri = Uri.parse('https://wa.me/$_supportWhatsAppNumber?text=$message');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +37,7 @@ class SuccessPage extends StatelessWidget {
                 width: 92,
                 height: 92,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFE3F7EF),
+                  color: AppColors.successBg,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -117,7 +129,7 @@ class SuccessPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               TextButton.icon(
-                onPressed: () {},
+                onPressed: _contactSupport,
                 icon: const Icon(Icons.support_agent_outlined),
                 label: const Text('Contact support'),
               ),

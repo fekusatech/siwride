@@ -19,13 +19,15 @@ class CheckoutPage extends StatefulWidget {
   State<CheckoutPage> createState() => _CheckoutPageState();
 }
 
+final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
 class _CheckoutPageState extends State<CheckoutPage> {
   final _formKey = GlobalKey<FormState>();
   final _api = CustomerApiService();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  bool _termsAccepted = true;
+  bool _termsAccepted = false;
   bool _isSubmitting = false;
 
   @override
@@ -43,19 +45,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
         widget.vehicle.displayPrice * (widget.draft.isRoundTrip ? 2 : 1);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Checkout'),
-        backgroundColor: AppColors.surface,
-      ),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Checkout')),
       body: SafeArea(
         top: false,
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
             children: [
               const StepHeader(current: 3, title: 'Review & confirm'),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               _SummaryCard(draft: widget.draft, vehicle: widget.vehicle),
               const SizedBox(height: 24),
               Text(
@@ -84,7 +84,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
                 validator: (value) =>
-                    value == null || !value.contains('@')
+                    value == null || !_emailPattern.hasMatch(value.trim())
                     ? 'Enter a valid email'
                     : null,
               ),
@@ -101,17 +101,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Text('Payment', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: AppColors.primary, width: 1.5),
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.ink,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
                   children: [
                     Icon(
-                      Icons.account_balance_wallet_outlined,
-                      color: AppColors.primary,
+                      Icons.lock_outline_rounded,
+                      color: Colors.white,
+                      size: 18,
                     ),
                     SizedBox(width: 12),
                     Expanded(
@@ -120,20 +120,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         children: [
                           Text(
                             'Online payment',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
-                          SizedBox(height: 3),
+                          SizedBox(height: 2),
                           Text(
                             'Secure payment after confirmation',
                             style: TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 13,
+                              color: AppColors.onInkMutedLight,
+                              fontSize: 12,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.check_circle, color: AppColors.primary),
+                    Icon(Icons.check_circle, color: Colors.white, size: 20),
                   ],
                 ),
               ),
@@ -235,6 +239,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
           context,
         ).showSnackBar(SnackBar(content: Text(error.message)));
       }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Something went wrong. Please try again.')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -252,35 +262,71 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.ink,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            draft.service,
-            style: const TextStyle(
-              color: Color(0xFFFFB4B4),
-              fontWeight: FontWeight.w700,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              draft.service.toUpperCase(),
+              style: const TextStyle(
+                color: AppColors.ink,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
-            '${draft.pickupAddress}\n→ ${draft.dropoffAddress}',
+            draft.pickupAddress,
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              height: 1.5,
-              fontWeight: FontWeight.w700,
+              color: AppColors.ink,
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const Divider(height: 28, color: Color(0xFF3D4658)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Container(width: 14, height: 1, color: AppColors.border),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.arrow_downward_rounded,
+                  size: 12,
+                  color: AppColors.muted,
+                ),
+              ),
+              Container(width: 14, height: 1, color: AppColors.border),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            draft.dropoffAddress,
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Divider(height: 24),
           Wrap(
-            spacing: 18,
-            runSpacing: 10,
+            spacing: 14,
+            runSpacing: 8,
             children: [
               _summaryMeta(
                 Icons.calendar_today_outlined,
@@ -290,7 +336,7 @@ class _SummaryCard extends StatelessWidget {
               _summaryMeta(Icons.directions_car_outlined, vehicle.title),
               _summaryMeta(
                 Icons.people_outline,
-                '${draft.passengers} passengers',
+                '${draft.passengers} pax',
               ),
             ],
           ),
@@ -303,11 +349,15 @@ class _SummaryCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: const Color(0xFFBAC1CE), size: 17),
+        Icon(icon, color: AppColors.muted, size: 14),
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(color: Color(0xFFDCE0E7), fontSize: 13),
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

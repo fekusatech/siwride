@@ -30,7 +30,10 @@ class ApiClient {
   );
 
   Uri _uri(String path, [Map<String, String>? query]) {
-    return Uri.parse('${ApiConfig.baseUrl}$path').replace(queryParameters: query);
+    final baseUrl = ApiConfig.baseUrl.endsWith('/')
+        ? ApiConfig.baseUrl.substring(0, ApiConfig.baseUrl.length - 1)
+        : ApiConfig.baseUrl;
+    return Uri.parse('$baseUrl$path').replace(queryParameters: query);
   }
 
   Future<Map<String, dynamic>> _send(
@@ -70,7 +73,8 @@ class ApiClient {
       return payload;
     }
 
-    final fieldErrors = payload['errors'] as Map<String, dynamic>?;
+    final rawErrors = payload['errors'];
+    final fieldErrors = rawErrors is Map<String, dynamic> ? rawErrors : null;
     final firstFieldError = fieldErrors?.values.whereType<List<dynamic>>().firstOrNull;
 
     throw ApiException(

@@ -34,31 +34,45 @@ class _ShellPageState extends State<ShellPage> {
 
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        height: 72,
-        backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFFFFE6E6),
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        onDestinationSelected: (index) =>
-            setState(() => _selectedIndex = index),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded, color: AppColors.primary),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: AppColors.borderLight)),
+        ),
+        child: SafeArea(
+          child: NavigationBar(
+            selectedIndex: _selectedIndex,
+            height: 64,
+            backgroundColor: Colors.white,
+            indicatorColor: AppColors.ink,
+            indicatorShape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            onDestinationSelected: (index) =>
+                setState(() => _selectedIndex = index),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined, color: AppColors.muted),
+                selectedIcon: Icon(Icons.home_rounded, color: Colors.white),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(
+                  Icons.add_circle_outline,
+                  color: AppColors.muted,
+                ),
+                selectedIcon: Icon(Icons.add_circle, color: Colors.white),
+                label: 'Book',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined, color: AppColors.muted),
+                selectedIcon: Icon(Icons.receipt_long, color: Colors.white),
+                label: 'Trips',
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.directions_car_outlined),
-            selectedIcon: Icon(Icons.directions_car, color: AppColors.primary),
-            label: 'Book',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long, color: AppColors.primary),
-            label: 'My trip',
-          ),
-        ],
+        ),
       ),
     );
   }

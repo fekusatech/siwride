@@ -26,13 +26,24 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<!-- The Laravel dev API runs over plain HTTP (http://siwride.test). Tighten
-	     this to a specific NSExceptionDomains entry before shipping a build
-	     that talks to a production https:// API. -->
+	<!-- Scoped to the local-dev host only (http://siwride.test, see
+	     lib/config/api_config.dart). A production build should point
+	     --dart-define=API_BASE_URL at an https:// host, which needs no entry
+	     here at all. Testing on a physical device via a LAN IP override?
+	     Add that IP as another NSExceptionDomains entry while you test, and
+	     remove it again before shipping. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>siwride.test</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
 	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

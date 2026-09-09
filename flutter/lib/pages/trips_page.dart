@@ -33,20 +33,18 @@ class _TripsPageState extends State<TripsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My trip'),
-        backgroundColor: AppColors.surface,
-      ),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('My trip')),
       body: SafeArea(
         top: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             Text(
               'Track a booking',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'Enter the booking code and email from your confirmation.',
               style: Theme.of(context).textTheme.bodyMedium,
@@ -125,6 +123,11 @@ class _TripsPageState extends State<TripsPage> {
         _booking = null;
         _error = error.message;
       });
+    } catch (_) {
+      setState(() {
+        _booking = null;
+        _error = 'Something went wrong. Please try again.';
+      });
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -145,6 +148,12 @@ class _TripsPageState extends State<TripsPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open the payment page.')),
+        );
       }
     }
   }
@@ -187,13 +196,13 @@ class _ActiveTripCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1DA),
+                  color: AppColors.warningBg,
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
                   statusLabel,
                   style: const TextStyle(
-                    color: Color(0xFF925D00),
+                    color: AppColors.warningFg,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),

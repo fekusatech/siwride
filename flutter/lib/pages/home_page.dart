@@ -41,14 +41,29 @@ class HomePage extends StatelessWidget {
           child: _Hero(onBook: () => onBook('Airport transfer')),
         ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
           sliver: SliverToBoxAdapter(
             child: SectionHeading(
               title: 'How can we take you?',
               subtitle: 'Pre-book trusted rides across Bali.',
               action: TextButton(
                 onPressed: onTrack,
-                child: const Text('Track trip'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.ink,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Track trip'),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded, size: 16),
+                  ],
+                ),
               ),
             ),
           ),
@@ -61,7 +76,7 @@ class HomePage extends StatelessWidget {
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 1.04,
+              childAspectRatio: 1.08,
             ),
             itemBuilder: (context, index) {
               final service = services[index];
@@ -85,7 +100,7 @@ class HomePage extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: SizedBox(
-            height: 218,
+            height: 200,
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               scrollDirection: Axis.horizontal,
@@ -125,77 +140,96 @@ class _Hero extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(
         20,
-        MediaQuery.paddingOf(context).top + 16,
+        MediaQuery.paddingOf(context).top + 12,
         20,
-        28,
+        32,
       ),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF172033), Color(0xFF29344C)],
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: AppColors.borderLight)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [BrandLogo(light: true, compact: true), _SafeBadge()],
+            children: [
+              const BrandLogo(compact: true),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.verified_outlined,
+                      color: AppColors.muted,
+                      size: 14,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Safe & reliable',
+                      style: TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 34),
+          const SizedBox(height: 28),
           Text(
             'Your Bali ride,\nready when you are.',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              color: AppColors.ink,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Private drivers, clear prices, and effortless pre-booking across the island.',
             style: Theme.of(
               context,
-            ).textTheme.displaySmall?.copyWith(color: Colors.white),
+            ).textTheme.bodyMedium?.copyWith(height: 1.6),
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Private drivers, clear prices, and effortless pre-booking across the island.',
-            style: TextStyle(
-              color: Color(0xFFD7DCE6),
-              fontSize: 16,
-              height: 1.5,
+          const SizedBox(height: 22),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              key: const Key('bookRideButton'),
+              onPressed: onBook,
+              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+              label: const Text('Book a ride'),
             ),
           ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            key: const Key('bookRideButton'),
-            onPressed: onBook,
-            icon: const Icon(Icons.arrow_forward_rounded),
-            label: const Text('Book a ride'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SafeBadge extends StatelessWidget {
-  const _SafeBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.11),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.verified_user_outlined, color: Colors.white, size: 17),
-          SizedBox(width: 6),
-          Text(
-            'Safe & reliable',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.lock_outline_rounded,
+                size: 13,
+                color: AppColors.muted,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Clear pricing · No hidden fees',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 12,
+                  color: AppColors.muted,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -220,36 +254,44 @@ class _ServiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFEAEA),
-                  borderRadius: BorderRadius.circular(14),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.borderLight),
                 ),
-                child: Icon(icon, color: AppColors.primary),
+                child: Icon(icon, color: AppColors.ink, size: 20),
               ),
               const Spacer(),
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
               Text(
                 subtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontSize: 12),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 12,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -272,47 +314,56 @@ class _DestinationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: '$title, $subtitle',
-      image: true,
-      child: Container(
-        width: 238,
-        margin: const EdgeInsets.only(right: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          image: DecorationImage(image: AssetImage(asset), fit: BoxFit.cover),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          alignment: Alignment.bottomLeft,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Color(0xD9000000)],
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
+    return Container(
+      width: 220,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Image.asset(
+              asset,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(
+                color: AppColors.surface,
+                child: const Icon(
+                  Icons.image_outlined,
+                  color: AppColors.muted,
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                subtitle,
-                style: const TextStyle(color: Color(0xFFECEFF4), fontSize: 13),
-              ),
-            ],
+            ),
           ),
-        ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 11.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

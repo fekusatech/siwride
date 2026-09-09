@@ -64,19 +64,26 @@ class _BookingPageState extends State<BookingPage> {
       appBar: AppBar(
         title: const Text('Book your ride'),
         centerTitle: false,
-        backgroundColor: AppColors.surface,
       ),
+      backgroundColor: Colors.white,
       body: SafeArea(
         top: false,
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
             children: [
               const StepHeader(current: 1, title: 'Plan your journey'),
-              const SizedBox(height: 26),
-              Text('Service', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
+              const SizedBox(height: 24),
+              Text(
+                'Service',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _service,
                 decoration: const InputDecoration(
@@ -101,16 +108,44 @@ class _BookingPageState extends State<BookingPage> {
               ),
               const SizedBox(height: 22),
               SegmentedButton<bool>(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return AppColors.ink;
+                    }
+                    return Colors.white;
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return Colors.white;
+                    }
+                    return AppColors.ink;
+                  }),
+                  side: WidgetStateProperty.all(
+                    const BorderSide(color: AppColors.border),
+                  ),
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
                 segments: const [
                   ButtonSegment(
                     value: false,
-                    label: Text('One way'),
-                    icon: Icon(Icons.arrow_forward_rounded),
+                    label: Text(
+                      'One way',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    icon: Icon(Icons.arrow_forward_rounded, size: 16),
                   ),
                   ButtonSegment(
                     value: true,
-                    label: Text('Round trip'),
-                    icon: Icon(Icons.sync_alt_rounded),
+                    label: Text(
+                      'Round trip',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    icon: Icon(Icons.sync_alt_rounded, size: 16),
                   ),
                 ],
                 selected: {_isRoundTrip},
@@ -191,43 +226,79 @@ class _BookingPageState extends State<BookingPage> {
               ],
               const SizedBox(height: 22),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.people_outline, color: AppColors.muted),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Passengers',
-                        style: Theme.of(context).textTheme.titleMedium,
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Icon(
+                        Icons.people_outline,
+                        color: AppColors.ink,
+                        size: 18,
                       ),
                     ),
-                    IconButton.filledTonal(
-                      tooltip: 'Remove passenger',
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Passengers',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontSize: 14),
+                          ),
+                          Text(
+                            'Max 10 guests',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _CounterBtn(
+                      icon: Icons.remove_rounded,
+                      semanticLabel: 'Decrease passengers',
                       onPressed: _passengers > 1
                           ? () => setState(() => _passengers--)
                           : null,
-                      icon: const Icon(Icons.remove),
                     ),
                     SizedBox(
-                      width: 42,
-                      child: Text(
-                        '$_passengers',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      width: 36,
+                      child: Semantics(
+                        liveRegion: true,
+                        label: '$_passengers passengers',
+                        excludeSemantics: true,
+                        child: Text(
+                          '$_passengers',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.ink,
+                          ),
+                        ),
                       ),
                     ),
-                    IconButton.filledTonal(
-                      tooltip: 'Add passenger',
+                    _CounterBtn(
+                      icon: Icons.add_rounded,
+                      semanticLabel: 'Increase passengers',
                       onPressed: _passengers < 10
                           ? () => setState(() => _passengers++)
                           : null,
-                      icon: const Icon(Icons.add),
                     ),
                   ],
                 ),
@@ -246,19 +317,27 @@ class _BookingPageState extends State<BookingPage> {
                       )
                     : const Text('Find available rides'),
               ),
-              const SizedBox(height: 12),
-              const Row(
+              const SizedBox(height: 14),
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.lock_outline_rounded,
-                    size: 16,
-                    color: AppColors.muted,
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.borderLight),
+                    ),
+                    child: const Icon(
+                      Icons.lock_outline_rounded,
+                      size: 12,
+                      color: AppColors.muted,
+                    ),
                   ),
-                  SizedBox(width: 6),
-                  Text(
-                    'Clear pricing. No hidden fees.',
-                    style: TextStyle(color: AppColors.muted, fontSize: 13),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Clear pricing · No hidden fees',
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
                   ),
                 ],
               ),
@@ -315,6 +394,11 @@ class _BookingPageState extends State<BookingPage> {
     }
   }
 
+  bool _isInThePast(DateTime date, TimeOfDay time) {
+    final candidate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    return candidate.isBefore(DateTime.now());
+  }
+
   Future<void> _continue() async {
     final formValid = _formKey.currentState!.validate();
     if (!formValid || _date == null || _time == null) {
@@ -328,6 +412,18 @@ class _BookingPageState extends State<BookingPage> {
     if (_isRoundTrip && (_returnDate == null || _returnTime == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please choose a return date and time.')),
+      );
+      return;
+    }
+    if (_isInThePast(_date!, _time!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please choose a pick-up time that has not passed yet.')),
+      );
+      return;
+    }
+    if (_isRoundTrip && _isInThePast(_returnDate!, _returnTime!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please choose a return time that has not passed yet.')),
       );
       return;
     }
@@ -408,6 +504,57 @@ class _BookingPageState extends State<BookingPage> {
   }
 }
 
+class _CounterBtn extends StatelessWidget {
+  const _CounterBtn({
+    required this.icon,
+    required this.onPressed,
+    required this.semanticLabel,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: semanticLabel,
+      child: Material(
+        color: onPressed == null ? AppColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: onPressed == null
+                      ? AppColors.borderLight
+                      : AppColors.border,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 16,
+                color: onPressed == null ? AppColors.muted : AppColors.ink,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PickerField extends StatelessWidget {
   const _PickerField({
     required this.label,
@@ -427,12 +574,17 @@ class _PickerField extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: InputDecorator(
-        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, size: 18),
+        ),
         child: Text(
           value ?? 'Select',
-          style: value == null
-              ? const TextStyle(color: AppColors.muted)
-              : null,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: value == null ? FontWeight.w400 : FontWeight.w600,
+            color: value == null ? AppColors.muted : AppColors.ink,
+          ),
         ),
       ),
     );

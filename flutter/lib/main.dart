@@ -16,6 +16,9 @@ class SiwrideApp extends StatelessWidget {
       title: 'SIWRIDE',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      // Only a light theme is designed today; pin it explicitly so the app
+      // doesn't partially invert under the system dark-mode setting.
+      themeMode: ThemeMode.light,
       home: const ShellPage(),
     );
   }

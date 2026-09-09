@@ -24,7 +24,7 @@ void main() {
   testWidgets('bottom navigation opens the booking tracker', (tester) async {
     await tester.pumpWidget(const SiwrideApp());
 
-    await tester.tap(find.text('My trip'));
+    await tester.tap(find.text('Trips'));
     await tester.pumpAndSettle();
 
     expect(find.text('Track a booking'), findsOneWidget);

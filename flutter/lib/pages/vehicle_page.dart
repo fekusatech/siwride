@@ -22,26 +22,38 @@ class _VehiclePageState extends State<VehiclePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Choose a ride'),
-        backgroundColor: AppColors.surface,
-      ),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Choose a ride')),
       body: SafeArea(
         top: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             const StepHeader(current: 2, title: 'Select your vehicle'),
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF3F8),
-                borderRadius: BorderRadius.circular(14),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.route_outlined, color: AppColors.ink),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Icon(
+                      Icons.route_outlined,
+                      color: AppColors.ink,
+                      size: 16,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -49,8 +61,10 @@ class _VehiclePageState extends State<VehiclePage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        height: 1.35,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                        color: AppColors.ink,
                       ),
                     ),
                   ),
@@ -66,7 +80,7 @@ class _VehiclePageState extends State<VehiclePage> {
               ),
               const SizedBox(height: 12),
             ],
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             ElevatedButton(
               key: const Key('continueToCheckoutButton'),
               onPressed: () {
@@ -107,18 +121,19 @@ class _VehicleCard extends StatelessWidget {
       label: '${vehicle.title}, ${formatRupiah(vehicle.displayPrice)}',
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
+              color: selected ? AppColors.ink : Colors.white,
               border: Border.all(
-                color: selected ? AppColors.primary : AppColors.border,
-                width: selected ? 2 : 1,
+                color: selected ? AppColors.ink : AppColors.border,
+                width: selected ? 1.5 : 1,
               ),
             ),
             child: Column(
@@ -134,62 +149,116 @@ class _VehicleCard extends StatelessWidget {
                             children: [
                               Text(
                                 vehicle.title,
-                                style: Theme.of(context).textTheme.titleLarge,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: selected
+                                      ? Colors.white
+                                      : AppColors.ink,
+                                ),
                               ),
                               if (selected) ...[
                                 const SizedBox(width: 8),
                                 const Icon(
                                   Icons.check_circle,
-                                  color: AppColors.primary,
-                                  size: 20,
+                                  color: Colors.white,
+                                  size: 18,
                                 ),
                               ],
                             ],
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 4),
                           Text(
                             vehicle.examples,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: selected
+                                  ? AppColors.onInkMuted
+                                  : AppColors.muted,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    Text(
-                      formatRupiah(vehicle.displayPrice),
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected ? Colors.white : AppColors.ink,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        formatRupiah(vehicle.displayPrice),
+                        style: TextStyle(
+                          color: selected ? AppColors.ink : Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                if (vehicle.imageUrl != null)
-                  Image.network(
-                    vehicle.imageUrl!,
+                const SizedBox(height: 14),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
                     height: 110,
-                    fit: BoxFit.contain,
-                    semanticLabel: '${vehicle.title} illustration',
-                    errorBuilder: (context, error, stackTrace) =>
-                        Image.asset('assets/images/sedan.png', height: 110),
-                  )
-                else
-                  Image.asset(
-                    'assets/images/sedan.png',
-                    height: 110,
-                    fit: BoxFit.contain,
-                    semanticLabel: '${vehicle.title} illustration',
+                    width: double.infinity,
+                    color: selected ? AppColors.inkSurface : AppColors.surface,
+                    child: vehicle.imageUrl != null
+                        ? Image.network(
+                            vehicle.imageUrl!,
+                            fit: BoxFit.contain,
+                            cacheWidth: 440,
+                            semanticLabel: '${vehicle.title} illustration',
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) {
+                                return child;
+                              }
+                              return const Center(
+                                child: SizedBox.square(
+                                  dimension: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) =>
+                                Image.asset(
+                                  'assets/images/sedan.png',
+                                  fit: BoxFit.contain,
+                                ),
+                          )
+                        : Image.asset(
+                            'assets/images/sedan.png',
+                            fit: BoxFit.contain,
+                            semanticLabel: '${vehicle.title} illustration',
+                          ),
                   ),
+                ),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     _Meta(
                       icon: Icons.person_outline,
                       label: '${vehicle.passengerCapacity ?? '-'} guests',
+                      light: selected,
                     ),
-                    const SizedBox(width: 18),
+                    const SizedBox(width: 16),
                     _Meta(
                       icon: Icons.luggage_outlined,
                       label: '${vehicle.luggageCapacity ?? '-'} bags',
+                      light: selected,
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: selected ? Colors.white : AppColors.muted,
                     ),
                   ],
                 ),
@@ -203,23 +272,32 @@ class _VehicleCard extends StatelessWidget {
 }
 
 class _Meta extends StatelessWidget {
-  const _Meta({required this.icon, required this.label});
+  const _Meta({
+    required this.icon,
+    required this.label,
+    this.light = false,
+  });
 
   final IconData icon;
   final String label;
+  final bool light;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.muted),
+        Icon(
+          icon,
+          size: 14,
+          color: light ? AppColors.onInkMutedLight : AppColors.muted,
+        ),
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.muted,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+          style: TextStyle(
+            color: light ? AppColors.onInkMuted : AppColors.muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],

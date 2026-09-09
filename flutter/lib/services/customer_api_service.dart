@@ -4,6 +4,18 @@ import '../models/location_suggestion.dart';
 import '../models/price_estimate.dart';
 import '../models/vehicle_category.dart';
 import 'api_client.dart';
+import 'api_exception.dart';
+
+/// Pulls `data` out of a decoded response, guarding against a backend
+/// contract change (missing/mistyped field) surfacing as an uncaught
+/// [TypeError] instead of a normal [ApiException].
+Map<String, dynamic> _dataOf(Map<String, dynamic> response) {
+  final data = response['data'];
+  if (data is Map<String, dynamic>) {
+    return data;
+  }
+  throw ApiException('The server sent an unexpected response.');
+}
 
 /// `data.vehicles` from `GET /customer/catalog`.
 class CustomerCatalog {
@@ -30,8 +42,8 @@ class CustomerApiService {
 
   Future<CustomerCatalog> fetchCatalog() async {
     final response = await _client.get('/customer/catalog');
-    final data = response['data'] as Map<String, dynamic>;
-    final vehicles = (data['vehicles'] as List<dynamic>)
+    final data = _dataOf(response);
+    final vehicles = (data['vehicles'] as List<dynamic>? ?? [])
         .cast<Map<String, dynamic>>()
         .map(VehicleCategory.fromJson)
         .toList();
@@ -46,7 +58,7 @@ class CustomerApiService {
       '/customer/locations',
       query: {'q': query},
     );
-    final data = response['data'] as Map<String, dynamic>;
+    final data = _dataOf(response);
     final suggestions = (data['suggestions'] as List<dynamic>? ?? [])
         .cast<Map<String, dynamic>>();
     return suggestions.map(LocationSuggestion.fromJson).toList();
@@ -66,7 +78,7 @@ class CustomerApiService {
       'dropoff_longitude': dropoffLongitude,
       'passengers': ?passengers,
     });
-    return PriceEstimate.fromJson(response['data'] as Map<String, dynamic>);
+    return PriceEstimate.fromJson(_dataOf(response));
   }
 
   Future<BookingCreated> createBooking(BookingDraftRequest request) async {
@@ -76,7 +88,7 @@ class CustomerApiService {
     );
     return BookingCreated(
       message: response['message'] as String? ?? 'Booking created.',
-      booking: Booking.fromJson(response['data'] as Map<String, dynamic>),
+      booking: Booking.fromJson(_dataOf(response)),
     );
   }
 
@@ -88,7 +100,7 @@ class CustomerApiService {
       'booking_code': bookingCode,
       'email': email,
     });
-    return Booking.fromJson(response['data'] as Map<String, dynamic>);
+    return Booking.fromJson(_dataOf(response));
   }
 
   Future<String> retryPayment({
@@ -99,8 +111,11 @@ class CustomerApiService {
       '/customer/bookings/$bookingCode/retry-payment',
       {'email': email},
     );
-    final data = response['data'] as Map<String, dynamic>;
-    return data['payment_url'] as String;
+    final paymentUrl = _dataOf(response)['payment_url'];
+    if (paymentUrl is String) {
+      return paymentUrl;
+    }
+    throw ApiException('The server sent an unexpected response.');
   }
 
   Future<Booking> cancelBooking({
@@ -111,7 +126,7 @@ class CustomerApiService {
       '/customer/bookings/$bookingCode/cancel',
       {'email': email},
     );
-    return Booking.fromJson(response['data'] as Map<String, dynamic>);
+    return Booking.fromJson(_dataOf(response));
   }
 
   void dispose() => _client.close();
