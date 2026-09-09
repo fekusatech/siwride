@@ -289,6 +289,13 @@
                 </Link>
             </li>
 
+            <li class="side-nav-item">
+                <Link href="/admin/guide/zone-pricing" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-book-2"></i></span>
+                    <span class="menu-text"> Panduan Zona &amp; Harga </span>
+                </Link>
+            </li>
+
             <li class="side-nav-title mt-2">Mobile App</li>
 
             <li class="side-nav-item">

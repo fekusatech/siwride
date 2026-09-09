@@ -122,6 +122,7 @@ use App\Http\Controllers\Admin\DriverServiceController as AdminDriverServiceCont
 use App\Http\Controllers\Admin\DriverWalletController as AdminDriverWalletController;
 use App\Http\Controllers\Admin\DriverWithdrawalController;
 use App\Http\Controllers\Admin\FrontendSettingController;
+use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
@@ -283,6 +284,8 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function () {
     Route::post('admin/rs-schedules', [ScheduleController::class, 'store'])->name('admin.rs-schedules.store');
     Route::put('admin/rs-schedules/{rs_schedule}', [ScheduleController::class, 'update'])->name('admin.rs-schedules.update');
     Route::delete('admin/rs-schedules/{rs_schedule}', [ScheduleController::class, 'destroy'])->name('admin.rs-schedules.destroy');
+
+    Route::get('admin/guide/zone-pricing', [GuideController::class, 'zonePricing'])->name('admin.guide.zone-pricing');
 
     Route::get('admin/zones/boundary-suggestions', [ZoneController::class, 'boundarySuggestions'])->name('admin.zones.boundary-suggestions');
     Route::post('admin/zones/validate', [ZoneController::class, 'validatePoint'])->name('admin.zones.validate');
