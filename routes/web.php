@@ -76,6 +76,8 @@ Route::get('/dokumentasi', function () {
     return view('api-docs');
 })->name('api.docs');
 
+Route::inertia('/drive-with-us', 'DriveWithUs')->name('drive-with-us');
+
 Route::get('/driver/register', [RegisteredDriverController::class, 'create'])->name('driver.register');
 Route::post('/driver/register', [RegisteredDriverController::class, 'store']);
 
