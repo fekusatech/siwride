@@ -11,11 +11,13 @@ class AppVersionController extends Controller
     public function check(Request $request)
     {
         $request->validate([
+            'app' => 'required|string|in:customer,driver',
             'platform' => 'required|string|in:android,ios',
             'current_version_code' => 'required|integer|min:0',
         ]);
 
-        $latest = AppVersion::where('platform', $request->platform)
+        $latest = AppVersion::where('app', $request->app)
+            ->where('platform', $request->platform)
             ->where('is_active', true)
             ->orderBy('version_code', 'desc')
             ->first();

@@ -22,7 +22,7 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h4 class="mb-0">App Versions</h4>
-                <p class="text-muted mb-0">Manage APK version updates for driver app</p>
+                <p class="text-muted mb-0">Manage APK version updates for the customer and driver apps</p>
             </div>
             <Link
                 href="/admin/app-versions/create"
@@ -39,6 +39,7 @@
                     <table class="table table-hover table-centered mb-0 text-nowrap">
                         <thead class="bg-light">
                             <tr>
+                                <th>App</th>
                                 <th>Platform</th>
                                 <th>Version</th>
                                 <th>Code</th>
@@ -51,6 +52,11 @@
                         <tbody>
                             {#each versionList as v}
                                 <tr>
+                                    <td>
+                                        <span class="badge bg-{v.app === 'driver' ? 'warning' : 'primary'}">
+                                            {v.app}
+                                        </span>
+                                    </td>
                                     <td>
                                         <span class="badge bg-{v.platform === 'android' ? 'success' : 'info'}">
                                             {v.platform}
@@ -92,7 +98,7 @@
                                 </tr>
                             {:else}
                                 <tr>
-                                    <td colspan="7" class="text-center py-5">
+                                    <td colspan="8" class="text-center py-5">
                                         <div class="text-muted">No app versions added yet.</div>
                                     </td>
                                 </tr>

@@ -11,7 +11,8 @@ class AppDownloadController extends Controller
 {
     public function show(): Response
     {
-        $version = AppVersion::where('platform', 'android')
+        $version = AppVersion::where('app', 'customer')
+            ->where('platform', 'android')
             ->where('is_active', true)
             ->orderByDesc('version_code')
             ->first();

@@ -7,6 +7,7 @@
     let isEditing = $derived(!!version);
 
     let form = useForm({
+        app: version?.app ?? 'customer',
         platform: version?.platform ?? 'android',
         version_name: version?.version_name ?? '',
         version_code: version?.version_code ?? '',
@@ -51,7 +52,7 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h4 class="mb-0">{isEditing ? 'Edit App Version' : 'Add App Version'}</h4>
-                <p class="text-muted mb-0">Manage APK version for driver mobile app</p>
+                <p class="text-muted mb-0">Manage APK versions for the customer and driver mobile apps</p>
             </div>
             <Link href="/admin/app-versions" class="btn btn-outline-secondary d-flex align-items-center gap-1">
                 <i class="ti ti-arrow-left fs-18"></i>
@@ -65,6 +66,16 @@
                     <div class="card-body">
                         <form onsubmit={submit}>
                             <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="app" class="form-label">App <span class="text-danger">*</span></label>
+                                    <select class="form-control {form.errors.app ? 'is-invalid' : ''}" id="app" bind:value={form.app}>
+                                        <option value="customer">Customer app</option>
+                                        <option value="driver">Driver app</option>
+                                    </select>
+                                    {#if form.errors.app}
+                                        <div class="invalid-feedback">{form.errors.app}</div>
+                                    {/if}
+                                </div>
                                 <div class="col-md-6">
                                     <label for="platform" class="form-label">Platform <span class="text-danger">*</span></label>
                                     <select class="form-control {form.errors.platform ? 'is-invalid' : ''}" id="platform" bind:value={form.platform}>
@@ -181,11 +192,12 @@
                             Guidelines
                         </h5>
                         <ul class="text-muted small ps-3 mb-0" style="line-height: 1.8;">
+                            <li><strong>App:</strong> Customer and driver each have their own version numbering &mdash; pick the right one.</li>
                             <li><strong>Version Code:</strong> Incremental integer. Higher = newer.</li>
                             <li><strong>Version Name:</strong> Display version (e.g. "1.2.0").</li>
                             <li><strong>Force Update:</strong> If enabled, user MUST update to proceed.</li>
                             <li><strong>Upload APK:</strong> Upload file langsung, atau isi External URL jika APK di Google Play.</li>
-                            <li>Flutter app compares its version_code with the API response to determine if update is available.</li>
+                            <li>The customer app's download page (/download-app) and both apps' in-app update checks read from this list.</li>
                         </ul>
                     </div>
                 </div>

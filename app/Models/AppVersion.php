@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AppVersion extends Model
 {
     protected $fillable = [
+        'app',
         'platform',
         'version_name',
         'version_code',

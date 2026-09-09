@@ -26,6 +26,7 @@ class AppVersionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'app' => 'required|string|in:customer,driver',
             'platform' => 'required|string|in:android,ios',
             'version_name' => 'required|string|max:50',
             'version_code' => 'required|integer|min:1',
@@ -57,6 +58,7 @@ class AppVersionController extends Controller
     public function update(Request $request, AppVersion $appVersion)
     {
         $validated = $request->validate([
+            'app' => 'required|string|in:customer,driver',
             'platform' => 'required|string|in:android,ios',
             'version_name' => 'required|string|max:50',
             'version_code' => 'required|integer|min:1',
