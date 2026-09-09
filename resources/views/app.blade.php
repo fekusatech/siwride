@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 @php
-    $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*') || request()->routeIs('driver.*');
+    // driver.register/driver.login are public (guest) pages - they should get
+    // the Travelhub frontend, not the admin dashboard bundle every other
+    // driver.* route (driver.dashboard, driver.wallet, ...) correctly wants.
+    $isDashboard = request()->is('dashboard*') || request()->is('admin*') || request()->is('login-admin*') || request()->is('c/*') || request()->is('login*')
+        || (request()->routeIs('driver.*') && ! request()->routeIs('driver.register') && ! request()->routeIs('driver.login'));
     $logoSetting = \App\Models\Setting::getValue('logo');
     $logoUrl = $logoSetting ? (str_starts_with($logoSetting, '/storage/') ? $logoSetting : asset('storage/' . $logoSetting)) : null;
     $siteName = \App\Models\Setting::getValue('business_name') ?: 'Siwride';
