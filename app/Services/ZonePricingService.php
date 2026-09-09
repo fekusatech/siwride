@@ -44,7 +44,15 @@ class ZonePricingService
         }
 
         return [
-            'price' => round($rule->calculate($distanceKm), 2),
+            // calculate()'s first param is the optional VehicleCategory (whose
+            // price_per_km should drive the per-km cost) - the admin manual-order
+            // form has no vehicle-category selection to supply one, so this
+            // falls back to the rule's own price_per_km (0 on every seeded
+            // zone-pair), meaning auto-price here is base_price only. Passing
+            // $distanceKm positionally as $vehicle threw a TypeError on every
+            // call - the form silently kept price at 0 and showed a small
+            // "Failed to calculate zone price" message easy to miss.
+            'price' => round($rule->calculate(null, $distanceKm), 2),
             'distance_km' => round($distanceKm, 2),
             'pickup_zone' => ['id' => $pickupZone->id, 'name' => $pickupZone->name],
             'dropoff_zone' => ['id' => $dropoffZone->id, 'name' => $dropoffZone->name],
