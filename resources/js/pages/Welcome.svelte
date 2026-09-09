@@ -2,6 +2,7 @@
     import { page } from '@inertiajs/svelte';
     import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import BaliCoverageMap from '@/components/BaliCoverageMap.svelte';
     import LocationSearchInput from '@/components/LocationSearchInput.svelte';
     import RideSharingLocationSearchInput from '@/components/RideSharingLocationSearchInput.svelte';
     import DatePicker from '@/components/DatePicker.svelte';
@@ -1096,33 +1097,15 @@
                     <div
                         style="border-radius: 15px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.1); height: 500px; position: relative; border: 1px solid #f1f1f1; background-color: #eef2f5;"
                     >
-                        {#if !settings.coverage_area_image}
-                            <div
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1;"
-                            >
-                                <i
-                                    class="flaticon-pin-1"
-                                    style="font-size: 60px; color: var(--travhub-base, #e52029); margin-bottom: 20px; opacity: 0.8;"
-                                ></i>
-                                <h4
-                                    style="color: #444; font-weight: 700; font-size: 24px; margin-bottom: 10px;"
-                                >
-                                    Illustration Map of Bali
-                                </h4>
-                                <p
-                                    style="color: #888; font-size: 15px; margin: 0;"
-                                >
-                                    (This area is reserved for a static map
-                                    image of Bali)
-                                </p>
-                            </div>
+                        {#if settings.coverage_area_image}
+                            <img
+                                src={settings.coverage_area_image}
+                                alt="Siwride coverage area in Bali"
+                                style="width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 0;"
+                            />
+                        {:else}
+                            <BaliCoverageMap />
                         {/if}
-                        <img
-                            src={settings.coverage_area_image ||
-                                'https://placehold.co/1200x500/e9ecef/e9ecef'}
-                            alt="Bali Map Placeholder"
-                            style="width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 0;"
-                        />
                     </div>
                 </div>
             </div>
@@ -1339,6 +1322,39 @@
                     </div>
                 {/each}
             </div>
+        </div>
+    </section>
+
+    <!-- Download the App -->
+    <section
+        class="app-download-band"
+        style="padding: 70px 0; background: #161616; overflow: hidden; position: relative;"
+    >
+        <div
+            class="container"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 30px; flex-wrap: wrap; position: relative; z-index: 1;"
+        >
+            <div style="max-width: 480px;">
+                <div
+                    style="display: inline-flex; align-items: center; gap: 8px; color: var(--travhub-base, #d11f1f); font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 14px;"
+                >
+                    <i class="fas fa-mobile-alt"></i> Now on Android
+                </div>
+                <h3 style="color: #fff; font-size: 28px; font-weight: 800; margin: 0 0 10px;">
+                    Book your ride from your phone
+                </h3>
+                <p style="color: #b5b5b5; font-size: 15px; line-height: 1.7; margin: 0;">
+                    Get the Siwride app for faster booking, live price estimates, and easy trip
+                    tracking &mdash; download the APK directly, no Play Store needed.
+                </p>
+            </div>
+            <a
+                href="/download-app"
+                class="travhub-btn"
+                style="display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0;"
+            >
+                <i class="fas fa-download"></i> Download APK
+            </a>
         </div>
     </section>
 

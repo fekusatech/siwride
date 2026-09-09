@@ -1,6 +1,7 @@
 <script lang="ts">
     import { page } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import BaliCoverageMap from '@/components/BaliCoverageMap.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
@@ -51,30 +52,15 @@
                     <div
                         style="border-radius: 15px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.1); height: 500px; position: relative; border: 1px solid #f1f1f1; background-color: #eef2f5;"
                     >
-                        {#if !settings.coverage_area_image}
-                            <div
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1;"
-                            >
-                                <i
-                                    class="flaticon-pin-1"
-                                    style="font-size: 60px; color: var(--travhub-base, #e52029); margin-bottom: 20px; opacity: 0.8;"
-                                ></i>
-                                <h4
-                                    style="color: #444; font-weight: 700; font-size: 24px; margin-bottom: 10px;"
-                                >
-                                    Illustration Map of Bali
-                                </h4>
-                                <p style="color: #888; font-size: 15px; margin: 0;">
-                                    (This area is reserved for a static map image of
-                                    Bali)
-                                </p>
-                            </div>
+                        {#if settings.coverage_area_image}
+                            <img
+                                src={settings.coverage_area_image}
+                                alt="Siwride coverage area in Bali"
+                                style="width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 0;"
+                            />
+                        {:else}
+                            <BaliCoverageMap />
                         {/if}
-                        <img
-                            src={settings.coverage_area_image || 'https://placehold.co/1200x500/e9ecef/e9ecef'}
-                            alt="Bali Map Placeholder"
-                            style="width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 0;"
-                        />
                     </div>
                 </div>
             </div>
