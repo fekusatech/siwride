@@ -58,6 +58,17 @@ return [
             'driver' => 'sanctum',
             'provider' => 'users',
         ],
+
+        // Sanctum's guard checks the token's owning model against the
+        // guard's `provider`, so a Customer token is silently rejected by
+        // the 'sanctum' guard above (bound to the driver/admin `users`
+        // provider) - hence a separate guard, kept scoped to customer-only
+        // routes so a customer token can never authenticate a driver/admin
+        // `auth:sanctum` endpoint.
+        'sanctum-customer' => [
+            'driver' => 'sanctum',
+            'provider' => 'customers',
+        ],
     ],
 
     /*

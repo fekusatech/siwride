@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\Api\AppVersionController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Customer\AuthController as CustomerAuthController;
 use App\Http\Controllers\Api\Customer\BookingController as CustomerBookingController;
 use App\Http\Controllers\Api\Customer\CatalogController as CustomerCatalogController;
 use App\Http\Controllers\Api\Customer\LocationController as CustomerLocationController;
 use App\Http\Controllers\Api\Customer\PriceEstimateController as CustomerPriceEstimateController;
+use App\Http\Controllers\Api\Customer\ProfileController as CustomerProfileController;
 use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\EarningController;
 use App\Http\Controllers\Api\HelpController;
@@ -42,6 +44,16 @@ Route::prefix('v1')->group(function () {
             Route::post('/bookings/track', [CustomerBookingController::class, 'track']);
             Route::post('/bookings/{bookingCode}/retry-payment', [CustomerBookingController::class, 'retryPayment']);
             Route::post('/bookings/{bookingCode}/cancel', [CustomerBookingController::class, 'cancel']);
+
+            Route::post('/auth/register', [CustomerAuthController::class, 'register']);
+            Route::post('/auth/login', [CustomerAuthController::class, 'login']);
+        });
+
+        Route::middleware('auth:sanctum-customer')->group(function () {
+            Route::post('/auth/logout', [CustomerAuthController::class, 'logout']);
+            Route::get('/me', [CustomerAuthController::class, 'me']);
+            Route::put('/profile', [CustomerProfileController::class, 'update']);
+            Route::get('/orders', [CustomerProfileController::class, 'orders']);
         });
     });
 
