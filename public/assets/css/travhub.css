@@ -12196,10 +12196,11 @@ input[type="number"] {
   grid-column-start: 1;
   grid-column-end: -1;
 }
-.form-one .bootstrap-select > .dropdown-toggle, 
-.form-one input[type="text"], 
-.form-one input[type="tel"], 
-.form-one input[type="email"], 
+.form-one .bootstrap-select > .dropdown-toggle,
+.form-one input[type="text"],
+.form-one input[type="tel"],
+.form-one input[type="email"],
+.form-one input[type="password"],
 .form-one textarea {
   height: 48px;
   width: 100%;
@@ -12220,9 +12221,10 @@ input[type="number"] {
   height: 135px;
   padding-top: 8px;
 }
-.form-one input[type="text"]:focus, 
-.form-one input[type="tel"]:focus, 
-.form-one input[type="email"]:focus, 
+.form-one input[type="text"]:focus,
+.form-one input[type="tel"]:focus,
+.form-one input[type="email"]:focus,
+.form-one input[type="password"]:focus,
 .form-one textarea:focus{
   color: rgba(var(--travhub-text-rgb), 1);
 }
