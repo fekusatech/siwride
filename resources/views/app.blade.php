@@ -70,7 +70,7 @@
             <link rel="stylesheet" href="/assets/vendors/slick/slick.css">
             <link rel="stylesheet" href="/assets/vendors/owl-carousel/css/owl.carousel.min.css">
             <link rel="stylesheet" href="/assets/vendors/owl-carousel/css/owl.theme.default.min.css">
-            <link rel="stylesheet" href="/assets/css/travhub.css" />
+            <link rel="stylesheet" href="/assets/css/travhub.css?v={{ @filemtime(public_path('assets/css/travhub.css')) }}" />
 
             <script>
                 // Preloader Fallback: Hide after 5 seconds if script fails
