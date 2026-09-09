@@ -1970,7 +1970,11 @@ h6 {
 # Page Header
 --------------------------------------------------------------*/
 .page-header {
-  background-color: rgba(var(--travhub-black3-rgb), 0.03);
+  /* Opaque, not rgba(black, 3%) - this section sits on <body>, which turns
+     near-black under the "dark" appearance cookie (Tailwind's bg-background
+     in app.css); an alpha tint let that show straight through and made the
+     (intentionally dark, travhub-black) title/breadcrumb text unreadable. */
+  background-color: #f7f7f7;
   position: relative;
   padding-top: 90px;
   padding-bottom: 90px;
