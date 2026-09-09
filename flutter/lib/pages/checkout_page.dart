@@ -35,7 +35,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _api.dispose();
     super.dispose();
   }
 

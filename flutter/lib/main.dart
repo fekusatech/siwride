@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'pages/shell_page.dart';
+import 'pages/splash_page.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -19,7 +19,7 @@ class SiwrideApp extends StatelessWidget {
       // Only a light theme is designed today; pin it explicitly so the app
       // doesn't partially invert under the system dark-mode setting.
       themeMode: ThemeMode.light,
-      home: const ShellPage(),
+      home: const SplashPage(),
     );
   }
 }

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../services/auth_controller.dart';
 import '../services/customer_api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/update_dialog.dart';
+import 'account_page.dart';
 import 'booking_page.dart';
 import 'home_page.dart';
 import 'trips_page.dart';
 
 class ShellPage extends StatefulWidget {
-  const ShellPage({super.key});
+  const ShellPage({required this.auth, super.key});
+
+  final AuthController auth;
 
   @override
   State<ShellPage> createState() => _ShellPageState();
@@ -23,12 +27,6 @@ class _ShellPageState extends State<ShellPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
-  }
-
-  @override
-  void dispose() {
-    _api.dispose();
-    super.dispose();
   }
 
   Future<void> _checkForUpdate() async {
@@ -60,6 +58,7 @@ class _ShellPageState extends State<ShellPage> {
       ),
       const BookingPage(),
       const TripsPage(),
+      AccountPage(auth: widget.auth),
     ];
 
     return Scaffold(
@@ -99,6 +98,11 @@ class _ShellPageState extends State<ShellPage> {
                 icon: Icon(Icons.receipt_long_outlined, color: AppColors.muted),
                 selectedIcon: Icon(Icons.receipt_long, color: Colors.white),
                 label: 'Trips',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline, color: AppColors.muted),
+                selectedIcon: Icon(Icons.person_rounded, color: Colors.white),
+                label: 'Account',
               ),
             ],
           ),

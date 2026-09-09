@@ -7,6 +7,12 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const SiwrideApp());
+    // The splash screen shows an indeterminate CircularProgressIndicator,
+    // which never lets pumpAndSettle() settle — pump past it manually
+    // instead (its own init work is bounded to a few seconds at most).
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(seconds: 1));
+    }
 
     expect(find.text('Your Bali ride,\nready when you are.'), findsOneWidget);
     expect(find.text('Airport transfer'), findsOneWidget);
@@ -23,6 +29,12 @@ void main() {
 
   testWidgets('bottom navigation opens the booking tracker', (tester) async {
     await tester.pumpWidget(const SiwrideApp());
+    // The splash screen shows an indeterminate CircularProgressIndicator,
+    // which never lets pumpAndSettle() settle — pump past it manually
+    // instead (its own init work is bounded to a few seconds at most).
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(seconds: 1));
+    }
 
     await tester.tap(find.text('Trips'));
     await tester.pumpAndSettle();

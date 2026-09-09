@@ -12,9 +12,14 @@ class ApiClient {
 
   final http.Client _httpClient;
 
-  static const _headers = {
+  /// Bearer token for `/customer/auth/*`-issued sessions. Requests are sent
+  /// without one (as guest bookings always have) until this is set.
+  String? authToken;
+
+  Map<String, String> get _headers => {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
+    if (authToken != null) 'Authorization': 'Bearer $authToken',
   };
 
   Future<Map<String, dynamic>> get(
@@ -27,6 +32,13 @@ class ApiClient {
     Map<String, dynamic> body = const {},
   ]) => _send(
     () => _httpClient.post(_uri(path), headers: _headers, body: jsonEncode(body)),
+  );
+
+  Future<Map<String, dynamic>> put(
+    String path, [
+    Map<String, dynamic> body = const {},
+  ]) => _send(
+    () => _httpClient.put(_uri(path), headers: _headers, body: jsonEncode(body)),
   );
 
   Uri _uri(String path, [Map<String, String>? query]) {

@@ -4,26 +4,46 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/booking.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
+import 'payment_webview_page.dart';
 
 /// Same WhatsApp line used by `App\Services\WhatsAppService` on the backend
 /// (see `database/seeders/SettingSeeder.php`: `company_phone`).
 const _supportWhatsAppNumber = '6281138105600';
 
-class SuccessPage extends StatelessWidget {
+class SuccessPage extends StatefulWidget {
   const SuccessPage({required this.booking, super.key});
 
   final Booking booking;
 
+  @override
+  State<SuccessPage> createState() => _SuccessPageState();
+}
+
+class _SuccessPageState extends State<SuccessPage> {
   Future<void> _contactSupport() async {
     final message = Uri.encodeComponent(
-      'Hi SIWRIDE, I need help with my booking ${booking.bookingCode}.',
+      'Hi SIWRIDE, I need help with my booking ${widget.booking.bookingCode}.',
     );
     final uri = Uri.parse('https://wa.me/$_supportWhatsAppNumber?text=$message');
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  Future<void> _payNow(String paymentUrl) async {
+    final success = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => PaymentWebViewPage(paymentUrl: paymentUrl),
+      ),
+    );
+    if (success == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment received — thank you!')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final booking = widget.booking;
     final paymentUrl = booking.paymentUrl;
 
     return Scaffold(
@@ -115,8 +135,7 @@ class SuccessPage extends StatelessWidget {
               if (paymentUrl != null) ...[
                 ElevatedButton.icon(
                   key: const Key('payNowButton'),
-                  onPressed: () =>
-                      launchUrl(Uri.parse(paymentUrl), mode: LaunchMode.externalApplication),
+                  onPressed: () => _payNow(paymentUrl),
                   icon: const Icon(Icons.payment_outlined),
                   label: const Text('Continue to payment'),
                 ),

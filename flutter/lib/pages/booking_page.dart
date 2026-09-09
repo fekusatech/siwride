@@ -54,7 +54,6 @@ class _BookingPageState extends State<BookingPage> {
   void dispose() {
     _pickupController.dispose();
     _dropoffController.dispose();
-    _api.dispose();
     super.dispose();
   }
 

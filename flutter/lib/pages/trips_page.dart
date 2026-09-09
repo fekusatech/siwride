@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../models/booking.dart';
 import '../services/api_exception.dart';
 import '../services/customer_api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
+import 'payment_webview_page.dart';
 
 class TripsPage extends StatefulWidget {
   const TripsPage({super.key});
@@ -26,7 +26,6 @@ class _TripsPageState extends State<TripsPage> {
   void dispose() {
     _codeController.dispose();
     _emailController.dispose();
-    _api.dispose();
     super.dispose();
   }
 
@@ -142,7 +141,17 @@ class _TripsPageState extends State<TripsPage> {
             bookingCode: booking.bookingCode,
             email: _emailController.text.trim(),
           );
-      await launchUrl(Uri.parse(paymentUrl), mode: LaunchMode.externalApplication);
+      if (!mounted) {
+        return;
+      }
+      final success = await Navigator.of(context).push<bool>(
+        MaterialPageRoute<bool>(
+          builder: (_) => PaymentWebViewPage(paymentUrl: paymentUrl),
+        ),
+      );
+      if (success == true) {
+        await _track();
+      }
     } on ApiException catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
