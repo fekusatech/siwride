@@ -1,3 +1,4 @@
+import '../models/app_update.dart';
 import '../models/booking.dart';
 import '../models/booking_draft_request.dart';
 import '../models/location_suggestion.dart';
@@ -127,6 +128,17 @@ class CustomerApiService {
       {'email': email},
     );
     return Booking.fromJson(_dataOf(response));
+  }
+
+  /// Asks the backend whether [currentVersionCode] is behind the latest
+  /// published `app: 'customer'` build (`Admin > App Versions`).
+  Future<AppUpdateInfo> checkForUpdate(int currentVersionCode) async {
+    final response = await _client.post('/app/check-version', {
+      'app': 'customer',
+      'platform': 'android',
+      'current_version_code': currentVersionCode,
+    });
+    return AppUpdateInfo.fromJson(_dataOf(response));
   }
 
   void dispose() => _client.close();

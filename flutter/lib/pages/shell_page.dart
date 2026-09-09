@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
+import '../services/customer_api_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/update_dialog.dart';
 import 'booking_page.dart';
 import 'home_page.dart';
 import 'trips_page.dart';
@@ -14,6 +17,33 @@ class ShellPage extends StatefulWidget {
 
 class _ShellPageState extends State<ShellPage> {
   int _selectedIndex = 0;
+  final _api = CustomerApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  @override
+  void dispose() {
+    _api.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersionCode = int.tryParse(packageInfo.buildNumber) ?? 0;
+      final update = await _api.checkForUpdate(currentVersionCode);
+      if (!mounted || !update.updateAvailable) {
+        return;
+      }
+      await UpdateDialog.show(context, update);
+    } catch (_) {
+      // Offline or the check failed — never block the app over this.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
