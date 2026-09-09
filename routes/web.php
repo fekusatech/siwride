@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityBookingController;
+use App\Http\Controllers\AppDownloadController;
 use App\Http\Controllers\Auth\RegisteredDriverController;
 use App\Http\Controllers\CustomerVehicleController;
 use App\Http\Controllers\Driver\DashboardController as DriverDashboardController;
@@ -135,6 +136,8 @@ use App\Http\Controllers\PublicClaimController;
 
 Route::get('/c/{booking_code}', [PublicClaimController::class, 'show'])->name('orders.claim.show');
 Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name('orders.claim.store');
+
+Route::get('/download-app', [AppDownloadController::class, 'show'])->name('app.download');
 
 Route::inertia('/about', 'customer/about')->name('about');
 Route::inertia('/services', 'customer/services')->name('services');
