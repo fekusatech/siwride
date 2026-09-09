@@ -78,7 +78,7 @@
     </section>
 
     <!-- Intro + CTA -->
-    <section class="pt-120 pb-60">
+    <section class="pt-120 pb-60" style="background: #fff;">
         <div class="container">
             <div class="sec-title text-center">
                 <div class="sec-title__tagline bw-split-in-right">
@@ -107,7 +107,7 @@
     </section>
 
     <!-- Benefits Grid -->
-    <section class="services-section pb-120">
+    <section class="services-section pb-120" style="background: #fff;">
         <div class="container">
             <div class="row gutter-y-30">
                 {#each benefits as benefit, index}
@@ -169,7 +169,7 @@
     </section>
 
     <!-- Requirements + CTA -->
-    <section class="pt-120 pb-120">
+    <section class="pt-120 pb-120" style="background: #fff;">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
