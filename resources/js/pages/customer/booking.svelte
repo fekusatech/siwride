@@ -296,7 +296,13 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 geocodeAndEstimate();
-            }, 1000);
+            }, 300);
+        }
+    });
+
+    onMount(() => {
+        if (pickup && dropoff) {
+            geocodeAndEstimate();
         }
     });
 
