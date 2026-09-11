@@ -363,6 +363,21 @@ class LocationSearchController extends Controller
             'address' => ['required', 'string', 'min:3', 'max:200'],
         ]);
 
+        $addressQuery = trim(mb_strtolower($request->string('address')));
+
+        // 1. Check static Bali locations list first (exact/partial match)
+        foreach ($this->baliLocations as $loc) {
+            $locName = mb_strtolower($loc['name']);
+            $locAddr = mb_strtolower($loc['address']);
+            if ($locName === $addressQuery || str_contains($locName, $addressQuery) || str_contains($addressQuery, $locName) || str_contains($locAddr, $addressQuery)) {
+                return response()->json([
+                    'lat' => $loc['lat'],
+                    'lng' => $loc['lng'],
+                    'formatted' => $loc['address'],
+                ]);
+            }
+        }
+
         try {
             $response = Http::withHeaders([
                 'User-Agent' => config('app.name', 'Siwride').'/1.0',
