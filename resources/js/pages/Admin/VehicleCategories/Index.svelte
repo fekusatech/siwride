@@ -91,6 +91,7 @@
                                 <th style="width: 80px;">Image</th>
                                 <th>Category Details</th>
                                 <th>Vehicle Type</th>
+                                <th>Pricing Rate</th>
                                 <th>Capacity</th>
                                 <th>Examples</th>
                                 <th class="text-center">Action</th>
@@ -129,6 +130,14 @@
                                             {category.vehicle_type}
                                         </span>
                                     </td>
+                                    <td>
+                                        <div class="fw-semibold text-success">
+                                            Base: Rp {Number(category.base_price || 0).toLocaleString('id-ID')}
+                                        </div>
+                                        <small class="text-muted">
+                                            Rp {Number(category.price_per_km || 0).toLocaleString('id-ID')} / km
+                                        </small>
+                                    </td>
                                     <td>{category.capacity || '-'}</td>
                                     <td class="text-wrap" style="max-width: 250px;">{category.examples || '-'}</td>
                                     <td class="text-center">
@@ -155,7 +164,7 @@
                                 </tr>
                             {:else}
                                 <tr>
-                                    <td colspan="6" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <div class="text-muted">
                                             {#if search}
                                                 No vehicle categories match "{search}"
