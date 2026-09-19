@@ -2,7 +2,7 @@
     <!-- Talks to the Laravel customer API and opens the Xendit payment page. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="SIWRIDE"
+        android:label="Siwride Customer"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:networkSecurityConfig="@xml/network_security_config">

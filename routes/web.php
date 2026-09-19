@@ -152,6 +152,7 @@ Route::inertia('/testimonials', 'customer/testimonials')->name('testimonials');
 Route::inertia('/faq', 'customer/faq')->name('faq');
 Route::inertia('/terms', 'customer/terms')->name('terms');
 Route::inertia('/privacy', 'customer/privacy')->name('privacy');
+Route::redirect('/privacy-policy', '/privacy');
 // Booking route moved outside auth middleware
 Route::inertia('/contact', 'customer/contact')->name('contact');
 // Public Customer Booking Routes (No Auth Required)

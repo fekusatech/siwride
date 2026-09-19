@@ -1,4 +1,4 @@
-package com.siwride.siwride_customer
+package com.siwride.customer
 
 import io.flutter.embedding.android.FlutterActivity
 

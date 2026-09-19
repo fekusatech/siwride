@@ -13,7 +13,7 @@ class SiwrideApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SIWRIDE',
+      title: 'Siwride Customer',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       // Only a light theme is designed today; pin it explicitly so the app
