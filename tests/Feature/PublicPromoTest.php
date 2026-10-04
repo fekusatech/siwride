@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Models\Voucher;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -35,4 +36,22 @@ it('returns 404 for expired or inactive promo article pages', function () {
 
     $this->get("/promos/{$expired->code}")->assertNotFound();
     $this->get("/promos/{$inactive->code}")->assertNotFound();
+});
+
+it('sanitizes promo description html on save', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)->post('/admin/promos', [
+        'code' => 'SAFE-1234',
+        'type' => 'percent',
+        'value' => 10,
+        'description' => '<p onclick="x()">Hi</p><script>alert(1)</script><a href="javascript:alert(1)">bad</a><a href="https://siwride.com" onclick="x()">ok</a>',
+    ]);
+
+    $description = Voucher::where('code', 'SAFE-1234')->value('description');
+
+    expect($description)->not->toContain('script')
+        ->not->toContain('onclick')
+        ->not->toContain('javascript:')
+        ->toContain('href="https://siwride.com"');
 });

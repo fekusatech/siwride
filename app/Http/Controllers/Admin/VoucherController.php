@@ -120,7 +120,7 @@ class VoucherController extends Controller
                 Rule::unique('vouchers', 'code')->ignore($voucher),
             ],
             'title' => ['nullable', 'string', 'max:150'],
-            'description' => ['nullable', 'string', 'max:5000'],
+            'description' => ['nullable', 'string', 'max:20000'],
             'type' => ['required', Rule::in([Voucher::TYPE_PERCENT, Voucher::TYPE_FIXED])],
             'value' => ['required', 'numeric', 'min:0.01'],
             'min_spend' => ['nullable', 'numeric', 'min:0'],
@@ -138,10 +138,34 @@ class VoucherController extends Controller
             ]);
         }
 
+        $validated['description'] = $this->sanitizeHtml($validated['description'] ?? null);
         $validated['code'] = strtoupper($validated['code']);
         $validated['min_spend'] = $validated['min_spend'] ?? 0;
         $validated['is_active'] = $request->boolean('is_active');
 
         return $validated;
+    }
+
+    /**
+     * Keep only the basic formatting tags the editor produces; drop all attributes except safe link hrefs.
+     */
+    private function sanitizeHtml(?string $html): ?string
+    {
+        if ($html === null || trim(strip_tags($html)) === '') {
+            return null;
+        }
+
+        $html = strip_tags($html, '<p><br><strong><em><u><ul><ol><li><h2><h3><a>');
+
+        return preg_replace_callback('/<(\/?)(\w+)([^>]*)>/', function (array $m): string {
+            [, $slash, $tag, $attrs] = $m;
+
+            if ($slash === '' && strtolower($tag) === 'a'
+                && preg_match('/href\s*=\s*"((?:https?:\/\/|mailto:)[^"]*)"/i', $attrs, $href)) {
+                return '<a href="'.e($href[1]).'" target="_blank" rel="noopener noreferrer">';
+            }
+
+            return '<'.$slash.$tag.'>';
+        }, $html);
     }
 }

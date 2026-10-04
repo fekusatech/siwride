@@ -2,6 +2,9 @@
     import AdminLayout from '@/layouts/AdminLayout.svelte';
     import AppHead from '@/components/AppHead.svelte';
     import { useForm, Link } from '@inertiajs/svelte';
+    import { onMount } from 'svelte';
+
+    const QUILL_BASE = '/assets-admin/vendor/quill';
 
     let { voucher = null } = $props();
 
@@ -19,6 +22,47 @@
         valid_from: voucher?.valid_from ? new Date(voucher.valid_from).toISOString().slice(0, 10) : '',
         valid_until: voucher?.valid_until ? new Date(voucher.valid_until).toISOString().slice(0, 10) : '',
         is_active: voucher?.is_active ?? true,
+    });
+
+    let editorEl: HTMLDivElement;
+
+    function loadQuill(): Promise<any> {
+        const w = window as any;
+        if (w.Quill) return Promise.resolve(w.Quill);
+        if (!document.querySelector(`link[href="${QUILL_BASE}/quill.snow.css"]`)) {
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = `${QUILL_BASE}/quill.snow.css`;
+            document.head.appendChild(css);
+        }
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = `${QUILL_BASE}/quill.min.js`;
+            script.onload = () => resolve(w.Quill);
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    onMount(() => {
+        loadQuill().then((Quill) => {
+            const quill = new Quill(editorEl, {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ header: [2, 3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['link'],
+                        ['clean'],
+                    ],
+                },
+            });
+            quill.root.innerHTML = form.description ?? '';
+            quill.on('text-change', () => {
+                form.description = quill.getText().trim() === '' ? '' : quill.root.innerHTML;
+            });
+        });
     });
 
     function submit(e: Event) {
@@ -218,15 +262,8 @@
 
                         <div class="col-12">
                             <div class="mb-3">
-                                <label for="description" class="form-label text-uppercase fs-12 fw-bold text-muted">Isi Artikel / Syarat &amp; Ketentuan</label>
-                                <textarea
-                                    id="description"
-                                    class="form-control"
-                                    rows="6"
-                                    bind:value={form.description}
-                                    disabled={form.processing}
-                                    maxlength="5000"
-                                ></textarea>
+                                <label class="form-label text-uppercase fs-12 fw-bold text-muted">Isi Artikel / Syarat &amp; Ketentuan</label>
+                                <div bind:this={editorEl} style="min-height: 200px; background: #fff;"></div>
                                 {#if form.errors.description}<div class="text-danger small mt-1">{form.errors.description}</div>{/if}
                             </div>
                         </div>

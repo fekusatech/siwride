@@ -73,7 +73,7 @@
                     </ul>
 
                     {#if promo.description}
-                        <div class="promo-body">{promo.description}</div>
+                        <div class="promo-body">{@html promo.description}</div>
                     {/if}
 
                     <button type="button" class="promo-code mt-4" onclick={copy}>
@@ -91,9 +91,6 @@
 </div>
 
 <style>
-    .promo-body {
-        white-space: pre-line;
-    }
     .promo-code {
         display: flex;
         width: 100%;
