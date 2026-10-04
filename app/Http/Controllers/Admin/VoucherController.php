@@ -119,6 +119,8 @@ class VoucherController extends Controller
                 'regex:/^[A-Z0-9-]{4,20}$/',
                 Rule::unique('vouchers', 'code')->ignore($voucher),
             ],
+            'title' => ['nullable', 'string', 'max:150'],
+            'description' => ['nullable', 'string', 'max:5000'],
             'type' => ['required', Rule::in([Voucher::TYPE_PERCENT, Voucher::TYPE_FIXED])],
             'value' => ['required', 'numeric', 'min:0.01'],
             'min_spend' => ['nullable', 'numeric', 'min:0'],

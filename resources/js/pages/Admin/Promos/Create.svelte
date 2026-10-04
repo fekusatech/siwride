@@ -8,6 +8,8 @@
     const form = useForm({
         _method: voucher ? 'put' : 'post',
         code: voucher?.code ?? '',
+        title: voucher?.title ?? '',
+        description: voucher?.description ?? '',
         type: voucher?.type ?? 'percent',
         value: voucher?.value ?? '',
         min_spend: voucher?.min_spend ?? '',
@@ -195,6 +197,37 @@
                                     disabled={form.processing}
                                 />
                                 {#if form.errors.valid_until}<div class="text-danger small mt-1">{form.errors.valid_until}</div>{/if}
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="title" class="form-label text-uppercase fs-12 fw-bold text-muted">Judul Artikel (tampil di halaman Promo)</label>
+                                <input
+                                    type="text"
+                                    id="title"
+                                    class="form-control"
+                                    bind:value={form.title}
+                                    disabled={form.processing}
+                                    maxlength="150"
+                                    placeholder="e.g. Diskon 20% Airport Transfer Bulan Ini"
+                                />
+                                {#if form.errors.title}<div class="text-danger small mt-1">{form.errors.title}</div>{/if}
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="description" class="form-label text-uppercase fs-12 fw-bold text-muted">Isi Artikel / Syarat &amp; Ketentuan</label>
+                                <textarea
+                                    id="description"
+                                    class="form-control"
+                                    rows="6"
+                                    bind:value={form.description}
+                                    disabled={form.processing}
+                                    maxlength="5000"
+                                ></textarea>
+                                {#if form.errors.description}<div class="text-danger small mt-1">{form.errors.description}</div>{/if}
                             </div>
                         </div>
 

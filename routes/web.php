@@ -152,6 +152,7 @@ Route::get('/vehicles/{slug}', [CustomerVehicleController::class, 'show'])->name
 Route::inertia('/testimonials', 'customer/testimonials')->name('testimonials');
 Route::inertia('/faq', 'customer/faq')->name('faq');
 Route::get('/promos', [PublicPromoController::class, 'index'])->name('promos');
+Route::get('/promos/{code}', [PublicPromoController::class, 'show'])->name('promos.show');
 Route::inertia('/terms', 'customer/terms')->name('terms');
 Route::inertia('/privacy', 'customer/privacy')->name('privacy');
 Route::redirect('/privacy-policy', '/privacy');

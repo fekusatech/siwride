@@ -17,6 +17,8 @@ class Voucher extends Model
 
     protected $fillable = [
         'code',
+        'title',
+        'description',
         'type',
         'value',
         'min_spend',

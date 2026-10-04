@@ -6,6 +6,7 @@
 
     type Promo = {
         code: string;
+        title: string | null;
         type: 'percent' | 'fixed';
         value: number;
         min_spend: number;
@@ -65,6 +66,7 @@
                         <div class="col-md-6 col-lg-4">
                             <div class="promo-card">
                                 <h3 class="promo-card__discount">{discountLabel(promo)}</h3>
+                                {#if promo.title}<p class="fw-bold">{promo.title}</p>{/if}
                                 <ul class="list-unstyled promo-card__meta">
                                     {#if promo.min_spend > 0}
                                         <li>Min. belanja {rupiah(promo.min_spend)}</li>
@@ -82,6 +84,7 @@
                                     <span>{promo.code}</span>
                                     <small>{copied === promo.code ? 'Tersalin!' : 'Salin'}</small>
                                 </button>
+                                <a href="/promos/{promo.code}" class="d-block mt-3 text-center">Lihat detail</a>
                             </div>
                         </div>
                     {/each}
