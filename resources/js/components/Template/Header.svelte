@@ -173,6 +173,9 @@
                             </li>
                         </ul>
                     </li>
+                    <li class:current={isActive('/promos', true)}>
+                        <Link href="/promos">Promo</Link>
+                    </li>
                     <li class:current={isActive('/drive-with-us', true)}>
                         <Link href="/drive-with-us">Drive with Us</Link>
                     </li>
@@ -383,6 +386,11 @@
                             >
                         </li>
                     </ul>
+                </li>
+                <li class:current={isActive('/promos', true)}>
+                    <a href="/promos" onclick={() => (mobileNavOpen = false)}
+                        >Promo</a
+                    >
                 </li>
                 <li class:current={isActive('/drive-with-us', true)}>
                     <a

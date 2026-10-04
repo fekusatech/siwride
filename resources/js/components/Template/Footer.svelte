@@ -106,6 +106,7 @@
                         <li><a href="/about">About us</a></li>
                         <li><a href="/vehicles">Vehicles</a></li>
                         <li><a href="/booking">Book Ride</a></li>
+                        <li><a href="/promos">Promo</a></li>
                         <li><a href="/contact">Contact Us</a></li>
                     </ul>
                 </div>

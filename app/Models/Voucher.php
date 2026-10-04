@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,6 +44,19 @@ class Voucher extends Model
             'applies_to' => 'array',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Vouchers a customer could redeem right now (active, in date window, quota left).
+     *
+     * @param  Builder<Voucher>  $query
+     */
+    public function scopeCurrentlyAvailable(Builder $query): void
+    {
+        $query->where('is_active', true)
+            ->where(fn (Builder $q) => $q->whereNull('valid_from')->orWhere('valid_from', '<=', now()))
+            ->where(fn (Builder $q) => $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()))
+            ->where(fn (Builder $q) => $q->whereNull('usage_limit')->orWhereColumn('used_count', '<', 'usage_limit'));
     }
 
     public function redemptions(): HasMany

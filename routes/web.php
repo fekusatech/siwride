@@ -136,6 +136,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\LocationSearchController;
 use App\Http\Controllers\PublicClaimController;
+use App\Http\Controllers\PublicPromoController;
 
 Route::get('/c/{booking_code}', [PublicClaimController::class, 'show'])->name('orders.claim.show');
 Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name('orders.claim.store');
@@ -150,6 +151,7 @@ Route::get('/vehicles', [CustomerVehicleController::class, 'index'])->name('vehi
 Route::get('/vehicles/{slug}', [CustomerVehicleController::class, 'show'])->name('vehicles.slug');
 Route::inertia('/testimonials', 'customer/testimonials')->name('testimonials');
 Route::inertia('/faq', 'customer/faq')->name('faq');
+Route::get('/promos', [PublicPromoController::class, 'index'])->name('promos');
 Route::inertia('/terms', 'customer/terms')->name('terms');
 Route::inertia('/privacy', 'customer/privacy')->name('privacy');
 Route::redirect('/privacy-policy', '/privacy');
