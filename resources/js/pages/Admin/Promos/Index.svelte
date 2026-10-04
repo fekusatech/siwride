@@ -2,7 +2,7 @@
     import AdminLayout from '@/layouts/AdminLayout.svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Pagination from '@/components/Pagination.svelte';
-    import { Link, router } from '@inertiajs/svelte';
+    import { Link, page, router } from '@inertiajs/svelte';
 
     let { vouchers, filters } = $props();
     let search = $state(filters.search ?? '');
