@@ -28,8 +28,6 @@
 <AppHead title="Become a Partner - Siwride" />
 
 <Preloader />
-<div class="custom-cursor__cursor"></div>
-<div class="custom-cursor__cursor-two"></div>
 
 <div class="page-wrapper">
     <Header />

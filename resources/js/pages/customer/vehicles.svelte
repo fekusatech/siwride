@@ -13,8 +13,6 @@
 <AppHead title="Our Vehicles - Siwride" />
 
 <Preloader />
-<div class="custom-cursor__cursor"></div>
-<div class="custom-cursor__cursor-two"></div>
 
 <div class="page-wrapper">
     <Header />

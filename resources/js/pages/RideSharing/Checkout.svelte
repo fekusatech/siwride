@@ -86,8 +86,6 @@
 
 <AppHead title="Checkout Ride Sharing - Siwride" />
 <Preloader />
-<div class="custom-cursor__cursor"></div>
-<div class="custom-cursor__cursor-two"></div>
 
 <div class="page-wrapper">
     <Header />

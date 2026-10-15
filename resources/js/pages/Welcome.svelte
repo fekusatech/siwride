@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from '@inertiajs/svelte';
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import BaliCoverageMap from '@/components/BaliCoverageMap.svelte';
     import LocationSearchInput from '@/components/LocationSearchInput.svelte';
@@ -66,8 +66,6 @@
     const customerTestimonials = $derived(settings.customer_testimonials || []);
 
     onMount(() => {
-        document.body.classList.add('custom-cursor');
-
         if ((window as any).$) {
             const jQuery = (window as any).$;
 
@@ -105,12 +103,6 @@
         }
     });
 
-    onDestroy(() => {
-        if (typeof window !== 'undefined') {
-            document.body.classList.remove('custom-cursor');
-        }
-    });
-
     import Preloader from '@/components/Template/Preloader.svelte';
     import Topbar from '@/components/Template/Topbar.svelte';
     import Header from '@/components/Template/Header.svelte';
@@ -122,8 +114,6 @@
 
 <AppHead title="Welcome | Siwride" />
 
-<div class="custom-cursor__cursor"></div>
-<div class="custom-cursor__cursor-two"></div>
 
 <Preloader />
 

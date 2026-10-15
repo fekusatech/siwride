@@ -447,8 +447,6 @@
     let clockInterval: ReturnType<typeof setInterval>;
 
     onMount(() => {
-        document.body.classList.add('custom-cursor');
-
         // Tick every 60 seconds so the "Earliest pickup" notice stays accurate
         // while the customer fills in the form — no page refresh needed.
         clockInterval = setInterval(() => {
@@ -459,15 +457,12 @@
     });
 
     onDestroy(() => {
-        document.body.classList.remove('custom-cursor');
         clearInterval(clockInterval);
     });
 </script>
 
 <AppHead title="Book a Transfer - Siwride" />
 <Preloader />
-<div class="custom-cursor__cursor"></div>
-<div class="custom-cursor__cursor-two"></div>
 
 <div class="page-wrapper">
     <Header />
