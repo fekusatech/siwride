@@ -12,7 +12,7 @@
     let authUser = page.props.auth?.user as any;
     let userRole = authUser?.role || 'admin';
 
-    let { orders, filters, drivers } = $props();
+    let { orders, filters, drivers, partners = [] } = $props();
     // svelte-ignore state_referenced_locally
     let search = $state(filters.search ?? '');
     // svelte-ignore state_referenced_locally
@@ -1255,6 +1255,7 @@
                         {:else}
                             <OrderForm
                                 {drivers}
+                                {partners}
                                 order={selectedOrder}
                                 onSuccess={handleOrderSuccess}
                             >

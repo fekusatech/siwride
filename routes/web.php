@@ -20,6 +20,11 @@ use App\Models\Activity;
 use App\Models\DriverService;
 use App\Models\RideSharingCity;
 use App\Models\VehicleCategory;
+use App\Http\Controllers\LocationSearchController;
+use App\Http\Controllers\PartnerApplyController;
+use App\Http\Controllers\PublicClaimController;
+use App\Http\Controllers\PublicPartnerController;
+use App\Http\Controllers\PublicPromoController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -78,6 +83,11 @@ Route::get('/dokumentasi', function () {
 
 Route::inertia('/drive-with-us', 'Public/DriveWithUs')->name('drive-with-us');
 
+Route::get('/become-partner', [PartnerApplyController::class, 'create'])->name('become-partner');
+Route::post('/become-partner', [PartnerApplyController::class, 'store']);
+Route::get('/partners', [PublicPartnerController::class, 'index'])->name('partners.index');
+Route::get('/partners/{partner:slug}', [PublicPartnerController::class, 'show'])->name('partners.show');
+
 Route::get('/driver/register', [RegisteredDriverController::class, 'create'])->name('driver.register');
 Route::post('/driver/register', [RegisteredDriverController::class, 'store']);
 
@@ -124,6 +134,7 @@ use App\Http\Controllers\Admin\DriverWithdrawalController;
 use App\Http\Controllers\Admin\FrontendSettingController;
 use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TransactionController;
@@ -134,9 +145,6 @@ use App\Http\Controllers\Admin\ZonePricingRuleController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CustomerOrderController;
-use App\Http\Controllers\LocationSearchController;
-use App\Http\Controllers\PublicClaimController;
-use App\Http\Controllers\PublicPromoController;
 
 Route::get('/c/{booking_code}', [PublicClaimController::class, 'show'])->name('orders.claim.show');
 Route::post('/c/{booking_code}', [PublicClaimController::class, 'store'])->name('orders.claim.store');
@@ -246,6 +254,10 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function () {
 
     Route::post('admin/drivers/{driver}/sync-user', [DriverController::class, 'syncUser'])->name('admin.drivers.sync-user');
     Route::resource('admin/drivers', DriverController::class)->names('admin.drivers');
+
+    Route::patch('admin/partners/{partner}/approve', [PartnerController::class, 'approve'])->name('admin.partners.approve');
+    Route::patch('admin/partners/{partner}/reject', [PartnerController::class, 'reject'])->name('admin.partners.reject');
+    Route::resource('admin/partners', PartnerController::class)->except(['create', 'show'])->names('admin.partners');
 
     Route::resource('admin/vehicles', VehicleController::class)->names('admin.vehicles');
     Route::resource('admin/vehicle-categories', VehicleCategoryController::class)->names('admin.vehicle-categories');

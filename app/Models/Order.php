@@ -26,6 +26,7 @@ class Order extends Model
         'extras',
         'vehicle_category_id',
         'driver_id',
+        'partner_id',
         'claimed_driver_id',
         'pickup_address',
         'pickup_latitude',
@@ -91,6 +92,11 @@ class Order extends Model
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class, 'driver_id');
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
     }
 
     public function claimedDriver(): BelongsTo

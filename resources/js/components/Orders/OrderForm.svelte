@@ -6,6 +6,7 @@
 
     let {
         drivers,
+        partners = [],
         initialDate = '',
         order = null,
         onSuccess = () => {},
@@ -23,6 +24,7 @@
         customer_email: order?.customer_email ?? order?.customer?.email ?? '',
         flight_number: order?.flight_number ?? '',
         driver_id: order?.driver_id?.toString() ?? '',
+        partner_id: order?.partner_id?.toString() ?? '',
         vehicle_id: order?.vehicle_id?.toString() ?? '',
         pickup_address: order?.pickup_address ?? '',
         pickup_latitude: order?.pickup_latitude ?? null,
@@ -39,6 +41,13 @@
     let driverOptions = $derived(
         drivers.map((d) => ({ value: d.id, label: d.name })),
     );
+    let partnerOptions = $derived([
+        { value: '', label: '— No partner —' },
+        ...partners.map((p) => ({
+            value: p.id,
+            label: `${p.name} (${p.type === 'guide' ? 'Guide' : 'Travel'})`,
+        })),
+    ]);
     let selectedDriver = $derived(
         drivers.find((d) => d.id === Number(form.driver_id)),
     );
@@ -339,6 +348,15 @@ form.vehicle_id = '';
                 options={driverOptions}
                 bind:value={form.driver_id}
                 placeholder="Search Driver..."
+            />
+        </div>
+        <div class="col-md-6">
+            <SearchableSelect
+                id="partner_id_form"
+                label="Assign Partner (tour/guide)"
+                options={partnerOptions}
+                bind:value={form.partner_id}
+                placeholder="Search Partner..."
             />
         </div>
         <div class="col-md-6">

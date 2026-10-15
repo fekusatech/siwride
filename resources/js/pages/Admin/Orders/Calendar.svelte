@@ -5,7 +5,7 @@
     import { onMount } from 'svelte';
     import { Link, router } from '@inertiajs/svelte';
 
-    let { orders, drivers } = $props();
+    let { orders, drivers, partners = [] } = $props();
 
     let calendarEl: HTMLDivElement;
     let calendar: any;
@@ -378,6 +378,7 @@
                         {:else}
                             <OrderForm
                                 {drivers}
+                                {partners}
                                 initialDate={selectedDate}
                                 order={selectedOrder}
                                 onSuccess={handleOrderSuccess}

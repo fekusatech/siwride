@@ -4,7 +4,7 @@
     import OrderForm from '@/components/Orders/OrderForm.svelte';
     import { router } from '@inertiajs/svelte';
 
-    let { drivers } = $props();
+    let { drivers, partners = [] } = $props();
 
     function handleSuccess() {
         router.visit('/admin/orders');
@@ -26,6 +26,7 @@
             <div class="card-body p-4">
                 <OrderForm
                     {drivers}
+                    {partners}
                     onSuccess={handleSuccess}
                 >
                     {#snippet footer({ processing })}

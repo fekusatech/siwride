@@ -7,6 +7,7 @@ use App\Imports\OrdersImport;
 use App\Models\Customer;
 use App\Models\Driver;
 use App\Models\Order;
+use App\Models\Partner;
 use App\Services\GeoService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
@@ -75,6 +76,7 @@ class OrderController extends Controller
                 ->withQueryString(),
             'filters' => $request->only(['search', 'status', 'driver_id', 'from_date', 'to_date']),
             'drivers' => $user->role === 'admin' ? Driver::with('vehicles')->get() : collect(),
+            'partners' => $user->role === 'admin' ? Partner::active()->orderBy('name')->get(['id', 'name', 'type']) : collect(),
             'user_role' => $user->role,
         ]);
     }
@@ -87,6 +89,7 @@ class OrderController extends Controller
         return Inertia::render('Admin/Orders/Calendar', [
             'orders' => Order::with(['driver', 'vehicle', 'customer'])->get(),
             'drivers' => Driver::with('vehicles')->get(),
+            'partners' => Partner::active()->orderBy('name')->get(['id', 'name', 'type']),
         ]);
     }
 
@@ -126,6 +129,7 @@ class OrderController extends Controller
     {
         return Inertia::render('Admin/Orders/Create', [
             'drivers' => Driver::with('vehicles')->get(),
+            'partners' => Partner::active()->orderBy('name')->get(['id', 'name', 'type']),
         ]);
     }
 
@@ -144,6 +148,7 @@ class OrderController extends Controller
             'customer_email' => ['required', 'email', 'max:255'],
             'flight_number' => ['nullable', 'string', 'max:50'],
             'driver_id' => ['nullable', 'exists:drivers,id'],
+            'partner_id' => ['nullable', 'exists:partners,id'],
             'vehicle_id' => ['nullable', 'exists:vehicles,id'],
             'pickup_address' => ['required', 'string'],
             'pickup_latitude' => ['nullable', 'numeric'],
@@ -211,6 +216,7 @@ class OrderController extends Controller
                 'customer_email' => ['required', 'email', 'max:255'],
                 'flight_number' => ['nullable', 'string', 'max:50'],
                 'driver_id' => ['nullable', 'exists:drivers,id'],
+                'partner_id' => ['nullable', 'exists:partners,id'],
                 'vehicle_id' => ['nullable', 'exists:vehicles,id'],
                 'pickup_address' => ['required', 'string'],
                 'pickup_latitude' => ['nullable', 'numeric'],

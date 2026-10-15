@@ -179,6 +179,12 @@
                     <li class:current={isActive('/drive-with-us', true)}>
                         <Link href="/drive-with-us">Drive with Us</Link>
                     </li>
+                    <li class:current={isActive('/partners', true)}>
+                        <Link href="/partners">Partners</Link>
+                    </li>
+                    <li class:current={isActive('/become-partner', true)}>
+                        <Link href="/become-partner">Become a Partner</Link>
+                    </li>
                     <li class:current={isActive('/contact', true)}>
                         <Link href="/contact">Contact</Link>
                     </li>
@@ -397,6 +403,18 @@
                         href="/drive-with-us"
                         onclick={() => (mobileNavOpen = false)}
                         >Drive with Us</a
+                    >
+                </li>
+                <li class:current={isActive('/partners', true)}>
+                    <a href="/partners" onclick={() => (mobileNavOpen = false)}
+                        >Partners</a
+                    >
+                </li>
+                <li class:current={isActive('/become-partner', true)}>
+                    <a
+                        href="/become-partner"
+                        onclick={() => (mobileNavOpen = false)}
+                        >Become a Partner</a
                     >
                 </li>
                 <li class:current={isActive('/contact', true)}>
