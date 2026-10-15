@@ -8,8 +8,8 @@
         <div class="topbar-one__inner">
             <ul class="list-unstyled topbar-one__info">
                 <li class="topbar-one__info__item">
-                    <i class="flaticon-pin-1 topbar-one__info__icon"></i>
-                    {settings.company_address || 'Jl. Mahendradatta selatan GG. Robby William no 99, Denpasar Barat, Bali'}
+                    <i class="flaticon-phone-call topbar-one__info__icon"></i>
+                    <a href="tel:{settings.company_phone || '+62812345678'}">{settings.company_phone || '+62 812-3456-78'}</a>
                 </li>
                 <li class="topbar-one__info__item">
                     <i class="flaticon-mail topbar-one__info__icon"></i>
