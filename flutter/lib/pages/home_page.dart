@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/common.dart';
+import 'web_service_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({required this.onBook, required this.onTrack, super.key});
@@ -87,6 +88,24 @@ class HomePage extends StatelessWidget {
                 onTap: () => onBook(service.title),
               );
             },
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          sliver: SliverToBoxAdapter(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.local_offer_outlined),
+                title: const Text('Promos & offers'),
+                subtitle: const Text('See current discount codes'),
+                trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+                onTap: () => WebServicePage.open(context, 'Promos'),
+              ),
+            ),
           ),
         ),
         const SliverPadding(
@@ -288,10 +307,9 @@ class _ServiceCard extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 12,
-                  height: 1.4,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 12, height: 1.4),
               ),
             ],
           ),
@@ -332,10 +350,7 @@ class _DestinationCard extends StatelessWidget {
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => Container(
                 color: AppColors.surface,
-                child: const Icon(
-                  Icons.image_outlined,
-                  color: AppColors.muted,
-                ),
+                child: const Icon(Icons.image_outlined, color: AppColors.muted),
               ),
             ),
           ),
@@ -356,9 +371,9 @@ class _DestinationCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: 11.5,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 11.5),
                 ),
               ],
             ),

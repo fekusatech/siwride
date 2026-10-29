@@ -12,6 +12,7 @@ import 'account_page.dart';
 import 'booking_page.dart';
 import 'home_page.dart';
 import 'trips_page.dart';
+import 'web_service_page.dart';
 
 class ShellPage extends StatefulWidget {
   const ShellPage({required this.auth, super.key});
@@ -80,6 +81,9 @@ class _ShellPageState extends State<ShellPage> {
     final pages = [
       HomePage(
         onBook: (service) {
+          if (WebServicePage.open(context, service)) {
+            return;
+          }
           Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => BookingPage(initialService: service),

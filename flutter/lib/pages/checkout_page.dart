@@ -69,8 +69,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   labelText: 'Full name',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
-                validator: (value) =>
-                    value == null || value.trim().length < 3
+                validator: (value) => value == null || value.trim().length < 3
                     ? 'Enter your full name'
                     : null,
               ),
@@ -241,7 +240,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Something went wrong. Please try again.')),
+          const SnackBar(
+            content: Text('Something went wrong. Please try again.'),
+          ),
         );
       }
     } finally {
@@ -333,10 +334,7 @@ class _SummaryCard extends StatelessWidget {
               ),
               _summaryMeta(Icons.schedule_outlined, draft.time),
               _summaryMeta(Icons.directions_car_outlined, vehicle.title),
-              _summaryMeta(
-                Icons.people_outline,
-                '${draft.passengers} pax',
-              ),
+              _summaryMeta(Icons.people_outline, '${draft.passengers} pax'),
             ],
           ),
         ],

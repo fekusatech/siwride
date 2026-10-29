@@ -24,7 +24,9 @@ class _SuccessPageState extends State<SuccessPage> {
     final message = Uri.encodeComponent(
       'Hi SIWRIDE, I need help with my booking ${widget.booking.bookingCode}.',
     );
-    final uri = Uri.parse('https://wa.me/$_supportWhatsAppNumber?text=$message');
+    final uri = Uri.parse(
+      'https://wa.me/$_supportWhatsAppNumber?text=$message',
+    );
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 

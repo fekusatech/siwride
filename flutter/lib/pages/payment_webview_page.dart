@@ -41,7 +41,9 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
           onNavigationRequest: (request) {
             final uri = Uri.tryParse(request.url);
             final payment = uri?.queryParameters['payment'];
-            if (!_finished && uri != null && uri.path.contains('/booking/') &&
+            if (!_finished &&
+                uri != null &&
+                uri.path.contains('/booking/') &&
                 (payment == 'success' || payment == 'failed')) {
               _finished = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {

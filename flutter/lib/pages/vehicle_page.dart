@@ -272,11 +272,7 @@ class _VehicleCard extends StatelessWidget {
 }
 
 class _Meta extends StatelessWidget {
-  const _Meta({
-    required this.icon,
-    required this.label,
-    this.light = false,
-  });
+  const _Meta({required this.icon, required this.label, this.light = false});
 
   final IconData icon;
   final String label;

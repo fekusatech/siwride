@@ -152,7 +152,10 @@ class _SignedOutView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-        Text('Log in to Siwride', style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          'Log in to Siwride',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         const SizedBox(height: 8),
         Text(
           'See every trip you have booked with us in one place — no need to re-enter your booking code.',
@@ -218,7 +221,9 @@ class _SignedInView extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?',
+                    customer.name.isNotEmpty
+                        ? customer.name[0].toUpperCase()
+                        : '?',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -249,7 +254,10 @@ class _SignedInView extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onLogout,
-                  icon: const Icon(Icons.logout_rounded, color: AppColors.muted),
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.muted,
+                  ),
                   tooltip: 'Log out',
                 ),
               ],
@@ -268,7 +276,10 @@ class _SignedInView extends StatelessWidget {
           else if (ordersError != null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text(ordersError!, style: const TextStyle(color: AppColors.primary)),
+              child: Text(
+                ordersError!,
+                style: const TextStyle(color: AppColors.primary),
+              ),
             )
           else if (orders.isEmpty)
             Padding(
@@ -318,7 +329,10 @@ class _OrderCard extends StatelessWidget {
             children: [
               Text(
                 booking.bookingCode,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -347,7 +361,9 @@ class _OrderCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${booking.date}, ${booking.time}',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontSize: 12),
           ),
           const SizedBox(height: 10),
           Row(
@@ -355,7 +371,10 @@ class _OrderCard extends StatelessWidget {
             children: [
               Text(
                 formatRupiah(booking.price),
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
               ),
               if (booking.canPay)
                 OutlinedButton(

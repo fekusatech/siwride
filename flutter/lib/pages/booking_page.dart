@@ -4,6 +4,7 @@ import '../models/booking.dart';
 import '../models/location_suggestion.dart';
 import '../models/vehicle_category.dart';
 import '../services/customer_api_service.dart';
+import 'web_service_page.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
 import '../widgets/location_field.dart';
@@ -60,10 +61,7 @@ class _BookingPageState extends State<BookingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Book your ride'),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text('Book your ride'), centerTitle: false),
       backgroundColor: Colors.white,
       body: SafeArea(
         top: false,
@@ -102,8 +100,12 @@ class _BookingPageState extends State<BookingPage> {
                           ),
                         )
                         .toList(),
-                onChanged: (value) =>
-                    setState(() => _service = value ?? _service),
+                onChanged: (value) {
+                  if (value == null || WebServicePage.open(context, value)) {
+                    return;
+                  }
+                  setState(() => _service = value);
+                },
               ),
               const SizedBox(height: 22),
               SegmentedButton<bool>(
@@ -134,7 +136,10 @@ class _BookingPageState extends State<BookingPage> {
                     value: false,
                     label: Text(
                       'One way',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     icon: Icon(Icons.arrow_forward_rounded, size: 16),
                   ),
@@ -142,7 +147,10 @@ class _BookingPageState extends State<BookingPage> {
                     value: true,
                     label: Text(
                       'Round trip',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     icon: Icon(Icons.sync_alt_rounded, size: 16),
                   ),
@@ -257,13 +265,15 @@ class _BookingPageState extends State<BookingPage> {
                         children: [
                           Text(
                             'Passengers',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontSize: 14),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(fontSize: 14),
                           ),
                           Text(
                             'Max 10 guests',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontSize: 12),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                           ),
                         ],
                       ),
@@ -394,7 +404,13 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   bool _isInThePast(DateTime date, TimeOfDay time) {
-    final candidate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    final candidate = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
     return candidate.isBefore(DateTime.now());
   }
 
@@ -416,13 +432,19 @@ class _BookingPageState extends State<BookingPage> {
     }
     if (_isInThePast(_date!, _time!)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please choose a pick-up time that has not passed yet.')),
+        const SnackBar(
+          content: Text(
+            'Please choose a pick-up time that has not passed yet.',
+          ),
+        ),
       );
       return;
     }
     if (_isRoundTrip && _isInThePast(_returnDate!, _returnTime!)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please choose a return time that has not passed yet.')),
+        const SnackBar(
+          content: Text('Please choose a return time that has not passed yet.'),
+        ),
       );
       return;
     }

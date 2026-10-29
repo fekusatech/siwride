@@ -15,4 +15,9 @@ class ApiConfig {
         ? 'https://siwride.com/api/v1'
         : 'http://siwride.test/api/v1',
   );
+
+  /// Website origin (the API base URL without its `/api/v1` suffix), used to
+  /// open booking flows the app doesn't implement natively.
+  static String get webBaseUrl =>
+      baseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
 }

@@ -44,7 +44,9 @@ class AuthController extends ChangeNotifier {
         // no good, so clear it. A generic read/network failure below is
         // left alone; it might just be transient.
         _api.authToken = null;
-        await _storage.delete(key: _tokenKey).timeout(const Duration(seconds: 5));
+        await _storage
+            .delete(key: _tokenKey)
+            .timeout(const Duration(seconds: 5));
       }
     } catch (_) {
       _api.authToken = null;

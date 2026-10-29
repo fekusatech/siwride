@@ -68,7 +68,8 @@ class UpdateDialog extends StatelessWidget {
                   : 'A new version of SIWRIDE is ready to install.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (update.whatsNew != null && update.whatsNew!.trim().isNotEmpty) ...[
+            if (update.whatsNew != null &&
+                update.whatsNew!.trim().isNotEmpty) ...[
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
@@ -101,9 +102,9 @@ class UpdateDialog extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'This update is required before you can keep using SIWRIDE.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 12,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                     ),
                   ),
                 ],

@@ -84,10 +84,7 @@ class _TripsPageState extends State<TripsPage> {
             ),
             const SizedBox(height: 28),
             if (_error != null)
-              Text(
-                _error!,
-                style: const TextStyle(color: AppColors.primary),
-              ),
+              Text(_error!, style: const TextStyle(color: AppColors.primary)),
             if (_booking != null)
               _ActiveTripCard(
                 booking: _booking!,
@@ -136,7 +133,8 @@ class _TripsPageState extends State<TripsPage> {
 
   Future<void> _payNow(Booking booking) async {
     try {
-      final paymentUrl = booking.paymentUrl ??
+      final paymentUrl =
+          booking.paymentUrl ??
           await _api.retryPayment(
             bookingCode: booking.bookingCode,
             email: _emailController.text.trim(),
@@ -197,7 +195,10 @@ class _ActiveTripCard extends StatelessWidget {
             children: [
               Text(
                 booking.bookingCode,
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(

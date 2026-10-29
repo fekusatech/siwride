@@ -32,7 +32,8 @@ class _SplashPageState extends State<SplashPage> {
       );
       if (mounted) {
         setState(() {
-          _versionLabel = 'v${packageInfo.version} (${packageInfo.buildNumber})';
+          _versionLabel =
+              'v${packageInfo.version} (${packageInfo.buildNumber})';
         });
       }
     } catch (_) {

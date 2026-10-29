@@ -8,7 +8,8 @@ import 'api_exception.dart';
 
 /// Thin JSON wrapper around [http.Client] for the `/api/v1/customer/*` routes.
 class ApiClient {
-  ApiClient({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
+  ApiClient({http.Client? httpClient})
+    : _httpClient = httpClient ?? http.Client();
 
   final http.Client _httpClient;
 
@@ -22,23 +23,23 @@ class ApiClient {
     if (authToken != null) 'Authorization': 'Bearer $authToken',
   };
 
-  Future<Map<String, dynamic>> get(
-    String path, {
-    Map<String, String>? query,
-  }) => _send(() => _httpClient.get(_uri(path, query), headers: _headers));
+  Future<Map<String, dynamic>> get(String path, {Map<String, String>? query}) =>
+      _send(() => _httpClient.get(_uri(path, query), headers: _headers));
 
   Future<Map<String, dynamic>> post(
     String path, [
     Map<String, dynamic> body = const {},
   ]) => _send(
-    () => _httpClient.post(_uri(path), headers: _headers, body: jsonEncode(body)),
+    () =>
+        _httpClient.post(_uri(path), headers: _headers, body: jsonEncode(body)),
   );
 
   Future<Map<String, dynamic>> put(
     String path, [
     Map<String, dynamic> body = const {},
   ]) => _send(
-    () => _httpClient.put(_uri(path), headers: _headers, body: jsonEncode(body)),
+    () =>
+        _httpClient.put(_uri(path), headers: _headers, body: jsonEncode(body)),
   );
 
   Uri _uri(String path, [Map<String, String>? query]) {
@@ -87,7 +88,9 @@ class ApiClient {
 
     final rawErrors = payload['errors'];
     final fieldErrors = rawErrors is Map<String, dynamic> ? rawErrors : null;
-    final firstFieldError = fieldErrors?.values.whereType<List<dynamic>>().firstOrNull;
+    final firstFieldError = fieldErrors?.values
+        .whereType<List<dynamic>>()
+        .firstOrNull;
 
     throw ApiException(
       firstFieldError?.first as String? ??

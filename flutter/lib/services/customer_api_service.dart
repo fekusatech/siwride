@@ -91,10 +91,7 @@ class CustomerApiService {
   }
 
   Future<BookingCreated> createBooking(BookingDraftRequest request) async {
-    final response = await _client.post(
-      '/customer/bookings',
-      request.toJson(),
-    );
+    final response = await _client.post('/customer/bookings', request.toJson());
     return BookingCreated(
       message: response['message'] as String? ?? 'Booking created.',
       booking: Booking.fromJson(_dataOf(response)),
@@ -187,7 +184,9 @@ class CustomerApiService {
       throw ApiException('The server sent an unexpected response.');
     }
     authToken = token;
-    return Customer.fromJson(data['customer'] as Map<String, dynamic>? ?? const {});
+    return Customer.fromJson(
+      data['customer'] as Map<String, dynamic>? ?? const {},
+    );
   }
 
   Future<void> logout() async {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/api_exception.dart';
 import '../services/auth_controller.dart';
 import 'register_page.dart';
+import 'web_service_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({required this.auth, super.key});
@@ -48,7 +49,9 @@ class _LoginPageState extends State<LoginPage> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Something went wrong. Please try again.')),
+          const SnackBar(
+            content: Text('Something went wrong. Please try again.'),
+          ),
         );
       }
     } finally {
@@ -87,8 +90,7 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty
+                validator: (value) => value == null || value.trim().isEmpty
                     ? 'Enter your email'
                     : null,
               ),
@@ -100,11 +102,20 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Password',
                   prefixIcon: Icon(Icons.lock_outline_rounded),
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter your password' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Enter your password'
+                    : null,
                 onFieldSubmitted: (_) => _submit(),
               ),
-              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () =>
+                      WebServicePage.open(context, 'Forgot password'),
+                  child: const Text('Forgot password?'),
+                ),
+              ),
+              const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submit,
                 child: _isSubmitting

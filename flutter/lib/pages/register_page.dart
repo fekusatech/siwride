@@ -61,7 +61,9 @@ class _RegisterPageState extends State<RegisterPage> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Something went wrong. Please try again.')),
+          const SnackBar(
+            content: Text('Something went wrong. Please try again.'),
+          ),
         );
       }
     } finally {
@@ -100,8 +102,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   labelText: 'Full name',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
-                validator: (value) =>
-                    value == null || value.trim().length < 3
+                validator: (value) => value == null || value.trim().length < 3
                     ? 'Enter your full name'
                     : null,
               ),
@@ -135,8 +136,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   labelText: 'Password',
                   prefixIcon: Icon(Icons.lock_outline_rounded),
                 ),
-                validator: (value) =>
-                    value == null || value.length < 8
+                validator: (value) => value == null || value.length < 8
                     ? 'At least 8 characters'
                     : null,
               ),
