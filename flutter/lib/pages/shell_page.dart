@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../services/auth_controller.dart';
@@ -37,9 +40,38 @@ class _ShellPageState extends State<ShellPage> {
       if (!mounted || !update.updateAvailable) {
         return;
       }
+      if (await _tryPlayUpdate(force: update.isForceUpdate) || !mounted) {
+        return;
+      }
       await UpdateDialog.show(context, update);
     } catch (_) {
       // Offline or the check failed — never block the app over this.
+    }
+  }
+
+  /// Runs Google Play's in-app update (immediate when [force], else flexible).
+  /// Returns false when Play can't handle it (sideloaded APK, Play has no newer
+  /// build yet, or the user declined a forced update) so the caller can fall
+  /// back to [UpdateDialog].
+  Future<bool> _tryPlayUpdate({required bool force}) async {
+    if (!Platform.isAndroid) {
+      return false;
+    }
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability != UpdateAvailability.updateAvailable) {
+        return false;
+      }
+      if (force) {
+        return await InAppUpdate.performImmediateUpdate() ==
+            AppUpdateResult.success;
+      }
+      if (await InAppUpdate.startFlexibleUpdate() == AppUpdateResult.success) {
+        await InAppUpdate.completeFlexibleUpdate();
+      }
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -87,10 +119,7 @@ class _ShellPageState extends State<ShellPage> {
                 label: 'Home',
               ),
               NavigationDestination(
-                icon: Icon(
-                  Icons.add_circle_outline,
-                  color: AppColors.muted,
-                ),
+                icon: Icon(Icons.add_circle_outline, color: AppColors.muted),
                 selectedIcon: Icon(Icons.add_circle, color: Colors.white),
                 label: 'Book',
               ),
