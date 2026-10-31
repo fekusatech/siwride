@@ -1,13 +1,18 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\Order;
 use App\Models\Setting;
+use App\Models\User;
+use App\Services\CustomerOrderPaymentService;
 use App\Services\RecaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\Sanctum;
 
 it('shares only explicitly public settings', function () {
     Setting::setValue('business_name', 'Public business');
+    Setting::setValue('logo', '0');
     foreach (['xendit_secret_key', 'xendit_webhook_token', 'recaptcha_secret_key', 'future_secret'] as $key) {
         Setting::setValue($key, 'must-not-leak');
     }
@@ -15,6 +20,7 @@ it('shares only explicitly public settings', function () {
     $request->setLaravelSession(app('session.store'));
     $settings = app(HandleInertiaRequests::class)->share($request)['settings'];
     expect($settings['business_name'])->toBe('Public business')
+        ->and($settings['logo'])->toBeNull()
         ->and(json_encode($settings))->not->toContain('must-not-leak');
 });
 

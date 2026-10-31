@@ -80,7 +80,7 @@ class ActivityBookingController extends Controller
 
         $customer = Customer::where('email', $validated['customer_email'])->first();
 
-        if ($request->boolean('create_account') && $customer && $customer->password) {
+        if ($request->boolean('create_account') && $customer) {
             throw ValidationException::withMessages([
                 'customer_email' => 'This email is already registered. Please log in to continue.',
             ]);
@@ -92,16 +92,7 @@ class ActivityBookingController extends Controller
             $customerData['password'] = Hash::make($validated['password']);
         }
 
-        if ($customer) {
-            $updateData = ['name' => $customerData['name']];
-            if (isset($customerData['phone'])) {
-                $updateData['phone'] = $customerData['phone'];
-            }
-            if (! $customer->password && isset($customerData['password'])) {
-                $updateData['password'] = $customerData['password'];
-            }
-            $customer->update($updateData);
-        } else {
+        if (! $customer) {
             $customerData['email'] = $validated['customer_email'];
             $customer = Customer::create($customerData);
         }

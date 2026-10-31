@@ -161,7 +161,7 @@ class OrderController extends Controller
             'parking_gas_fee' => ['required', 'numeric', 'min:0'],
         ]);
 
-        $customer = Customer::updateOrCreate(
+        $customer = Customer::firstOrCreate(
             ['email' => $validated['customer_email']],
             [
                 'name' => $validated['customer_name'],
@@ -172,10 +172,11 @@ class OrderController extends Controller
         Order::create(array_merge(
             collect($validated)->except(['customer_name', 'customer_phone', 'customer_email'])->toArray(),
             [
+                'posted_by' => $request->user()->id,
                 'customer_id' => $customer->id,
-                'customer_name' => $customer->name,
-                'customer_phone' => $customer->phone,
-                'customer_email' => $customer->email,
+                'customer_name' => $validated['customer_name'],
+                'customer_phone' => $validated['customer_phone'] ?? null,
+                'customer_email' => $validated['customer_email'],
                 'is_shared' => empty($validated['driver_id']),
             ]
         ));
@@ -230,7 +231,7 @@ class OrderController extends Controller
                 'status' => ['required', 'string', 'in:pending,completed,cancelled'],
             ]);
 
-            $customer = Customer::updateOrCreate(
+            $customer = Customer::firstOrCreate(
                 ['email' => $validated['customer_email']],
                 [
                     'name' => $validated['customer_name'],
@@ -242,9 +243,9 @@ class OrderController extends Controller
                 collect($validated)->except(['customer_name', 'customer_phone', 'customer_email'])->toArray(),
                 [
                     'customer_id' => $customer->id,
-                    'customer_name' => $customer->name,
-                    'customer_phone' => $customer->phone,
-                    'customer_email' => $customer->email,
+                    'customer_name' => $validated['customer_name'],
+                    'customer_phone' => $validated['customer_phone'] ?? null,
+                    'customer_email' => $validated['customer_email'],
                     'is_shared' => empty($validated['driver_id']),
                 ]
             ));

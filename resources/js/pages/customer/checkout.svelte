@@ -88,7 +88,7 @@
             : '',
         vehicle_type: vehicleCategory?.vehicle_type || '',
         notes: '',
-        extras: [] as { label: string; price: number }[],
+        extras: [] as { id: string; label: string; price: number }[],
         create_account: false,
         password_confirmation: '',
         'g-recaptcha-response': '',
@@ -103,7 +103,7 @@
     $effect(() => {
         form.extras = selectedExtras.map((id) => {
             const extra = EXTRAS.find((e) => e.id === id);
-            return { label: extra?.label ?? id, price: extra?.price ?? 0 };
+            return { id, label: extra?.label ?? id, price: extra?.price ?? 0 };
         });
     });
 

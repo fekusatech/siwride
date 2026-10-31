@@ -8,11 +8,11 @@ use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\Setting;
 use App\Models\TourPackage;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
 use App\Models\ZonePricingRule;
+use App\Services\BookingExtrasService;
 use App\Services\CustomerOrderPaymentService;
 use App\Services\GeoService;
 use App\Services\OrderCancellationService;
@@ -308,7 +308,7 @@ class CustomerOrderController extends Controller
         $customer = Customer::where('email', $validated['email'])->first();
 
         // If trying to create account but email already registered with password
-        if ($request->boolean('create_account') && $customer && $customer->password) {
+        if ($request->boolean('create_account') && $customer) {
             return response()->json([
                 'valid' => false,
                 'message' => 'This email is already registered. Please log in to continue booking.',
@@ -390,7 +390,7 @@ class CustomerOrderController extends Controller
         $customer = Customer::where('email', $validated['email'])->first();
 
         // If trying to create account but email already registered with password
-        if ($request->boolean('create_account') && $customer && $customer->password) {
+        if ($request->boolean('create_account') && $customer) {
             throw ValidationException::withMessages([
                 'email' => 'This email is already registered. Please log in to continue booking.',
             ]);
@@ -406,19 +406,7 @@ class CustomerOrderController extends Controller
             $customerData['password'] = Hash::make($validated['password']);
         }
 
-        if ($customer) {
-            $updateData = ['name' => $customerData['name']];
-
-            if (isset($customerData['phone'])) {
-                $updateData['phone'] = $customerData['phone'];
-            }
-
-            if (! $customer->password && isset($customerData['password'])) {
-                $updateData['password'] = $customerData['password'];
-            }
-
-            $customer->update($updateData);
-        } else {
+        if (! $customer) {
             $customerData['email'] = $validated['email'];
             $customer = Customer::create($customerData);
         }
@@ -445,7 +433,7 @@ class CustomerOrderController extends Controller
             $dropoffLat = isset($validated['dropoff_latitude']) ? (float) $validated['dropoff_latitude'] : null;
             $dropoffLng = isset($validated['dropoff_longitude']) ? (float) $validated['dropoff_longitude'] : null;
 
-            if ($pickupLat && $pickupLng && $dropoffLat && $dropoffLng) {
+            if ($pickupLat !== null && $pickupLng !== null && $dropoffLat !== null && $dropoffLng !== null) {
                 $pickupZone = Zone::findContainingPoint($pickupLat, $pickupLng);
                 $dropoffZone = Zone::findContainingPoint($dropoffLat, $dropoffLng);
 
@@ -470,11 +458,11 @@ class CustomerOrderController extends Controller
             }
         }
 
-        $extrasTotal = 0.0;
-        $extras = $validated['extras'] ?? [];
-        foreach ($extras as $extra) {
-            $extrasTotal += (float) ($extra['price'] ?? 0);
+        if ($basePrice <= 0) {
+            throw ValidationException::withMessages(['vehicle_category_id' => 'No valid fare is available for this trip.']);
         }
+        $extras = app(BookingExtrasService::class)->resolve($validated['extras'] ?? []);
+        $extrasTotal = array_sum(array_column($extras, 'price'));
 
         $tripType = $validated['trip_type'] ?? 'one_way';
         $isRoundTrip = $tripType === 'round_trip';

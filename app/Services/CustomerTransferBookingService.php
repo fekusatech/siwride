@@ -18,14 +18,10 @@ class CustomerTransferBookingService
     {
         return DB::transaction(function () use ($data): Order {
             $data['email'] = Str::lower(trim($data['email']));
-            $customer = Customer::query()->firstOrNew(['email' => $data['email']]);
-            $customer->name = $data['customer_name'];
-
-            if (! empty($data['customer_phone'])) {
-                $customer->phone = $data['customer_phone'];
-            }
-
-            $customer->save();
+            $customer = Customer::query()->firstOrCreate(['email' => $data['email']], [
+                'name' => $data['customer_name'],
+                'phone' => $data['customer_phone'] ?? null,
+            ]);
 
             $estimate = $this->pricing->estimate(
                 (float) $data['pickup_latitude'],

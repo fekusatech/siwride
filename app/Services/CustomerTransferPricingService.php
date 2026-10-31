@@ -87,7 +87,7 @@ class CustomerTransferPricingService
     {
         $price = $estimate['prices']->firstWhere('id', $vehicleCategoryId);
 
-        if (! $price) {
+        if (! $price || (float) $price['estimated_price'] <= 0) {
             throw ValidationException::withMessages([
                 'vehicle_category_id' => 'The selected vehicle is not available for this trip.',
             ]);

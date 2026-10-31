@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Setting;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
+use App\Services\BookingExtrasService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
@@ -117,11 +118,7 @@ class HandleInertiaRequests extends Middleware
             'privacy_content' => '<h4 class="mb-3">1. Information Collection</h4><p class="mb-5">We collect information from you when you book a ride on our site, subscribe to our newsletter, respond to a survey or fill out a form.</p>',
 
             // Booking Extras
-            'booking_extras' => [
-                ['id' => 'english_driver', 'label' => 'English-speaking driver', 'description' => 'A driver with basic English communication ability.', 'price' => 30000],
-                ['id' => 'water', 'label' => 'Drinking water', 'description' => 'A bottle of still water (0.5L).', 'price' => 20000],
-                ['id' => 'pets', 'label' => 'I am travelling with pets', 'description' => 'Pets must be kept in a carrier. Additional charges may apply.', 'price' => 0],
-            ],
+            'booking_extras' => BookingExtrasService::DEFAULTS,
             'destinations_subtitle' => 'Explore the most beautiful places in Bali with our professional drivers.',
             'popular_destinations' => [
                 [
@@ -217,6 +214,10 @@ class HandleInertiaRequests extends Middleware
         $settings = array_replace($defaults, Setting::query()
             ->whereIn('setting_key', array_keys($defaults))
             ->pluck('setting_value', 'setting_key')->all());
+
+        if (in_array($settings['logo'], ['0', 0, 'false', false], true)) {
+            $settings['logo'] = null;
+        }
 
         // Decode JSON arrays if they are strings
         $jsonKeys = ['our_services', 'popular_destinations', 'why_choose_us_features', 'customer_testimonials', 'faq_items', 'booking_extras'];
