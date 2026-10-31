@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\JobClaimDecisionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -220,24 +221,9 @@ class JobController extends Controller
             'driver_id' => ['prohibited'],
         ]);
 
-        return DB::transaction(function () use ($request, $id, $validated, $accept) {
-            $order = Order::query()->lockForUpdate()->findOrFail($id);
-            $actor = $request->user();
-            abort_unless($actor->isAdmin() || ($order->posted_by !== null && (int) $order->posted_by === $actor->id), 403);
-            $claim = JobClaim::query()->where('order_id', $order->id)
-                ->lockForUpdate()->findOrFail($validated['claim_id']);
-            abort_if($claim->status !== 'pending' || $order->driver_id !== null || $order->is_cancelled || ! in_array($order->status, ['pending', 'shared'], true), 409);
+        app(JobClaimDecisionService::class)->decide($request->user(), $id, (int) $validated['claim_id'], $accept);
 
-            if ($accept) {
-                $driverId = $claim->driver?->driver_id;
-                abort_unless($driverId, 422, 'Driver record not found.');
-                $order->update(['driver_id' => $driverId, 'is_shared' => false, 'status' => 'pending']);
-                JobClaim::query()->where('order_id', $id)->where('status', 'pending')->update(['status' => 'rejected']);
-            }
-            $claim->update(['status' => $accept ? 'approved' : 'rejected']);
-
-            return response()->json(['status' => 'success', 'message' => $accept ? 'Klaim driver diterima!' : 'Klaim driver ditolak.']);
-        }, attempts: 5);
+        return response()->json(['status' => 'success', 'message' => $accept ? 'Klaim driver diterima!' : 'Klaim driver ditolak.']);
     }
 
     public function updateStatus(Request $request, $id)

@@ -1,12 +1,13 @@
 <script lang="ts">
-    import AdminLayout from '@/layouts/AdminLayout.svelte';
-    import AppHead from '@/components/AppHead.svelte';
-    import Pagination from '@/components/Pagination.svelte';
-    import OrderForm from '@/components/Orders/OrderForm.svelte';
-    import Flatpickr from '@/components/Flatpickr.svelte';
     import { Link, router, usePage } from '@inertiajs/svelte';
     import { onMount } from 'svelte';
     import { fade, fly } from 'svelte/transition';
+    import { acceptClaim as approveOrderClaim, rejectClaim as rejectOrderClaim } from '@/actions/App/Http/Controllers/Admin/OrderController';
+    import AppHead from '@/components/AppHead.svelte';
+    import Flatpickr from '@/components/Flatpickr.svelte';
+    import OrderForm from '@/components/Orders/OrderForm.svelte';
+    import Pagination from '@/components/Pagination.svelte';
+    import AdminLayout from '@/layouts/AdminLayout.svelte';
 
     let page = usePage();
     let authUser = page.props.auth?.user as any;
@@ -81,8 +82,8 @@
         processingClaimId = order.id;
         processingClaimAction = 'accept';
         router.post(
-            `/admin/orders/${order.id}/accept-claim`,
-            { driver_id: order.current_claim.driver_id },
+            approveOrderClaim.url(order.id),
+            { claim_id: order.current_claim.id },
             {
                 preserveScroll: true,
                 onFinish: () => {
@@ -97,8 +98,8 @@
         processingClaimId = order.id;
         processingClaimAction = 'reject';
         router.post(
-            `/admin/orders/${order.id}/reject-claim`,
-            { driver_id: order.current_claim.driver_id },
+            rejectOrderClaim.url(order.id),
+            { claim_id: order.current_claim.id },
             {
                 preserveScroll: true,
                 onFinish: () => {

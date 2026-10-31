@@ -9,9 +9,9 @@ use App\Models\Driver;
 use App\Models\Order;
 use App\Models\Partner;
 use App\Services\GeoService;
+use App\Services\JobClaimDecisionService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -321,34 +321,11 @@ class OrderController extends Controller
     /**
      * Accept a driver's claim request and assign the driver to the order.
      */
-    public function acceptClaim(Order $order, WhatsAppService $waService)
+    public function acceptClaim(Request $request, Order $order, WhatsAppService $waService)
     {
-        $claim = $order->claims()->where('status', 'pending')->latest()->first();
-
-        if (! $claim) {
-            return redirect()->back()->with('error', 'Tidak ada claim yang perlu dikonfirmasi.');
-        }
-
-        $user = $claim->driver; // Driver here is a User model from job_claims.driver_id
-        if (! $user) {
-            return redirect()->back()->with('error', 'Driver tidak ditemukan.');
-        }
-
-        // Get Driver model (to get phone, vehicles, etc)
-        $driver = Driver::where('email', $user->email)->first();
-        if (! $driver) {
-            return redirect()->back()->with('error', 'Profil Driver tidak ditemukan.');
-        }
-
-        DB::transaction(function () use ($order, $driver, $claim) {
-            $order->update([
-                'driver_id' => $driver->id,
-            ]);
-
-            // Update all claims for this order
-            $order->claims()->update(['status' => 'rejected']);
-            $claim->update(['status' => 'approved']);
-        });
+        $validated = $request->validate(['claim_id' => ['required', 'integer'], 'driver_id' => ['prohibited']]);
+        $order = app(JobClaimDecisionService::class)->decide($request->user(), $order->id, (int) $validated['claim_id'], true);
+        $driver = $order->driver;
 
         $d = new \DateTime($order->date);
         $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -387,19 +364,10 @@ class OrderController extends Controller
     /**
      * Reject a driver's claim request.
      */
-    public function rejectClaim(Order $order)
+    public function rejectClaim(Request $request, Order $order)
     {
-        $claims = $order->claims()->where('status', 'pending')->get();
-
-        if ($claims->isEmpty()) {
-            return redirect()->back()->with('error', 'Tidak ada claim yang perlu ditolak.');
-        }
-
-        $order->claims()->where('status', 'pending')->update([
-            'status' => 'rejected',
-        ]);
-
-        $order->update(['claimed_driver_id' => null]);
+        $validated = $request->validate(['claim_id' => ['required', 'integer'], 'driver_id' => ['prohibited']]);
+        app(JobClaimDecisionService::class)->decide($request->user(), $order->id, (int) $validated['claim_id'], false);
 
         return redirect()->back()->with('success', 'Claim driver ditolak.');
     }
