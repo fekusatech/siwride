@@ -13,6 +13,9 @@ class CustomerOrderPaymentService
     public function createInvoice(Order $order): string
     {
         $xenditKey = config('services.xendit.secret_key');
+        if (blank($xenditKey)) {
+            throw new \LogicException('Xendit secret key is not configured.');
+        }
         Configuration::setXenditKey($xenditKey);
 
         $client = new Client([

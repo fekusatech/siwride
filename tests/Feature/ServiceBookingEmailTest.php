@@ -5,6 +5,11 @@ use App\Mail\PaymentReminderMail;
 use App\Models\DriverServiceBooking;
 use Illuminate\Support\Facades\Mail;
 
+beforeEach(function () {
+    config(['services.xendit.webhook_token' => 'test-webhook-token']);
+    $this->withHeader('x-callback-token', 'test-webhook-token');
+});
+
 it('renders discount row in service confirmed email only when voucher applied', function () {
     $withVoucher = DriverServiceBooking::factory()->create([
         'voucher_code' => 'SAVE10',

@@ -203,6 +203,9 @@ class ActivityBookingController extends Controller
     private function generateXenditPayment(ActivityBooking $booking, Activity $activity): string
     {
         $xenditKey = config('services.xendit.secret_key');
+        if (blank($xenditKey)) {
+            throw new \LogicException('Xendit secret key is not configured.');
+        }
         Configuration::setXenditKey($xenditKey);
 
         $guzzleClient = new Client(['verify' => ! app()->environment('local')]);

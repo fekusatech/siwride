@@ -103,6 +103,9 @@ class TransactionController extends Controller
     private function createQrisPaymentRequest(Transaction $transaction): PaymentRequest
     {
         $xenditKey = config('services.xendit.secret_key');
+        if (blank($xenditKey)) {
+            throw new \LogicException('Xendit secret key is not configured.');
+        }
         Configuration::setXenditKey($xenditKey);
 
         $guzzleClient = new Client([

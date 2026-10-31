@@ -10,7 +10,7 @@ class SettingController extends Controller
 {
     public function index()
     {
-        $settings = Setting::all()->pluck('setting_value', 'setting_key');
+        $settings = Setting::query()->whereNotIn('setting_key', ['recaptcha_secret_key', 'xendit_secret_key', 'xendit_webhook_token'])->pluck('setting_value', 'setting_key');
 
         return response()->json([
             'status' => 'success',
@@ -22,6 +22,9 @@ class SettingController extends Controller
     {
         $request->validate([
             'settings' => 'required|array',
+            'settings.recaptcha_secret_key' => ['prohibited'],
+            'settings.xendit_secret_key' => ['prohibited'],
+            'settings.xendit_webhook_token' => ['prohibited'],
         ]);
 
         foreach ($request->settings as $key => $value) {

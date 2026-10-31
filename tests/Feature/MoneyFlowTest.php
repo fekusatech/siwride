@@ -12,6 +12,11 @@ use App\Models\User;
 use App\Services\DriverWalletService;
 use Illuminate\Support\Facades\Mail;
 
+beforeEach(function () {
+    config(['services.xendit.webhook_token' => 'test-webhook-token']);
+    $this->withHeader('x-callback-token', 'test-webhook-token');
+});
+
 it('assigns and credits a paid service booking only once', function () {
     Mail::fake();
 

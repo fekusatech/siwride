@@ -1,8 +1,8 @@
 <script lang="ts">
     import { useForm, page } from '@inertiajs/svelte';
+    import { updateGeneral } from '@/actions/App/Http/Controllers/Admin/SettingController';
     import AppHead from '@/components/AppHead.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
-    import { updateGeneral } from '@/actions/App/Http/Controllers/Admin/SettingController';
 
     let { setting } = $props();
 

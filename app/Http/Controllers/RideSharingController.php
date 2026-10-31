@@ -287,6 +287,9 @@ class RideSharingController extends Controller
     private function generateXenditPayment(Order $order): string
     {
         $xenditKey = config('services.xendit.secret_key');
+        if (blank($xenditKey)) {
+            throw new \LogicException('Xendit secret key is not configured.');
+        }
         Configuration::setXenditKey($xenditKey);
 
         $expiry = now()->addHours(24);

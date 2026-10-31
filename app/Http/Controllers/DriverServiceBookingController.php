@@ -183,6 +183,9 @@ class DriverServiceBookingController extends Controller
     private function generateXenditPayment(DriverServiceBooking $booking, DriverService $service): string
     {
         $xenditKey = config('services.xendit.secret_key');
+        if (blank($xenditKey)) {
+            throw new \LogicException('Xendit secret key is not configured.');
+        }
         Configuration::setXenditKey($xenditKey);
 
         $guzzleClient = new Client(['verify' => ! app()->environment('local')]);
