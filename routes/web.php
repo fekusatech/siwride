@@ -84,7 +84,7 @@ Route::get('/dokumentasi', function () {
 Route::inertia('/drive-with-us', 'Public/DriveWithUs')->name('drive-with-us');
 
 Route::get('/become-partner', [PartnerApplyController::class, 'create'])->name('become-partner');
-Route::post('/become-partner', [PartnerApplyController::class, 'store']);
+Route::post('/become-partner', [PartnerApplyController::class, 'store'])->name('become-partner.store');
 Route::get('/partners', [PublicPartnerController::class, 'index'])->name('partners.index');
 Route::get('/partners/{partner:slug}', [PublicPartnerController::class, 'show'])->name('partners.show');
 
@@ -255,6 +255,7 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function () {
     Route::post('admin/drivers/{driver}/sync-user', [DriverController::class, 'syncUser'])->name('admin.drivers.sync-user');
     Route::resource('admin/drivers', DriverController::class)->names('admin.drivers');
 
+    Route::get('admin/partners/{partner}/identity', [PartnerController::class, 'identity'])->name('admin.partners.identity');
     Route::patch('admin/partners/{partner}/approve', [PartnerController::class, 'approve'])->name('admin.partners.approve');
     Route::patch('admin/partners/{partner}/reject', [PartnerController::class, 'reject'])->name('admin.partners.reject');
     Route::resource('admin/partners', PartnerController::class)->except(['create', 'show'])->names('admin.partners');

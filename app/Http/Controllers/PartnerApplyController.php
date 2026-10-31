@@ -39,7 +39,7 @@ class PartnerApplyController extends Controller
 
         $partner = DB::transaction(function () use ($validated, $request) {
             if ($request->hasFile('nik_image')) {
-                $validated['nik_image'] = $request->file('nik_image')->store('partners/nik', 'public');
+                $validated['nik_image'] = $request->file('nik_image')->store('partners/nik', 'local');
             }
 
             $validated['slug'] = $this->uniqueSlug($validated['name']);

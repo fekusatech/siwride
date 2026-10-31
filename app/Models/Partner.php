@@ -39,6 +39,8 @@ class Partner extends Model
     ];
 
     protected $hidden = [
+        'nik',
+        'nik_image',
         'password',
         'remember_token',
     ];

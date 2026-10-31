@@ -11,9 +11,18 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PartnerController extends Controller
 {
+    public function identity(Partner $partner): StreamedResponse
+    {
+        abort_unless($partner->nik_image, 404);
+        abort_unless(Storage::disk('local')->exists($partner->nik_image), 404);
+
+        return Storage::disk('local')->response($partner->nik_image, headers: ['Cache-Control' => 'private, no-store']);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -113,9 +122,9 @@ class PartnerController extends Controller
 
         if ($request->hasFile('nik_image')) {
             if ($partner->nik_image) {
-                Storage::disk('public')->delete($partner->nik_image);
+                Storage::disk('local')->delete($partner->nik_image);
             }
-            $validated['nik_image'] = $request->file('nik_image')->store('partners/nik', 'public');
+            $validated['nik_image'] = $request->file('nik_image')->store('partners/nik', 'local');
         } else {
             unset($validated['nik_image']);
         }
@@ -148,7 +157,7 @@ class PartnerController extends Controller
     public function destroy(Partner $partner)
     {
         if ($partner->nik_image) {
-            Storage::disk('public')->delete($partner->nik_image);
+            Storage::disk('local')->delete($partner->nik_image);
         }
 
         if ($partner->image) {
