@@ -13,6 +13,7 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
+        'posted_by',
         'booking_code',
         'order_number',
         'customer_id',

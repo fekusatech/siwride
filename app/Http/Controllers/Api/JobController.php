@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\Setting;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -202,79 +203,41 @@ class JobController extends Controller
         return $this->take($request, $id);
     }
 
-    public function acceptClaim(Request $request, $id)
+    public function acceptClaim(Request $request, int $id): JsonResponse
     {
-        $request->validate([
-            'driver_id' => 'required|exists:users,id',
-        ]);
-
-        return DB::transaction(function () use ($id, $request) {
-            $order = Order::findOrFail($id);
-            $userId = $request->driver_id;
-
-            $user = User::findOrFail($userId);
-            $driverId = $user->driver_id;
-
-            if (! $driverId) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Driver record tidak ditemukan.',
-                ], 404);
-            }
-
-            // Check if this driver actually claimed this job
-            $claim = JobClaim::where('order_id', $id)
-                ->where('driver_id', $userId)
-                ->first();
-
-            if (! $claim) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Driver ini belum melakukan klaim pada pekerjaan ini.',
-                ], 400);
-            }
-
-            // Assign driver to order (drivers.id, not users.id)
-            $order->update([
-                'driver_id' => $driverId,
-                'is_shared' => false,
-                'status' => 'pending',
-            ]);
-
-            // Update all claims for this order
-            JobClaim::where('order_id', $id)->update(['status' => 'rejected']);
-            $claim->update(['status' => 'approved']);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Klaim driver diterima!',
-            ]);
-        });
+        return $this->decideClaim($request, $id, true);
     }
 
-    public function rejectClaim(Request $request, $id)
+    public function rejectClaim(Request $request, int $id): JsonResponse
     {
-        $request->validate([
-            'driver_id' => 'required|exists:users,id',
+        return $this->decideClaim($request, $id, false);
+    }
+
+    private function decideClaim(Request $request, int $id, bool $accept): JsonResponse
+    {
+        $validated = $request->validate([
+            'claim_id' => ['required', 'integer'],
+            'driver_id' => ['prohibited'],
         ]);
 
-        $claim = JobClaim::where('order_id', $id)
-            ->where('driver_id', $request->driver_id)
-            ->first();
+        return DB::transaction(function () use ($request, $id, $validated, $accept) {
+            $order = Order::query()->lockForUpdate()->findOrFail($id);
+            $actor = $request->user();
+            abort_unless($actor->isAdmin() || ($order->posted_by !== null && (int) $order->posted_by === $actor->id), 403);
+            $claim = JobClaim::query()->where('order_id', $order->id)
+                ->lockForUpdate()->findOrFail($validated['claim_id']);
+            abort_if($claim->status !== 'pending' || $order->driver_id !== null || $order->is_cancelled || ! in_array($order->status, ['pending', 'shared'], true), 409);
 
-        if (! $claim) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Klaim tidak ditemukan.',
-            ], 404);
-        }
+            if ($accept) {
+                $driverId = $claim->driver?->driver_id;
+                abort_unless($driverId, 422, 'Driver record not found.');
+                $order->update(['driver_id' => $driverId, 'is_shared' => false, 'status' => 'pending']);
+                JobClaim::query()->where('order_id', $id)->where('status', 'pending')->update(['status' => 'rejected']);
+            }
+            $claim->update(['status' => $accept ? 'approved' : 'rejected']);
 
-        $claim->update(['status' => 'rejected']);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Klaim driver ditolak.',
-        ]);
+            return response()->json(['status' => 'success', 'message' => $accept ? 'Klaim driver diterima!' : 'Klaim driver ditolak.']);
+        }, attempts: 5);
     }
 
     public function updateStatus(Request $request, $id)
@@ -421,6 +384,7 @@ class JobController extends Controller
         }
 
         $order = Order::create(array_merge($data, [
+            'posted_by' => $request->user()->id,
             'booking_code' => 'SW-'.strtoupper(str()->random(8)),
             'order_number' => '#'.str()->random(6),
             'status' => $request->driver_id ? 'pending' : 'shared',
