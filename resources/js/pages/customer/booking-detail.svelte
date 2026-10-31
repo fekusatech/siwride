@@ -1,11 +1,12 @@
 <script lang="ts">
-    import AppHead from '@/components/AppHead.svelte';
-    import Header from '@/components/Template/Header.svelte';
-    import Footer from '@/components/Template/Footer.svelte';
-    import Preloader from '@/components/Template/Preloader.svelte';
     import { Link, useForm } from '@inertiajs/svelte';
     import { router } from '@inertiajs/svelte';
     import { onMount } from 'svelte';
+    import { cancelOrder } from '@/actions/App/Http/Controllers/CustomerOrderController';
+    import AppHead from '@/components/AppHead.svelte';
+    import Footer from '@/components/Template/Footer.svelte';
+    import Header from '@/components/Template/Header.svelte';
+    import Preloader from '@/components/Template/Preloader.svelte';
     import { formatTime12 } from '@/lib/pickupTime';
     import { formatRupiah } from '@/lib/utils';
 
@@ -184,15 +185,19 @@
     const handleCancelOrder = async () => {
         if (!canCancelOrder) return;
 
+        const email = window.prompt('Enter the email used for this booking to confirm cancellation:');
+        if (!email) return;
+
         isCancelling = true;
         cancellationError = null;
         cancellationMessage = null;
 
         try {
             const response = await fetch(
-                `/booking/${order.booking_code}/cancel`,
+                cancelOrder.url(order.booking_code),
                 {
                     method: 'POST',
+                    body: JSON.stringify({ email }),
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-Token':

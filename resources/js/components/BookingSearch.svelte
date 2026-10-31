@@ -1,15 +1,12 @@
 <script lang="ts">
     import { Link, router } from '@inertiajs/svelte';
+    import { search, show } from '@/routes/booking';
 
     interface Order {
         booking_code: string;
-        order_number: string;
-        pickup_address: string;
-        dropoff_address: string;
         date: string;
         status: string;
         customer_name: string | null;
-        driver_name: string | null;
     }
 
     let { variant = 'default' }: { variant?: 'default' | 'compact' | 'hero' } =
@@ -33,11 +30,6 @@
         return statusMap[status] || { text: status, color: '#6b7280' };
     };
 
-    const truncate = (text: string, length: number = 30) => {
-        if (text.length <= length) return text;
-        return text.substring(0, length) + '...';
-    };
-
     const performSearch = async (query: string) => {
         if (query.length < 2) {
             searchResults = [];
@@ -49,9 +41,7 @@
         searchError = '';
 
         try {
-            const response = await fetch(
-                `/booking/search?query=${encodeURIComponent(query)}`,
-            );
+            const response = await fetch(search.url({ query: { query } }));
             const data = await response.json();
 
             if (response.ok) {
@@ -94,10 +84,10 @@
             e.preventDefault();
             if (searchResults.length > 0) {
                 // Navigate to first result
-                router.visit(`/booking/${searchResults[0].booking_code}`);
+                router.visit(show.url(searchResults[0].booking_code));
             } else {
                 // Direct navigation attempt
-                router.visit(`/booking/${searchQuery.toUpperCase()}`);
+                router.visit(show.url(searchQuery.toUpperCase()));
             }
             showDropdown = false;
         }
@@ -111,7 +101,7 @@
         searchQuery = '';
         searchResults = [];
         showDropdown = false;
-        router.visit(`/booking/${bookingCode}`);
+        router.visit(show.url(bookingCode));
     };
 
     const handleClickOutside = (e: MouseEvent) => {
@@ -193,15 +183,6 @@
                             >
                                 {formatStatus(order.status).text}
                             </span>
-                        </div>
-                        <div class="result-route">
-                            <span class="location"
-                                >{truncate(order.pickup_address)}</span
-                            >
-                            <i class="fas fa-arrow-right route-arrow"></i>
-                            <span class="location"
-                                >{truncate(order.dropoff_address)}</span
-                            >
                         </div>
                     </div>
                     <div class="result-meta">

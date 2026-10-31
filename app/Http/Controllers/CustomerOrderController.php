@@ -210,7 +210,7 @@ class CustomerOrderController extends Controller
             'order' => $order ? [
                 'booking_code' => $order->booking_code,
                 'customer_name' => $order->customer_name,
-                'email' => $order->customer_email,
+                'email' => Auth::guard('customer')->check() && Auth::guard('customer')->id() === $order->customer_id ? $order->customer_email : null,
                 'pickup_address' => $order->pickup_address,
                 'dropoff_address' => $order->dropoff_address,
                 'date' => $order->date->format('Y-m-d'),
@@ -333,22 +333,17 @@ class CustomerOrderController extends Controller
 
         $query = $validated['query'];
 
-        $orders = Order::with(['customer', 'driver'])
-            ->where('booking_code', 'like', "%{$query}%")
-            ->orWhere('order_number', 'like', "%{$query}%")
-            ->limit(5)
+        $orders = Order::query()
+            ->where('booking_code', strtoupper(trim($query)))
+            ->limit(1)
             ->get();
 
         return response()->json([
-            'orders' => $orders->map(fn ($order) => [
+            'orders' => $orders->map(fn (Order $order): array => [
                 'booking_code' => $order->booking_code,
-                'order_number' => $order->order_number,
-                'pickup_address' => $order->pickup_address,
-                'dropoff_address' => $order->dropoff_address,
                 'date' => $order->date->format('Y-m-d'),
                 'status' => $order->status,
-                'customer_name' => $order->customer_name,
-                'driver_name' => $order->driver?->name,
+                'customer_name' => mb_substr($order->customer_name ?? '', 0, 1).'***',
             ]),
         ]);
     }
@@ -602,7 +597,7 @@ class CustomerOrderController extends Controller
             'booking_code' => $bookingCode,
             'order' => $order ? [
                 'customer_name' => $order->customer_name,
-                'email' => $order->customer_email,
+                'email' => Auth::guard('customer')->check() && Auth::guard('customer')->id() === $order->customer_id ? $order->customer_email : null,
                 'pickup_address' => $order->pickup_address,
                 'dropoff_address' => $order->dropoff_address,
                 'date' => $order->date->format('Y-m-d'),
@@ -618,12 +613,16 @@ class CustomerOrderController extends Controller
      */
     public function cancelOrder(Request $request, $bookingCode): JsonResponse
     {
-        $baseCode = explode('-', $bookingCode)[0];
-        $order = Order::where('booking_code', $baseCode)->firstOrFail();
-
-        // Verify the user is the order owner (if authenticated) or it's a guest order
-        if ($request->user('customer') && $order->customer_id !== $request->user('customer')->id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        $order = Order::where('booking_code', $bookingCode)->firstOrFail();
+        $customer = $request->user('customer');
+        if ($customer) {
+            abort_unless($order->customer_id === $customer->id, 403);
+        } else {
+            $validated = $request->validate(['email' => ['required', 'email']]);
+            abort_unless(
+                hash_equals(strtolower(trim($order->customer_email ?? '')), strtolower(trim($validated['email']))),
+                403,
+            );
         }
 
         $cancellationService = new OrderCancellationService;
@@ -726,6 +725,12 @@ class CustomerOrderController extends Controller
 
         // Refresh order from database to get updated status, then reload relations
         $order = $order->fresh(['customer', 'driver', 'vehicleCategory', 'linkedOrder.driver', 'linkedOrder.vehicleCategory']);
+
+        if (! Auth::guard('customer')->check() || Auth::guard('customer')->id() !== $order->customer_id) {
+            foreach ([$order, $order->linkedOrder] as $trip) {
+                $trip?->makeHidden(['customer_email', 'customer']);
+            }
+        }
 
         return Inertia::render('customer/booking-detail', [
             'order' => $order,
