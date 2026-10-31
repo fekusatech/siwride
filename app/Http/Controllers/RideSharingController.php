@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\RideSharingCity;
 use App\Models\RideSharingRoute;
 use App\Models\RideSharingSchedule;
-use App\Models\Setting;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\RedirectResponse;
@@ -287,7 +286,7 @@ class RideSharingController extends Controller
 
     private function generateXenditPayment(Order $order): string
     {
-        $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
+        $xenditKey = config('services.xendit.secret_key');
         Configuration::setXenditKey($xenditKey);
 
         $expiry = now()->addHours(24);

@@ -15,23 +15,20 @@ class SettingController extends Controller
     public function general(): Response
     {
         return Inertia::render('Admin/Settings/General', [
-            'setting' => Setting::values([
+            'setting' => array_diff_key(Setting::values([
                 'business_name' => config('app.name', 'Siwride'),
                 'logo' => null,
                 'recaptcha_enabled' => '0',
                 'recaptcha_site_key' => null,
-                'recaptcha_secret_key' => null,
                 'xendit_enabled' => '0',
-                'xendit_secret_key' => null,
                 'xendit_public_key' => null,
-                'xendit_webhook_token' => null,
                 'referral_commission_amount' => '50000',
                 'referral_window_days' => '30',
                 'dp_percent_default' => '30',
                 'platform_commission_percent' => '10',
                 'min_withdrawal_amount' => '100000',
                 'updated_at' => Setting::query()->max('updated_at'),
-            ]),
+            ]), array_flip(['recaptcha_secret_key', 'xendit_secret_key', 'xendit_webhook_token'])),
         ]);
     }
 
@@ -42,11 +39,8 @@ class SettingController extends Controller
             'logo' => ['nullable', 'image', 'max:2048'],
             'recaptcha_enabled' => ['required', 'boolean'],
             'recaptcha_site_key' => ['nullable', 'string', 'max:255'],
-            'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
             'xendit_enabled' => ['required', 'boolean'],
-            'xendit_secret_key' => ['nullable', 'string', 'max:500'],
             'xendit_public_key' => ['nullable', 'string', 'max:500'],
-            'xendit_webhook_token' => ['nullable', 'string', 'max:500'],
             'referral_commission_amount' => ['required', 'numeric', 'min:0'],
             'referral_window_days' => ['required', 'integer', 'min:1'],
             'dp_percent_default' => ['required', 'numeric', 'between:10,100'],
@@ -57,24 +51,14 @@ class SettingController extends Controller
         if ($validated['recaptcha_enabled']) {
             $request->validate([
                 'recaptcha_site_key' => ['required', 'string', 'max:255'],
-                'recaptcha_secret_key' => ['required', 'string', 'max:255'],
-            ]);
-        }
-
-        if ($validated['xendit_enabled']) {
-            $request->validate([
-                'xendit_secret_key' => ['required', 'string', 'max:500'],
             ]);
         }
 
         Setting::setValue('business_name', $validated['business_name']);
         Setting::setValue('recaptcha_enabled', $validated['recaptcha_enabled'] ? '1' : '0');
         Setting::setValue('recaptcha_site_key', $validated['recaptcha_site_key'] ?? '');
-        Setting::setValue('recaptcha_secret_key', $validated['recaptcha_secret_key'] ?? '');
         Setting::setValue('xendit_enabled', $validated['xendit_enabled'] ? '1' : '0');
-        Setting::setValue('xendit_secret_key', $validated['xendit_secret_key'] ?? '');
         Setting::setValue('xendit_public_key', $validated['xendit_public_key'] ?? '');
-        Setting::setValue('xendit_webhook_token', $validated['xendit_webhook_token'] ?? '');
         Setting::setValue('referral_commission_amount', (string) $validated['referral_commission_amount']);
         Setting::setValue('referral_window_days', (string) $validated['referral_window_days']);
         Setting::setValue('dp_percent_default', (string) $validated['dp_percent_default']);

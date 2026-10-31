@@ -8,7 +8,6 @@ use App\Models\ActivityBooking;
 use App\Models\DriverServiceBooking;
 use App\Models\DriverWalletTransaction;
 use App\Models\Order;
-use App\Models\Setting;
 use App\Models\Transaction;
 use App\Services\DriverWalletService;
 use App\Support\DriverReferralAttribution;
@@ -29,14 +28,14 @@ class WebhookController extends Controller
      */
     private function verifyToken(Request $request): bool
     {
-        $token = Setting::getValue('xendit_webhook_token') ?? config('services.xendit.webhook_token');
+        $token = config('services.xendit.webhook_token');
         $callbackToken = $request->header('x-callback-token');
 
         if (! $token) {
-            return true;
+            return false;
         }
 
-        return $callbackToken === $token;
+        return is_string($callbackToken) && hash_equals($token, $callbackToken);
     }
 
     /**
@@ -44,6 +43,12 @@ class WebhookController extends Controller
      */
     private function requireValidToken(Request $request): ?JsonResponse
     {
+        if (blank(config('services.xendit.webhook_token'))) {
+            Log::error('Xendit webhook token is not configured');
+
+            return response()->json(['error' => 'Webhook unavailable'], 503);
+        }
+
         if (! $this->verifyToken($request)) {
             Log::warning('Xendit Webhook — invalid callback token', [
                 'ip' => $request->ip(),

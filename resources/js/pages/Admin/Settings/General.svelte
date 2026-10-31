@@ -1,8 +1,8 @@
 <script lang="ts">
-    import AdminLayout from '@/layouts/AdminLayout.svelte';
+    import { useForm, page } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
-    import { useForm, page, router } from '@inertiajs/svelte';
-    import { fade } from 'svelte/transition';
+    import AdminLayout from '@/layouts/AdminLayout.svelte';
+    import { updateGeneral } from '@/actions/App/Http/Controllers/Admin/SettingController';
 
     let { setting } = $props();
 
@@ -12,19 +12,18 @@
         logo: null as File | null,
         recaptcha_enabled: setting.recaptcha_enabled === '1',
         recaptcha_site_key: setting.recaptcha_site_key ?? '',
-        recaptcha_secret_key: setting.recaptcha_secret_key ?? '',
         xendit_enabled: setting.xendit_enabled === '1',
-        xendit_secret_key: setting.xendit_secret_key ?? '',
         xendit_public_key: setting.xendit_public_key ?? '',
-        xendit_webhook_token: setting.xendit_webhook_token ?? '',
-        referral_commission_amount: setting.referral_commission_amount ?? '50000',
+        referral_commission_amount:
+            setting.referral_commission_amount ?? '50000',
         referral_window_days: setting.referral_window_days ?? '30',
         dp_percent_default: setting.dp_percent_default ?? '30',
-        platform_commission_percent: setting.platform_commission_percent ?? '10',
+        platform_commission_percent:
+            setting.platform_commission_percent ?? '10',
         min_withdrawal_amount: setting.min_withdrawal_amount ?? '100000',
     });
 
-    let logoPreview = $state<string | null>(null);
+    let logoPreview = $derived<string | null>(storagePreview(setting.logo));
 
     function storagePreview(path: string | null) {
         if (!path || path === '0' || path === 'false') {
@@ -34,13 +33,9 @@
         return `/storage/${path}?v=${new Date(setting.updated_at).getTime()}`;
     }
 
-    // Sync previews with props when they change (after successful submission)
-    $effect(() => {
-        logoPreview = storagePreview(setting.logo);
-    });
-
     function handleLogoChange(e: Event) {
         const file = (e.target as HTMLInputElement).files?.[0];
+
         if (file) {
             form.logo = file;
             const reader = new FileReader();
@@ -52,7 +47,7 @@
     function submit(e: Event) {
         e.preventDefault();
 
-        form.post('/admin/settings/general', {
+        form.post(updateGeneral.url(), {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
@@ -253,29 +248,10 @@
                                             </div>
                                         {/if}
                                     </div>
-                                    <div class="col-md-6">
-                                        <label
-                                            for="recaptcha_secret_key"
-                                            class="form-label fw-bold"
-                                            >Secret Key</label
-                                        >
-                                        <input
-                                            id="recaptcha_secret_key"
-                                            name="recaptcha_secret_key"
-                                            type="text"
-                                            class="form-control"
-                                            bind:value={
-                                                form.recaptcha_secret_key
-                                            }
-                                            placeholder="Enter Google reCAPTCHA secret key"
-                                        />
-                                        {#if form.errors.recaptcha_secret_key}
-                                            <div class="text-danger small mt-1">
-                                                {form.errors
-                                                    .recaptcha_secret_key}
-                                            </div>
-                                        {/if}
-                                    </div>
+                                    <p class="text-muted small">
+                                        Secret configured through server
+                                        environment.
+                                    </p>
                                 </div>
                             </div>
 
@@ -291,7 +267,9 @@
                                             Xendit Payment Gateway
                                         </div>
                                         <div class="text-muted small">
-                                            Enable Xendit for invoice payments. Get your keys from the Xendit Dashboard.
+                                            Enable Xendit for invoice payments.
+                                            Get your keys from the Xendit
+                                            Dashboard.
                                         </div>
                                     </div>
                                     <div class="form-check form-switch m-0">
@@ -306,26 +284,10 @@
                                 </div>
 
                                 <div class="row g-3">
-                                    <div class="col-12">
-                                        <label
-                                            for="xendit_secret_key"
-                                            class="form-label fw-bold"
-                                            >Secret Key</label
-                                        >
-                                        <input
-                                            id="xendit_secret_key"
-                                            name="xendit_secret_key"
-                                            type="text"
-                                            class="form-control"
-                                            bind:value={form.xendit_secret_key}
-                                            placeholder="xnd_production_..."
-                                        />
-                                        {#if form.errors.xendit_secret_key}
-                                            <div class="text-danger small mt-1">
-                                                {form.errors.xendit_secret_key}
-                                            </div>
-                                        {/if}
-                                    </div>
+                                    <p class="text-muted small">
+                                        Secret configured through server
+                                        environment.
+                                    </p>
                                     <div class="col-12">
                                         <label
                                             for="xendit_public_key"
@@ -346,91 +308,10 @@
                                             </div>
                                         {/if}
                                     </div>
-                                    <div class="col-12">
-                                        <label
-                                            for="xendit_webhook_token"
-                                            class="form-label fw-bold"
-                                            >Webhook Verification Token</label
-                                        >
-                                        <input
-                                            id="xendit_webhook_token"
-                                            name="xendit_webhook_token"
-                                            type="text"
-                                            class="form-control"
-                                            bind:value={form.xendit_webhook_token}
-                                            placeholder="Enter Xendit webhook callback token"
-                                        />
-                                        {#if form.errors.xendit_webhook_token}
-                                            <div class="text-danger small mt-1">
-                                                {form.errors.xendit_webhook_token}
-                                            </div>
-                                        {/if}
-                                        <small class="text-muted mt-1 d-block">
-                                            Found in Xendit Dashboard → Settings → Webhooks → Verification Token
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="my-4 opacity-50" />
-
-                            <!-- Payments -->
-                            <div class="mb-4">
-                                <div class="form-label fw-bold mb-1">Payments</div>
-                                <div class="text-muted small mb-3">
-                                    Configure service booking deposits, platform commission, and driver withdrawal limits.
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label for="dp_percent_default" class="form-label fw-bold">Default DP (%)</label>
-                                        <input
-                                            id="dp_percent_default"
-                                            name="dp_percent_default"
-                                            type="number"
-                                            min="10"
-                                            max="100"
-                                            step="0.01"
-                                            class="form-control"
-                                            bind:value={form.dp_percent_default}
-                                        />
-                                        {#if form.errors.dp_percent_default}
-                                            <div class="text-danger small mt-1">{form.errors.dp_percent_default}</div>
-                                        {/if}
-                                        <small class="text-muted mt-1 d-block">Allowed range: 10%–100%.</small>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="platform_commission_percent" class="form-label fw-bold">Platform Commission (%)</label>
-                                        <input
-                                            id="platform_commission_percent"
-                                            name="platform_commission_percent"
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            step="0.01"
-                                            class="form-control"
-                                            bind:value={form.platform_commission_percent}
-                                        />
-                                        {#if form.errors.platform_commission_percent}
-                                            <div class="text-danger small mt-1">{form.errors.platform_commission_percent}</div>
-                                        {/if}
-                                        <small class="text-muted mt-1 d-block">Allowed range: 0%–100%.</small>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="min_withdrawal_amount" class="form-label fw-bold">Minimum Withdrawal (IDR)</label>
-                                        <input
-                                            id="min_withdrawal_amount"
-                                            name="min_withdrawal_amount"
-                                            type="number"
-                                            min="0"
-                                            step="1000"
-                                            class="form-control"
-                                            bind:value={form.min_withdrawal_amount}
-                                        />
-                                        {#if form.errors.min_withdrawal_amount}
-                                            <div class="text-danger small mt-1">{form.errors.min_withdrawal_amount}</div>
-                                        {/if}
-                                    </div>
+                                    <p class="text-muted small">
+                                        Secret configured through server
+                                        environment.
+                                    </p>
                                 </div>
                             </div>
 
@@ -438,48 +319,70 @@
 
                             <!-- Driver Referrals -->
                             <div class="mb-4">
-                                <div class="form-label fw-bold mb-1">Driver Referrals</div>
+                                <div class="form-label fw-bold mb-1">
+                                    Driver Referrals
+                                </div>
                                 <div class="text-muted small mb-3">
-                                    Commission drivers earn when a booking is made through one of their published guide articles.
+                                    Commission drivers earn when a booking is
+                                    made through one of their published guide
+                                    articles.
                                 </div>
 
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label for="referral_commission_amount" class="form-label fw-bold">Commission per Booking (IDR)</label>
+                                        <label
+                                            for="referral_commission_amount"
+                                            class="form-label fw-bold"
+                                            >Commission per Booking (IDR)</label
+                                        >
                                         <input
                                             id="referral_commission_amount"
                                             name="referral_commission_amount"
                                             type="number"
                                             min="0"
                                             class="form-control"
-                                            bind:value={form.referral_commission_amount}
+                                            bind:value={
+                                                form.referral_commission_amount
+                                            }
                                         />
                                         {#if form.errors.referral_commission_amount}
-                                            <div class="text-danger small mt-1">{form.errors.referral_commission_amount}</div>
+                                            <div class="text-danger small mt-1">
+                                                {form.errors
+                                                    .referral_commission_amount}
+                                            </div>
                                         {/if}
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="referral_window_days" class="form-label fw-bold">Attribution Window (days)</label>
+                                        <label
+                                            for="referral_window_days"
+                                            class="form-label fw-bold"
+                                            >Attribution Window (days)</label
+                                        >
                                         <input
                                             id="referral_window_days"
                                             name="referral_window_days"
                                             type="number"
                                             min="1"
                                             class="form-control"
-                                            bind:value={form.referral_window_days}
+                                            bind:value={
+                                                form.referral_window_days
+                                            }
                                         />
                                         {#if form.errors.referral_window_days}
-                                            <div class="text-danger small mt-1">{form.errors.referral_window_days}</div>
+                                            <div class="text-danger small mt-1">
+                                                {form.errors
+                                                    .referral_window_days}
+                                            </div>
                                         {/if}
                                         <small class="text-muted mt-1 d-block">
-                                            How long after reading a guide a booking still counts as referred.
+                                            How long after reading a guide a
+                                            booking still counts as referred.
                                         </small>
                                     </div>
                                 </div>
                             </div>
 
-                            <div
-                            >
+                            <div>
                                 <button
                                     type="submit"
                                     class="btn btn-primary px-4 d-flex align-items-center gap-2"

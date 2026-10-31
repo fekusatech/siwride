@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Order;
-use App\Models\Setting;
 use GuzzleHttp\Client;
 use Xendit\Configuration;
 use Xendit\Invoice\CreateInvoiceRequest;
@@ -13,7 +12,7 @@ class CustomerOrderPaymentService
 {
     public function createInvoice(Order $order): string
     {
-        $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
+        $xenditKey = config('services.xendit.secret_key');
         Configuration::setXenditKey($xenditKey);
 
         $client = new Client([

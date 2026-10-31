@@ -24,7 +24,7 @@ class RecaptchaService
 
     public function secretKey(): ?string
     {
-        return Setting::getValue('recaptcha_secret_key');
+        return config('services.recaptcha.secret_key');
     }
 
     public function validate(Request $request): void
@@ -41,7 +41,6 @@ class RecaptchaService
 
         Log::info('reCAPTCHA token received.', [
             'length' => strlen($token),
-            'prefix' => substr($token, 0, 12),
         ]);
 
         if ($token === '') {

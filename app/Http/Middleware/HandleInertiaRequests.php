@@ -44,7 +44,6 @@ class HandleInertiaRequests extends Middleware
             'logo' => null,
             'recaptcha_enabled' => '0',
             'recaptcha_site_key' => null,
-            'recaptcha_secret_key' => null,
 
             // Company Info
             'company_phone' => '+62 812-3456-78',
@@ -215,7 +214,9 @@ class HandleInertiaRequests extends Middleware
             ],
         ];
 
-        $settings = Setting::values($defaults);
+        $settings = array_replace($defaults, Setting::query()
+            ->whereIn('setting_key', array_keys($defaults))
+            ->pluck('setting_value', 'setting_key')->all());
 
         // Decode JSON arrays if they are strings
         $jsonKeys = ['our_services', 'popular_destinations', 'why_choose_us_features', 'customer_testimonials', 'faq_items', 'booking_extras'];

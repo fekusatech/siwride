@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Setting;
 use App\Models\Transaction;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
@@ -13,6 +12,7 @@ use Inertia\Response;
 use Xendit\Configuration;
 use Xendit\PaymentRequest\PaymentMethodReusability;
 use Xendit\PaymentRequest\PaymentMethodType;
+use Xendit\PaymentRequest\PaymentRequest;
 use Xendit\PaymentRequest\PaymentRequestApi;
 use Xendit\PaymentRequest\PaymentRequestParameters;
 use Xendit\PaymentRequest\QRCodeChannelCode;
@@ -100,9 +100,9 @@ class TransactionController extends Controller
         ]);
     }
 
-    private function createQrisPaymentRequest(Transaction $transaction): \Xendit\PaymentRequest\PaymentRequest
+    private function createQrisPaymentRequest(Transaction $transaction): PaymentRequest
     {
-        $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
+        $xenditKey = config('services.xendit.secret_key');
         Configuration::setXenditKey($xenditKey);
 
         $guzzleClient = new Client([
