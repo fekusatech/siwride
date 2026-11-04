@@ -42,6 +42,15 @@ return [
         'group_id' => env('WA_GROUP_ID'),
     ],
 
+    'doku' => [
+        'enabled' => env('DOKU_ENABLED', false),
+        'environment' => env('DOKU_ENVIRONMENT', 'sandbox'),
+        'client_id' => env('DOKU_CLIENT_ID'),
+        'secret_key' => env('DOKU_SECRET_KEY'),
+        'timeout' => (int) env('DOKU_TIMEOUT', 15),
+        'connect_timeout' => (int) env('DOKU_CONNECT_TIMEOUT', 5),
+    ],
+
     'xendit' => [
         'secret_key' => env('XENDIT_SECRET_KEY'),
         'public_key' => env('XENDIT_PUBLIC_KEY'),
