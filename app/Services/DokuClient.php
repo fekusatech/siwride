@@ -10,25 +10,27 @@ use LogicException;
 
 class DokuClient
 {
-    public function __construct(private DokuSignature $signature) {}
+    public function __construct(private DokuSignature $signature, private DokuConfiguration $configuration) {}
 
     /**
      * @param  array<string, mixed>  $payload
      */
     public function post(string $path, array $payload): Response
     {
-        if (config('services.doku.enabled') !== true) {
+        $configuration = $this->configuration->active();
+
+        if ($configuration['enabled'] !== true) {
             throw new LogicException('DOKU module is disabled.');
         }
 
-        $baseUrl = match (config('services.doku.environment')) {
+        $baseUrl = match ($configuration['environment']) {
             'sandbox' => 'https://api-sandbox.doku.com',
             'production' => 'https://api.doku.com',
             default => throw new LogicException('Invalid DOKU environment.'),
         };
 
-        $clientId = config('services.doku.client_id');
-        $secretKey = config('services.doku.secret_key');
+        $clientId = $configuration['client_id'];
+        $secretKey = $configuration['secret_key'];
 
         if (! is_string($clientId) || trim($clientId) === '' || ! is_string($secretKey) || trim($secretKey) === '') {
             throw new LogicException('DOKU credentials are not configured.');

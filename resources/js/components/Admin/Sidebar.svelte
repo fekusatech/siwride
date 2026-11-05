@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Link, page } from '@inertiajs/svelte';
+    import { edit as dokuSettings } from '@/routes/admin/settings/doku';
     import { onMount } from 'svelte';
 
     let { toggleSidebar, closeSidebar } = $props();
@@ -318,6 +319,13 @@
                 <Link href="/admin/users" class="side-nav-link">
                     <span class="menu-icon"><i class="ti ti-users"></i></span>
                     <span class="menu-text"> Users </span>
+                </Link>
+            </li>
+
+            <li class="side-nav-item">
+                <Link href={dokuSettings()} class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-key"></i></span>
+                    <span class="menu-text">DOKU Settings</span>
                 </Link>
             </li>
 
