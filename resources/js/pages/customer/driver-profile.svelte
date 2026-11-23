@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formatMoney } from '@/lib/currency';
     import { page } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
@@ -34,9 +35,7 @@
     const PLACEHOLDER_IMAGE =
         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e9ecef'/%3E%3Cpath d='M160 120a20 20 0 1 1 0-40 20 20 0 0 1 0 40Zm-40 100 60-70 40 45 30-35 70 60H120Z' fill='%23adb5bd'/%3E%3C/svg%3E";
 
-    function formatPrice(price: number): string {
-        return `Rp ${price.toLocaleString('id-ID')}`;
-    }
+    const formatPrice = formatMoney;
 
     const pricedServices = $derived(
         services.filter((service) => service.price_per_pax !== null),

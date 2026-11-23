@@ -1,4 +1,6 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import { formatMoney } from '@/lib/currency';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -26,13 +28,7 @@
 
     const minTime = $derived(getMinPickupTime(selectedDate));
 
-    function formatCurrency(amount: number): string {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
-    }
+    const formatCurrency = formatMoney;
 
     const hourOptions = [2, 3, 4, 5, 6, 8, 10, 12];
 </script>
@@ -47,7 +43,10 @@
     <Header />
 
     <!-- ==================== Simple Service Header ==================== -->
-    <div class="service-simple-header" style="padding: 40px 0 10px; background: #f7f9fa; border-bottom: 1px solid #eaeef2;">
+    <div
+        class="service-simple-header"
+        style="padding: 40px 0 10px; background: #f7f9fa; border-bottom: 1px solid #eaeef2;"
+    >
         <div class="container">
             <h2 style="font-size: 26px; font-weight: 800; color: #1e293b; margin: 0;">Hourly Service Booking</h2>
             <p style="color: #64748b; margin: 6px 0 0; font-size: 15px;">Rent a car with a professional driver by the hour.</p>
@@ -181,7 +180,10 @@
                                 <div style="display: flex; align-items: center; gap: 14px;">
                                     <button
                                         type="button"
-                                        onclick={() => { if (passengerCount > 1) passengerCount--; }}
+                                        onclick={() => {
+                                            if (passengerCount > 1)
+                                                passengerCount--;
+                                        }}
                                         style="background: #f5f3ff; border: 2px solid #6366f1; color: #6366f1; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 20px; font-weight: 700; padding-bottom: 2px; transition: all 0.2s;"
                                     >−</button>
                                     <span style="font-size: 20px; font-weight: 700; min-width: 32px; text-align: center; color: #1e293b;">{passengerCount}</span>
@@ -244,12 +246,19 @@
                     <div
                         style="background: #fff; border-radius: 20px; padding: 36px; box-shadow: 0 6px 25px rgba(0,0,0,0.07);"
                     >
-                        <h4
-                            style="font-size: 20px; font-weight: 800; margin-bottom: 6px; color: #1e293b;"
+                        <div
+                            class="d-flex flex-column flex-md-row flex-wrap align-items-md-center justify-content-between gap-3 mb-3"
                         >
-                            Available Vehicles
-                        </h4>
-                        <p style="color: #64748b; font-size: 14px; margin-bottom: 22px;">
+                            <h4
+                                style="font-size: 20px; font-weight: 800; margin: 0; color: #1e293b;"
+                            >
+                                Available Vehicles
+                            </h4>
+                            <CurrencyPicker />
+                        </div>
+                        <p
+                            style="color: #64748b; font-size: 14px; margin-bottom: 22px;"
+                        >
                             Pricing is per hour. Contact us for exact rates.
                         </p>
                         {#if vehicleCategories.length === 0}
@@ -274,7 +283,11 @@
                                             </div>
                                         {/if}
                                         <div style="flex: 1;">
-                                            <h6 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 3px;">{vehicle.title}</h6>
+                                            <h6
+                                                style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 3px;"
+                                            >
+                                                {vehicle.title}
+                                            </h6>
                                             {#if vehicle.passenger_capacity}
                                                 <p style="color: #64748b; font-size: 13px; margin: 0;">
                                                     <i class="icon icon-traveler-with-a-suitcase-1" style="margin-right: 4px; color: #6366f1;"></i>

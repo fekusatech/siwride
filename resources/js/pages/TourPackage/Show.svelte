@@ -1,4 +1,6 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import { formatMoney } from '@/lib/currency';
     import { page } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
@@ -28,13 +30,7 @@
 
     const auth = $derived((page.props as any).auth);
 
-    function formatCurrency(amount: number): string {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
-    }
+    const formatCurrency = formatMoney;
 </script>
 
 <AppHead
@@ -340,9 +336,10 @@
 
                 <!-- Right — booking sidebar -->
                 <div class="col-lg-4">
-                    <div
-                        style="position: sticky; top: 30px;"
-                    >
+                    <div style="position: sticky; top: 30px;">
+                        <div class="bg-white rounded-3 p-3 mb-3">
+                            <CurrencyPicker />
+                        </div>
                         <!-- Price Card -->
                         <div
                             style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 24px; padding: 36px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08);"

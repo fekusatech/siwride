@@ -91,7 +91,7 @@
                 </Link>
             </div>
 
-            <nav class="main-header__nav main-menu" style="margin-right: 50px;">
+            <nav class="main-header__nav main-menu" style="margin-right: 24px;">
                 <ul class="main-menu__list">
                     <li class:current={isActive('/', true)}>
                         <Link href="/">Home</Link>
@@ -512,6 +512,33 @@
 </div>
 
 <style>
+    .main-header__logo,
+    .main-header__right {
+        flex-shrink: 0;
+    }
+
+    .main-header__right {
+        margin-left: auto;
+    }
+
+    :global(.main-header__nav > .main-menu__list > li + li) {
+        margin-left: 20px !important;
+    }
+
+    :global(.main-header__nav > .main-menu__list > li > a) {
+        white-space: nowrap;
+    }
+
+    @media (max-width: 1399px) {
+        .main-header__nav {
+            display: none;
+        }
+
+        .main-header .mobile-nav__btn {
+            display: flex;
+        }
+    }
+
     /* ── Sticky header ──
        position: sticky would be the simpler fix, but .page-wrapper has
        overflow: hidden (travhub.css), which silently breaks sticky

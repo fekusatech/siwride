@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formatMoney } from '@/lib/currency';
     import { page } from '@inertiajs/svelte';
     import { useForm, Link, router } from '@inertiajs/svelte';
     import { formatTime12 } from '@/lib/pickupTime';
@@ -362,7 +363,7 @@
                                                             ><i
                                                                 class="fas fa-money-bill-wave"
                                                             ></i>
-                                                            Rp {Number(order.price).toLocaleString('id-ID')}</span
+                                                            {formatMoney(order.price)}</span
                                                         >
                                                     </div>
                                                 </div>

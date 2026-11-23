@@ -10,6 +10,8 @@ use App\Models\DriverWalletTransaction;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Models\Transaction;
+use App\Services\DokuConfiguration;
+use App\Services\DokuSignature;
 use App\Services\DriverWalletService;
 use App\Support\DriverReferralAttribution;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +25,57 @@ class WebhookController extends Controller
     public function __construct(
         private DriverWalletService $driverWalletService,
     ) {}
+
+    public function doku(Request $request, DokuConfiguration $configuration, DokuSignature $signature): JsonResponse
+    {
+        $active = $configuration->active();
+        $clientId = $request->header('Client-Id', '');
+        $requestId = $request->header('Request-Id', '');
+        $timestamp = $request->header('Request-Timestamp', '');
+        abort_unless(is_string($active['secret_key']) && filled($active['secret_key'])
+            && is_string($active['client_id']) && filled($active['client_id'])
+            && hash_equals($active['client_id'], $clientId)
+            && $requestId !== '' && strlen($requestId) <= 128
+            && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/D', $timestamp), 403);
+        $expected = $signature->generate($clientId, $requestId, $timestamp, '/'.$request->path(), $request->getContent(), $active['secret_key']);
+        abort_unless(hash_equals($expected, $request->header('Signature', '')), 403);
+
+        $invoice = $request->input('order.invoice_number');
+        $amount = $request->input('order.amount');
+        abort_unless(is_string($invoice) && strlen($invoice) <= 30
+            && (is_string($amount) || is_int($amount)) && preg_match('/^\d+(\.0{1,2})?$/D', (string) $amount)
+            && $request->input('order.currency', 'IDR') === 'IDR', 422);
+
+        DB::transaction(function () use ($invoice, $amount, $active, $clientId, $request): void {
+            $payment = DB::table('doku_payments')->where('invoice_number', $invoice)->lockForUpdate()->first();
+            abort_unless($payment && $payment->environment === $active['environment']
+                && $payment->client_id === $clientId && $payment->currency === 'IDR'
+                && bccomp((string) $payment->amount, (string) $amount, 2) === 0, 422);
+            if ($payment->status === 'paid' || $request->input('transaction.status') !== 'SUCCESS') {
+                return;
+            }
+            $class = $payment->booking_type;
+            abort_unless(in_array($class, [Order::class, ActivityBooking::class, DriverServiceBooking::class], true), 422);
+            $booking = $class::query()->lockForUpdate()->findOrFail($payment->booking_id);
+            DB::table('doku_payments')->where('id', $payment->id)->update(['status' => 'paid', 'paid_at' => now(), 'updated_at' => now()]);
+            if ($booking->payment_status === 'paid') {
+                return;
+            }
+            if (in_array($booking->status, ['cancelled', 'completed'], true)) {
+                $booking->update(['payment_status' => 'paid']);
+                Log::warning('DOKU payment received for closed booking; manual reconciliation required.', ['invoice_number' => $invoice]);
+
+                return;
+            }
+            match (true) {
+                $booking instanceof Order => $this->markOrderPaid($booking, []),
+                $booking instanceof ActivityBooking => $this->markActivityBookingPaid($booking),
+                $booking instanceof DriverServiceBooking => $this->markDriverServiceBookingPaid($booking),
+            };
+        });
+
+        return response()->json(['success' => true]);
+    }
 
     /**
      * Verify the Xendit callback token from the request header.

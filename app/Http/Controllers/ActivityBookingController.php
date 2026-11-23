@@ -7,6 +7,8 @@ use App\Models\Activity;
 use App\Models\ActivityBooking;
 use App\Models\Customer;
 use App\Models\Setting;
+use App\Services\DisplayCurrency;
+use App\Services\DokuCheckout;
 use App\Services\PackTierService;
 use App\Services\VoucherService;
 use App\Services\WhatsAppService;
@@ -202,6 +204,11 @@ class ActivityBookingController extends Controller
 
     private function generateXenditPayment(ActivityBooking $booking, Activity $activity): string
     {
+        app(DisplayCurrency::class)->capture($booking, (string) $booking->dp_amount);
+        if (app(DokuCheckout::class)->enabled($booking)) {
+            return app(DokuCheckout::class)->create($booking, (string) $booking->dp_amount, route('activities.booking.success', $booking->booking_code));
+        }
+
         $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
         Configuration::setXenditKey($xenditKey);
 

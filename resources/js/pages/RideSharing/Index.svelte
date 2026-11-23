@@ -1,4 +1,6 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import { formatMoney } from '@/lib/currency';
     import { page } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
@@ -13,7 +15,15 @@
     function isDayAvailable(days: string[]) {
         if (!date) return true;
         const selectedDate = new Date(date);
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayNames = [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+        ];
         const selectedDayName = dayNames[selectedDate.getDay()];
         return Array.isArray(days) ? days.includes(selectedDayName) : String(days).includes(selectedDayName);
     }
@@ -81,7 +91,10 @@
     <Header {auth} />
 
     <!-- Simple Service Header -->
-    <div class="service-simple-header" style="padding: 40px 0 10px; background: #f7f9fa; border-bottom: 1px solid #eaeef2;">
+    <div
+        class="service-simple-header"
+        style="padding: 40px 0 10px; background: #f7f9fa; border-bottom: 1px solid #eaeef2;"
+    >
         <div class="container">
             <h2 style="font-size: 26px; font-weight: 800; color: #1e293b; margin: 0;">Ride Sharing Booking</h2>
             <p style="color: #64748b; margin: 6px 0 0; font-size: 15px;">Find and book a seat in a shared vehicle along established routes.</p>
@@ -173,7 +186,9 @@
                                     <button
                                         type="button"
                                         class="rs-counter-btn"
-                                        onclick={() => { if (passengers > 1) passengers--; }}
+                                        onclick={() => {
+                                            if (passengers > 1) passengers--;
+                                        }}
                                         aria-label="Decrease passengers"
                                     >−</button>
                                     <span class="rs-counter-value">{passengers}</span>
@@ -196,6 +211,12 @@
 
                 <!-- Right: Search Results -->
                 <div class="col-lg-8">
+                    <div
+                        class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4"
+                    >
+                        <h3 class="rs-results-title mb-0">Available Routes</h3>
+                        <CurrencyPicker />
+                    </div>
                     {#if !search.pickup_location_id || !search.dropoff_location_id}
                         <!-- Empty State -->
                         <div class="rs-empty-state">
@@ -215,8 +236,12 @@
                         </div>
                     {:else}
                         <div class="rs-results-header">
-                            <h3>Available Routes</h3>
-                            <p>Showing routes from <strong>{selectedPickup?.name}</strong> to <strong>{selectedDropoff?.name}</strong></p>
+                            <p>
+                                Showing routes from <strong
+                                    >{selectedPickup?.name}</strong
+                                >
+                                to <strong>{selectedDropoff?.name}</strong>
+                            </p>
                         </div>
 
                         {#each availableRoutes as route}
@@ -250,12 +275,28 @@
                                                     
                                                     
                                                     {#if schedule.vehicle_category}
-                                                        <div class="rs-schedule-card__vehicle">
-                                                            <i class="fas fa-car"></i>
-                                                            <span>{schedule.vehicle_category.title}</span>
-                                                            <div class="vehicle-tooltip-wrap">
-                                                                <button type="button" class="vehicle-tooltip-btn" aria-label="Vehicle details">
-                                                                    <i class="fas fa-info-circle"></i>
+                                                        <div
+                                                            class="rs-schedule-card__vehicle"
+                                                        >
+                                                            <i
+                                                                class="fas fa-car"
+                                                            ></i>
+                                                            <span
+                                                                >{schedule
+                                                                    .vehicle_category
+                                                                    .title}</span
+                                                            >
+                                                            <div
+                                                                class="vehicle-tooltip-wrap"
+                                                            >
+                                                                <button
+                                                                    type="button"
+                                                                    class="vehicle-tooltip-btn"
+                                                                    aria-label="Vehicle details"
+                                                                >
+                                                                    <i
+                                                                        class="fas fa-info-circle"
+                                                                    ></i>
                                                                 </button>
                                                                 <div class="vehicle-tooltip" role="tooltip">
                                                                     <span class="vehicle-tooltip__label">Capacity</span>
@@ -275,10 +316,15 @@
                                                         </div>
                                                     {/if}
                                                     <!-- <div class="rs-schedule-card__price">
-                                                        <span>Rp {new Intl.NumberFormat('id-ID').format(schedule.price)} <small class="text-muted fw-normal">/ seat</small></span>
+                                                        <span>{formatMoney(schedule.price)} <small class="text-muted fw-normal">/ seat</small></span>
                                                     </div> -->
 
-                                                    <div class="rs-schedule-card__quota {schedule.quota > 0 ? '' : 'rs-schedule-card__quota--full'}">
+                                                    <div
+                                                        class="rs-schedule-card__quota {schedule.quota >
+                                                        0
+                                                            ? ''
+                                                            : 'rs-schedule-card__quota--full'}"
+                                                    >
                                                         {#if schedule.quota > 0}
                                                             {schedule.quota} seat{schedule.quota === 1 ? '' : 's'} available
                                                         {:else}
@@ -296,9 +342,21 @@
                                                         <input type="hidden" name="passengers" value={passengers} />
                                                         <input type="hidden" name="price" value={route.price} />
 
-                                                        <button type="submit" class="rs-select-btn">
-                                                            <span>Rp {new Intl.NumberFormat('id-ID').format(schedule.price)} <small>/seat</small></span>
-                                                            <i class="fas fa-arrow-right"></i>
+                                                        <button
+                                                            type="submit"
+                                                            class="rs-select-btn"
+                                                        >
+                                                            <span
+                                                                >{formatMoney(
+                                                                    schedule.price,
+                                                                )}
+                                                                <small
+                                                                    >/seat</small
+                                                                ></span
+                                                            >
+                                                            <i
+                                                                class="fas fa-arrow-right"
+                                                            ></i>
                                                         </button>
                                                     </form>
                                                 </div>
@@ -551,7 +609,7 @@
     .rs-results-header {
         margin-bottom: 24px;
     }
-    .rs-results-header h3 {
+    .rs-results-title {
         font-weight: 700;
         font-size: 24px;
         margin-bottom: 4px;

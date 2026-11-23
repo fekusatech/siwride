@@ -1,4 +1,6 @@
 <script lang="ts">
+    import CurrencyNotice from '@/components/Template/CurrencyNotice.svelte';
+    import { formatMoney } from '@/lib/currency';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -7,9 +9,7 @@
 
     let { booking } = $props<{ booking: any }>();
 
-    function formatRp(amount: number): string {
-        return 'Rp ' + amount.toLocaleString('id-ID');
-    }
+    const formatRp = formatMoney;
 </script>
 
 <AppHead title="Booking Confirmed | Siwride" />
@@ -20,6 +20,7 @@
 
 <div class="page-wrapper">
     <Header />
+    <CurrencyNotice amount={booking.dp_amount} />
 
     <section style="padding: 100px 0; background: #f7f9fa;">
         <div class="container">

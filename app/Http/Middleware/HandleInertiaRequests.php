@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Setting;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
+use App\Services\DisplayCurrency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
@@ -232,6 +233,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'currency' => app(DisplayCurrency::class)->context($request->session()->get('display_currency', 'IDR')),
             'auth' => [
                 'user' => $request->user(),
                 'customer' => Auth::guard('customer')->user(),

@@ -1,4 +1,6 @@
 <script lang="ts">
+    import CurrencyNotice from '@/components/Template/CurrencyNotice.svelte';
+    import { formatMoney } from '@/lib/currency';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -16,9 +18,7 @@
         } | null;
     }>();
 
-    function formatRp(amount: number): string {
-        return 'Rp ' + amount.toLocaleString('id-ID');
-    }
+    const formatRp = formatMoney;
 
     function initial(name: string): string {
         return name.trim().charAt(0).toUpperCase() || '?';
@@ -66,6 +66,7 @@
 
 <div class="page-wrapper">
     <Header />
+    <CurrencyNotice amount={booking.dp_amount} />
 
     <section style="padding: 60px 0 100px; background: #f7f9fa;">
         <div class="container">

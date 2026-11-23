@@ -13,6 +13,22 @@ class CustomerOrderPaymentService
 {
     public function createInvoice(Order $order): string
     {
+        $amount = (string) $order->price;
+        $linkedOrder = null;
+
+        if ($order->trip_type === 'round_trip' && $order->linked_order_id && ! $order->is_return_trip) {
+            $linkedOrder = $order->linkedOrder()->firstOrFail();
+            $amount = bcadd($amount, (string) $linkedOrder->price, 2);
+        }
+
+        $quote = app(DisplayCurrency::class)->capture($order, $amount);
+        if ($linkedOrder && $linkedOrder->display_quote === null) {
+            $linkedOrder->forceFill(['display_quote' => $quote])->save();
+        }
+        if (app(DokuCheckout::class)->enabled($order)) {
+            return app(DokuCheckout::class)->create($order, (string) $amount, route('booking.show', $order->booking_code));
+        }
+
         $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
         Configuration::setXenditKey($xenditKey);
 
@@ -22,12 +38,6 @@ class CustomerOrderPaymentService
             'connect_timeout' => 5,
         ]);
         $api = new InvoiceApi($client);
-        $amount = (float) $order->price;
-
-        if ($order->trip_type === 'round_trip' && $order->linked_order_id && ! $order->is_return_trip) {
-            $amount += (float) $order->linkedOrder()->value('price');
-        }
-
         $invoice = $api->createInvoice(new CreateInvoiceRequest([
             'external_id' => $order->booking_code.'_'.time(),
             'amount' => $amount,

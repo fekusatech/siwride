@@ -5,7 +5,7 @@
     import Preloader from '@/components/Template/Preloader.svelte';
     import { Link, useForm } from '@inertiajs/svelte';
     import { formatTime12 } from '@/lib/pickupTime';
-    import { formatRupiah } from '@/lib/utils';
+    import { formatMoney as formatRupiah } from '@/lib/currency';
 
     interface OrderData {
         booking_code: string;

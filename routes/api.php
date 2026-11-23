@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\LogApiRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -267,3 +268,5 @@ Route::prefix('webhooks/xendit')->group(function () {
     Route::post('/', [WebhookController::class, 'xendit'])
         ->name('webhooks.xendit');
 });
+
+Route::post('/webhooks/doku', [WebhookController::class, 'doku'])->withoutMiddleware(LogApiRequest::class)->name('webhooks.doku');

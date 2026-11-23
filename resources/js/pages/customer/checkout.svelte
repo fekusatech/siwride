@@ -1,4 +1,6 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import CurrencyNotice from '@/components/Template/CurrencyNotice.svelte';
     import { page, useForm, router } from '@inertiajs/svelte';
     import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
@@ -13,7 +15,7 @@
         formatTime12,
         isPickupTimeValid,
     } from '@/lib/pickupTime';
-    import { formatRupiah } from '@/lib/utils';
+    import { formatMoney as formatRupiah } from '@/lib/currency';
 
     interface VehicleCategory {
         id: number;
@@ -1489,7 +1491,10 @@
                                 </div>
                                 {#if isRoundTrip && form.return_date}
                                     <div class="sidebar-info-item">
-                                        <i class="fas fa-undo-alt" style="color: #10b981;"></i>
+                                        <i
+                                            class="fas fa-undo-alt"
+                                            style="color: #10b981;"
+                                        ></i>
                                         <div>
                                             <span class="sidebar-info-label">Return Date</span>
                                             <span class="sidebar-info-value">{formatDisplayDate(form.return_date)}</span>
@@ -1498,7 +1503,10 @@
                                 {/if}
                                 {#if isRoundTrip && form.return_time}
                                     <div class="sidebar-info-item">
-                                        <i class="fas fa-clock" style="color: #10b981;"></i>
+                                        <i
+                                            class="fas fa-clock"
+                                            style="color: #10b981;"
+                                        ></i>
                                         <div>
                                             <span class="sidebar-info-label">Return Time</span>
                                             <span class="sidebar-info-value">{formatTime12(form.return_time)}</span>
@@ -1513,6 +1521,7 @@
                             <div class="sidebar-section-title">
                                 Price Breakdown
                             </div>
+                            <div class="mb-3"><CurrencyPicker /></div>
                             <div class="sidebar-row">
                                 <span
                                     >Vehicle ({vehicleCategory?.title ??
@@ -1569,6 +1578,10 @@
                                 {:else}
                                     <span>{formatRupiah(totalPrice)}</span>
                                 {/if}
+                            </div>
+
+                            <div class="mt-3">
+                                <CurrencyNotice amount={totalPrice} />
                             </div>
 
                             <div class="sidebar-note">

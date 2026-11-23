@@ -1,4 +1,6 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import { formatMoney } from '@/lib/currency';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -65,9 +67,7 @@
         applyFilters();
     }
 
-    function formatRp(amount: number): string {
-        return 'Rp ' + amount.toLocaleString('id-ID');
-    }
+    const formatRp = formatMoney;
 
     const typeBadge: Record<string, { label: string; class: string }> = {
         service: { label: 'Driver Service', class: 'bg-info-subtle text-info' },
@@ -210,10 +210,13 @@
             </div>
 
             <!-- Results count -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div
+                class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4"
+            >
                 <p class="text-muted mb-0">
                     {items.length} item{items.length !== 1 ? 's' : ''} found
                 </p>
+                <CurrencyPicker />
             </div>
 
             <!-- Catalog Grid -->
