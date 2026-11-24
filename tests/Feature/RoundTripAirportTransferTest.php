@@ -5,9 +5,17 @@ use App\Models\Order;
 use App\Models\VehicleCategory;
 use App\Models\Zone;
 use App\Models\ZonePricingRule;
+use App\Services\CustomerOrderPaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Mail::fake();
+    $this->mock(CustomerOrderPaymentService::class)
+        ->shouldReceive('createInvoice')->andReturn('/booking/payment-success');
+});
 
 /**
  * Helper to create a minimal zone-pricing setup so the controller
@@ -134,7 +142,7 @@ it('creates two linked orders for a round-trip booking', function () {
     expect($returnOrder->customer_email)->toBe($parent->customer_email);
 });
 
-it('calculates round-trip total as 2x base price plus extras once', function () {
+it('charges round-trip extras on both legs', function () {
     ['category' => $category] = makeZonePricingSetup();
 
     $data = [
@@ -164,12 +172,11 @@ it('calculates round-trip total as 2x base price plus extras once', function () 
     $parent = Order::where('is_return_trip', false)->first();
     $returnTrip = Order::where('is_return_trip', true)->first();
 
-    // Return trip has no extras (extras charged on parent only)
-    expect($returnTrip->extras)->toBeNull();
-
-    // Parent total = base*2 + extras
-    $basePrice = (float) $returnTrip->price; // return trip price = one leg base only
-    expect((float) $parent->price)->toBe($basePrice * 2 + 50000);
+    expect($returnTrip->extras)->toBe($data['extras'])
+        ->and($parent->extras)->toBe($data['extras'])
+        ->and((float) $parent->price)->toBe(301100.0)
+        ->and((float) $returnTrip->price)->toBe(301100.0)
+        ->and((float) Order::sum('price'))->toBe(602200.0);
 });
 
 it('fails round-trip validation when return_date is missing', function () {

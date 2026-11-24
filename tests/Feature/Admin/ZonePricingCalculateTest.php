@@ -10,6 +10,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->admin = User::factory()->create([
         'email' => 'admin@siwride.com',
+        'role' => 'admin',
     ]);
 
     $this->airport = Zone::create([

@@ -1,12 +1,14 @@
 <?php
 
+use App\Models\Activity;
 use App\Models\TourPackage;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
-it('displays featured tour packages on the homepage', function () {
-    TourPackage::factory()->count(3)->create(['is_active' => true, 'sort_order' => 0]);
-    TourPackage::factory()->create(['is_active' => false]);
+it('displays active activities on the homepage', function () {
+    Activity::factory()->count(3)->create(['is_active' => true, 'sort_order' => 0]);
+    Activity::factory()->create(['is_active' => false]);
 
     $response = $this->get('/');
 
@@ -14,7 +16,7 @@ it('displays featured tour packages on the homepage', function () {
     $response->assertInertia(
         fn ($page) => $page
             ->component('Welcome')
-            ->has('tourPackages', 3)
+            ->has('services', 3)
     );
 });
 

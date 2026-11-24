@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Mail;
 
 it('assigns and credits a paid service booking only once', function () {
     Mail::fake();
+    config(['services.xendit.webhook_token' => 'test-webhook-token']);
 
     $driver = User::factory()->create(['role' => 'driver']);
     $booking = DriverServiceBooking::factory()->create([
@@ -27,6 +28,12 @@ it('assigns and credits a paid service booking only once', function () {
         'external_id' => $booking->booking_code.'_12345',
     ];
 
+    $this->postJson(route('webhooks.xendit.invoice'), $payload)->assertForbidden();
+    $this->withHeader('x-callback-token', 'invalid-token')
+        ->postJson(route('webhooks.xendit.invoice'), $payload)->assertForbidden();
+    expect(DriverWalletTransaction::count())->toBe(0);
+
+    $this->withHeader('x-callback-token', 'test-webhook-token');
     $this->postJson(route('webhooks.xendit.invoice'), $payload)->assertSuccessful();
     $this->postJson(route('webhooks.xendit.invoice'), $payload)->assertSuccessful();
 

@@ -26,6 +26,7 @@ class ImportOrdersTest extends TestCase
 
         $this->admin = User::factory()->create([
             'email' => 'admin@example.com',
+            'role' => 'admin',
         ]);
     }
 

@@ -57,7 +57,7 @@ test('vehicle details page returns 404 for invalid slug', function () {
 test('booking page can be rendered with vehicle categories', function () {
     $this->seed(VehicleCategorySeeder::class);
 
-    $response = $this->get(route('booking'));
+    $response = $this->get(route('booking.airport-transfer'));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page

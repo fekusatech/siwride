@@ -12,6 +12,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->admin = User::factory()->create([
         'email' => 'admin@siwride.com',
+        'role' => 'admin',
     ]);
 });
 
@@ -52,6 +53,8 @@ test('admin can store a new vehicle category', function () {
     $response = $this->actingAs($this->admin)
         ->post(route('admin.vehicle-categories.store'), [
             'title' => 'New Category',
+            'base_price' => 200000,
+            'price_per_km' => 5000,
             'vehicle_type' => 'premium',
             'capacity' => '5 passengers',
             'examples' => 'A, B, C',
@@ -100,8 +103,11 @@ test('admin can update a vehicle category', function () {
     ]);
 
     $response = $this->actingAs($this->admin)
+        ->from(route('admin.vehicle-categories.index'))
         ->put(route('admin.vehicle-categories.update', $category), [
             'title' => 'Updated Category Title',
+            'base_price' => 200000,
+            'price_per_km' => 5000,
             'vehicle_type' => 'van',
             'capacity' => '10 passengers',
             'image' => $file,
@@ -129,8 +135,11 @@ test('admin can update a vehicle category without changing its image', function 
     ]);
 
     $response = $this->actingAs($this->admin)
+        ->from(route('admin.vehicle-categories.index'))
         ->put(route('admin.vehicle-categories.update', $category), [
             'title' => 'Updated Category Title',
+            'base_price' => 200000,
+            'price_per_km' => 5000,
             'vehicle_type' => 'van',
             'capacity' => '10 passengers',
         ]);
