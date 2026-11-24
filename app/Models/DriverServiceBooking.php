@@ -59,6 +59,7 @@ class DriverServiceBooking extends Model
     protected function casts(): array
     {
         return [
+            'display_quote' => 'array',
             'booking_date' => 'date',
             'price_per_pax' => 'decimal:2',
             'total_price' => 'decimal:2',

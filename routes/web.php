@@ -188,6 +188,7 @@ use App\Http\Controllers\Admin\RideSharing\ScheduleController;
 use App\Http\Controllers\Admin\ServiceReassignmentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerProfileController;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -326,3 +327,5 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+Route::put('/display-currency', [CurrencyController::class, 'update'])->middleware('throttle:30,1')->name('currency.update');

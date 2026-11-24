@@ -1,4 +1,5 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
     import { page, router } from '@inertiajs/svelte';
     import { onMount, onDestroy } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
@@ -14,7 +15,7 @@
         isPickupTimeValid,
     } from '@/lib/pickupTime';
     import { formatTime12 } from '@/lib/pickupTime';
-    import { formatRupiah } from '@/lib/utils';
+    import { formatMoney as formatRupiah } from '@/lib/currency';
 
     /** Reactive clock — ticks every minute so earliest-time notices stay fresh. */
     let now = $state(new Date());
@@ -468,7 +469,10 @@
     <Header />
 
     <!-- Simple Service Header -->
-    <div class="service-simple-header" style="padding: 40px 0 10px; background: #f4f7f9; border-bottom: 1px solid #eaeef2;">
+    <div
+        class="service-simple-header"
+        style="padding: 40px 0 10px; background: #f4f7f9; border-bottom: 1px solid #eaeef2;"
+    >
         <div class="container">
             <h2 style="font-size: 26px; font-weight: 800; color: #1e293b; margin: 0;">Airport Transfer Booking</h2>
             <p style="color: #64748b; margin: 6px 0 0; font-size: 15px;">Book a private vehicle for your airport transfer or city trip.</p>
@@ -862,18 +866,25 @@
 
             <!-- SECTION C: Vehicle Categories -->
             <div class="booking-card">
-                <div class="booking-card__header">
-                    <div class="step-badge">3</div>
-                    <div>
-                        <h4 class="booking-card__title">Choose Your Vehicle</h4>
-                        <p class="booking-card__subtitle">
-                            {#if passengerCount > 1}
-                                Showing vehicles for {passengerCount} passengers
-                            {:else}
-                                Select the vehicle that suits your needs
-                            {/if}
-                        </p>
+                <div
+                    class="booking-card__header flex-column flex-md-row flex-wrap align-items-start align-items-md-center justify-content-between"
+                >
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="step-badge">3</div>
+                        <div>
+                            <h4 class="booking-card__title">
+                                Choose Your Vehicle
+                            </h4>
+                            <p class="booking-card__subtitle">
+                                {#if passengerCount > 1}
+                                    Showing vehicles for {passengerCount} passengers
+                                {:else}
+                                    Select the vehicle that suits your needs
+                                {/if}
+                            </p>
+                        </div>
                     </div>
+                    <CurrencyPicker />
                 </div>
                 <div class="booking-card__body">
                     {#if filteredCategories.length === 0}
@@ -966,7 +977,9 @@
                                     <div class="vehicle-card__footer">
                                         <div class="vehicle-card__price">
                                             {#if isRoundTrip}
-                                                <span class="price-from">Round-Trip</span>
+                                                <span class="price-from"
+                                                    >Round-Trip</span
+                                                >
                                             {:else}
                                                 <span class="price-from">From</span>
                                             {/if}

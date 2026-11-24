@@ -26,6 +26,7 @@
     </style>
 </head>
 <body>
+    @include('emails.currency-estimate', ['quote' => $order->display_quote])
     <div class="ticket">
         <div class="header">
             <h1>Depart Ticket</h1>

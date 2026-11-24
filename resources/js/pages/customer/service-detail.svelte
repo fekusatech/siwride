@@ -1,4 +1,7 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import CurrencyNotice from '@/components/Template/CurrencyNotice.svelte';
+    import { formatMoney } from '@/lib/currency';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -129,9 +132,7 @@
     let extraThumbs = allImages.slice(1, 5);
     let remainingPhotoCount = Math.max(0, allImages.length - 5);
 
-    function formatRp(amount: number): string {
-        return 'Rp ' + amount.toLocaleString('id-ID');
-    }
+    const formatRp = formatMoney;
 
     function submit(e: Event) {
         e.preventDefault();
@@ -355,6 +356,7 @@
                         style="top: 100px;"
                     >
                         <div class="card-body p-4">
+                            <div class="mb-3"><CurrencyPicker /></div>
                             <div
                                 class="d-flex align-items-center justify-content-between mb-2"
                             >
@@ -366,8 +368,19 @@
                                         {formatRp(effectivePricePerPax)}
                                     </div>
                                     {#if selectedPackTier}
-                                        <small class="text-success fw-semibold">{selectedPackTier.discount_label}</small>
-                                        <div><small class="text-muted text-decoration-line-through">{formatRp(Number(service.price_per_pax))}</small></div>
+                                        <small class="text-success fw-semibold"
+                                            >{selectedPackTier.discount_label}</small
+                                        >
+                                        <div>
+                                            <small
+                                                class="text-muted text-decoration-line-through"
+                                                >{formatRp(
+                                                    Number(
+                                                        service.price_per_pax,
+                                                    ),
+                                                )}</small
+                                            >
+                                        </div>
                                     {:else}
                                         <small class="text-muted">per person</small>
                                     {/if}
@@ -652,6 +665,9 @@
                                     </div>
                                 </div>
 
+                                <div class="mb-4">
+                                    <CurrencyNotice amount={dpAmount} />
+                                </div>
                                 <button
                                     type="submit"
                                     class="travhub-btn w-100 fw-bold"

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formatMoney } from '@/lib/currency';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -18,7 +19,7 @@
 
     let copied = $state<string | null>(null);
 
-    const rupiah = (n: number) => 'Rp ' + n.toLocaleString('id-ID');
+    const rupiah = formatMoney;
 
     const discountLabel = (p: Promo) =>
         p.type === 'percent' ? `${p.value}% OFF` : `${rupiah(p.value)} OFF`;

@@ -1,10 +1,12 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import CurrencyNotice from '@/components/Template/CurrencyNotice.svelte';
     import { page, useForm } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
     import Preloader from '@/components/Template/Preloader.svelte';
-    import { formatRupiah } from '@/lib/utils';
+    import { formatMoney as formatRupiah } from '@/lib/currency';
 
     let { checkoutData, customer } = $props<{
         checkoutData: any;
@@ -155,7 +157,9 @@
                                 <div class="step-card__body">
                                     <div class="helper-notice">
                                         <i class="fas fa-info-circle"></i>
-                                        Please review the basic ride details. This is a shared ride. The vehicle may pick up other passengers along the route.
+                                        Please review the basic ride details. This
+                                        is a shared ride. The vehicle may pick up
+                                        other passengers along the route.
                                     </div>
                                     
                                     <div class="form-row">
@@ -296,8 +300,16 @@
                                     </div>
 
                                     <div class="terms-box">
-                                        <label class="terms-label" for="agree_terms">
-                                            <input type="checkbox" id="agree_terms" class="terms-checkbox" bind:checked={agreedToTerms} />
+                                        <label
+                                            class="terms-label"
+                                            for="agree_terms"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                id="agree_terms"
+                                                class="terms-checkbox"
+                                                bind:checked={agreedToTerms}
+                                            />
                                             <span>
                                                 I agree to the <a href="/terms" target="_blank">Terms & Conditions</a> and <a href="/privacy" target="_blank">Privacy Policy</a>.
                                             </span>
@@ -336,7 +348,11 @@
                         <!-- Sidebar Content -->
                         <div class="sidebar-vehicle">
                             {#if checkoutData.schedule.vehicle_category?.image_url}
-                                <img src={checkoutData.schedule.vehicle_category.image_url} alt="Vehicle" />
+                                <img
+                                    src={checkoutData.schedule.vehicle_category
+                                        .image_url}
+                                    alt="Vehicle"
+                                />
                             {:else}
                                 <img src="/assets/images/resources/vehicle-default.png" alt="Vehicle" />
                             {/if}
@@ -345,13 +361,15 @@
                                 <span>Max {checkoutData.schedule.vehicle_category?.passenger_capacity || 4} Passengers</span>
                             </div>
                         </div>
-                        
+
                         <div class="sidebar-divider"></div>
 
                         <div class="sidebar-section-title">Transfer Details</div>
                         <div class="sidebar-route">
                             <div class="sidebar-route-point">
-                                <div class="sidebar-route-dot sidebar-route-dot--from"></div>
+                                <div
+                                    class="sidebar-route-dot sidebar-route-dot--from"
+                                ></div>
                                 <div class="sidebar-route-text">
                                     {checkoutData.pickup.name} <br/>
                                     <span class="route-full-address text-muted">{checkoutData.pickup.address}</span>
@@ -359,7 +377,9 @@
                             </div>
                             <div class="sidebar-route-line"></div>
                             <div class="sidebar-route-point">
-                                <div class="sidebar-route-dot sidebar-route-dot--to"></div>
+                                <div
+                                    class="sidebar-route-dot sidebar-route-dot--to"
+                                ></div>
                                 <div class="sidebar-route-text">
                                     {checkoutData.dropoff.name} <br/>
                                     <span class="route-full-address text-muted">{checkoutData.dropoff.address}</span>
@@ -403,6 +423,7 @@
                         <div class="sidebar-divider"></div>
 
                         <div class="sidebar-section-title">Price Breakdown</div>
+                        <div class="mb-3"><CurrencyPicker /></div>
                         <div class="sidebar-row">
                             <span>Price per seat</span>
                             <span>{formatRupiah(checkoutData.basePrice)}</span>
@@ -416,6 +437,10 @@
                         <div class="sidebar-total">
                             <span>Total</span>
                             <span class="total-amount">{formatRupiah(checkoutData.totalPrice)}</span>
+                        </div>
+
+                        <div class="mt-3">
+                            <CurrencyNotice amount={checkoutData.totalPrice} />
                         </div>
 
                         <div class="sidebar-note">

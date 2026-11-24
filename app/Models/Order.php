@@ -59,6 +59,7 @@ class Order extends Model
     ];
 
     protected $casts = [
+        'display_quote' => 'array',
         'date' => 'date',
         'return_date' => 'date',
         'price' => 'decimal:2',

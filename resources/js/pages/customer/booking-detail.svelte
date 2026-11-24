@@ -1,4 +1,5 @@
 <script lang="ts">
+    import CurrencyNotice from '@/components/Template/CurrencyNotice.svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -7,7 +8,7 @@
     import { router } from '@inertiajs/svelte';
     import { onMount } from 'svelte';
     import { formatTime12 } from '@/lib/pickupTime';
-    import { formatRupiah } from '@/lib/utils';
+    import { formatMoney as formatRupiah } from '@/lib/currency';
 
     const { order } = $props();
 
@@ -269,6 +270,7 @@
 
 <div class="page-wrapper">
     <Header />
+    <CurrencyNotice amount={order.display_quote?.base_amount ?? grandTotal} />
 
     <!-- Details Section -->
     <section

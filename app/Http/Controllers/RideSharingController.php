@@ -8,6 +8,8 @@ use App\Models\RideSharingCity;
 use App\Models\RideSharingRoute;
 use App\Models\RideSharingSchedule;
 use App\Models\Setting;
+use App\Services\DisplayCurrency;
+use App\Services\DokuCheckout;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\RedirectResponse;
@@ -287,6 +289,11 @@ class RideSharingController extends Controller
 
     private function generateXenditPayment(Order $order): string
     {
+        app(DisplayCurrency::class)->capture($order, (string) $order->price);
+        if (app(DokuCheckout::class)->enabled($order)) {
+            return app(DokuCheckout::class)->create($order, (string) $order->price, route('booking.show', $order->booking_code));
+        }
+
         $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
         Configuration::setXenditKey($xenditKey);
 

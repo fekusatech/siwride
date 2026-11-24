@@ -1,4 +1,7 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import CurrencyNotice from '@/components/Template/CurrencyNotice.svelte';
+    import { formatMoney } from '@/lib/currency';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
     import Footer from '@/components/Template/Footer.svelte';
@@ -38,7 +41,13 @@
     let effectivePricePerPax = $derived.by(() => {
         if (!applicableTier) return basePricePerPax;
         if (applicableTier.discount_type === 'percent') {
-            return Math.round(basePricePerPax * (1 - applicableTier.discount_value / 100) * 100) / 100;
+            return (
+                Math.round(
+                    basePricePerPax *
+                        (1 - applicableTier.discount_value / 100) *
+                        100,
+                ) / 100
+            );
         }
         return Math.max(0, Math.round((basePricePerPax - applicableTier.discount_value) * 100) / 100);
     });
@@ -96,9 +105,7 @@
     let extraThumbs = allImages.slice(1, 5);
     let remainingPhotoCount = Math.max(0, allImages.length - 5);
 
-    function formatRp(amount: number): string {
-        return 'Rp ' + amount.toLocaleString('id-ID');
-    }
+    const formatRp = formatMoney;
 
     function submit(e: Event) {
         e.preventDefault();
@@ -171,24 +178,39 @@
                     <!-- Quick specs -->
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         {#if activity.duration_label}
-                            <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                                <i class="ti ti-clock fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
+                            <div
+                                class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white"
+                            >
+                                <i
+                                    class="ti ti-clock fs-4"
+                                    style="color: var(--travhub-base, #d11f1f);"
+                                ></i>
                                 <div>
                                     <div class="small text-muted lh-1">Duration</div>
                                     <div class="fw-medium">{activity.duration_label}</div>
                                 </div>
                             </div>
                         {/if}
-                        <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                            <i class="ti ti-users fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
+                        <div
+                            class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white"
+                        >
+                            <i
+                                class="ti ti-users fs-4"
+                                style="color: var(--travhub-base, #d11f1f);"
+                            ></i>
                             <div>
                                 <div class="small text-muted lh-1">Participants</div>
                                 <div class="fw-medium">Min {activity.min_pax}{#if activity.max_pax} · Max {activity.max_pax}{/if}</div>
                             </div>
                         </div>
                         {#if activity.meeting_point}
-                            <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white">
-                                <i class="ti ti-map-pin fs-4" style="color: var(--travhub-base, #d11f1f);"></i>
+                            <div
+                                class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white"
+                            >
+                                <i
+                                    class="ti ti-map-pin fs-4"
+                                    style="color: var(--travhub-base, #d11f1f);"
+                                ></i>
                                 <div>
                                     <div class="small text-muted lh-1">Meeting Point</div>
                                     <div class="fw-medium">{activity.meeting_point}</div>
@@ -261,9 +283,15 @@
 
                 <!-- Right: Booking Form -->
                 <div class="col-lg-5">
-                    <div class="card shadow border-0 rounded-3 sticky-top" style="top: 100px;">
+                    <div
+                        class="card shadow border-0 rounded-3 sticky-top"
+                        style="top: 100px;"
+                    >
                         <div class="card-body p-4">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="mb-3"><CurrencyPicker /></div>
+                            <div
+                                class="d-flex align-items-center justify-content-between mb-2"
+                            >
                                 <div>
                                     <div class="fs-4 fw-bold" style="color: var(--travhub-base, #d11f1f);">
                                         {formatRp(effectivePricePerPax)}
@@ -276,7 +304,10 @@
                             </div>
                             <div class="d-flex flex-wrap gap-3 small text-muted mb-4 pb-3 border-bottom">
                                 {#if activity.duration_label}
-                                    <span><i class="ti ti-clock me-1"></i>{activity.duration_label}</span>
+                                    <span
+                                        ><i class="ti ti-clock me-1"
+                                        ></i>{activity.duration_label}</span
+                                    >
                                 {/if}
                                 <span><i class="ti ti-users me-1"></i>Min {activity.min_pax}{#if activity.max_pax} · Max {activity.max_pax}{/if} pax</span>
                             </div>
@@ -380,7 +411,10 @@
                                         {:else}
                                             <button
                                                 type="button"
-                                                class="btn {voucherState === 'invalid' ? 'btn-outline-danger' : 'btn-outline-secondary'}"
+                                                class="btn {voucherState ===
+                                                'invalid'
+                                                    ? 'btn-outline-danger'
+                                                    : 'btn-outline-secondary'}"
                                                 onclick={applyVoucher}
                                                 disabled={voucherState === 'loading' || !(form.voucher_code ?? '').trim()}
                                             >
@@ -404,8 +438,13 @@
                                 </div>
 
                                 {#if packTiers.length > 0}
-                                    <div class="mb-3 p-2 rounded-3 border border-dashed">
-                                        <div class="small text-muted mb-1"><i class="ti ti-stack-2 me-1"></i>Group Discount</div>
+                                    <div
+                                        class="mb-3 p-2 rounded-3 border border-dashed"
+                                    >
+                                        <div class="small text-muted mb-1">
+                                            <i class="ti ti-stack-2 me-1"
+                                            ></i>Group Discount
+                                        </div>
                                         {#each packTiers as tier}
                                             <div class="d-flex justify-content-between small {applicableTier?.id === tier.id ? 'fw-bold text-success' : 'text-muted'}">
                                                 <span>{tier.min_pax}{tier.max_pax ? '-' + tier.max_pax : '+'} pax</span>
@@ -418,8 +457,12 @@
                                 <div class="border rounded-3 p-3 mb-4 bg-light">
                                     <div class="d-flex justify-content-between">
                                         <span class="text-muted">
-                                            {formatRp(effectivePricePerPax)} × {form.pax} pax
-                                            {#if applicableTier}<span class="text-success small ms-1">({applicableTier.label})</span>{/if}
+                                            {formatRp(effectivePricePerPax)} × {form.pax}
+                                            pax
+                                            {#if applicableTier}<span
+                                                    class="text-success small ms-1"
+                                                    >({applicableTier.label})</span
+                                                >{/if}
                                         </span>
                                         <span class="fw-bold">{formatRp(subtotal)}</span>
                                     </div>
@@ -429,13 +472,21 @@
                                             <span class="fw-bold">-{formatRp(voucherDiscount)}</span>
                                         </div>
                                     {/if}
-                                    <div class="d-flex justify-content-between mt-2">
+                                    <div
+                                        class="d-flex justify-content-between mt-2"
+                                    >
                                         <span class="text-muted">Total</span>
                                         <span class="fw-bold">{formatRp(totalAmount)}</span>
                                     </div>
-                                    <div class="d-flex justify-content-between mt-2 text-success">
-                                        <span>Bayar sekarang (DP {payment.dp_percent}%)</span>
-                                        <span class="fw-bold">{formatRp(dpAmount)}</span>
+                                    <div
+                                        class="d-flex justify-content-between mt-2 text-success"
+                                    >
+                                        <span
+                                            >Bayar sekarang (DP {payment.dp_percent}%)</span
+                                        >
+                                        <span class="fw-bold"
+                                            >{formatRp(dpAmount)}</span
+                                        >
                                     </div>
                                     <div class="d-flex justify-content-between mt-2">
                                         <span class="text-muted">Sisa tunai</span>
@@ -443,6 +494,9 @@
                                     </div>
                                 </div>
 
+                                <div class="mb-4">
+                                    <CurrencyNotice amount={dpAmount} />
+                                </div>
                                 <button
                                     type="submit"
                                     class="travhub-btn w-100 fw-bold"
@@ -481,12 +535,19 @@
                                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
                                     <img src={item.image_url} alt={item.title} style="height: 180px; object-fit: cover;" />
                                     <div class="card-body">
-                                        <h6 class="fw-bold mb-1">{item.title}</h6>
-                                        <div class="d-flex flex-wrap gap-2 mb-2 small text-muted">
+                                        <h6 class="fw-bold mb-1">
+                                            {item.title}
+                                        </h6>
+                                        <div
+                                            class="d-flex flex-wrap gap-2 mb-2 small text-muted"
+                                        >
                                             {#if item.duration_label}
                                                 <span><i class="ti ti-clock me-1"></i>{item.duration_label}</span>
                                             {/if}
-                                            <span><i class="ti ti-users me-1"></i>Min {item.min_pax} pax</span>
+                                            <span
+                                                ><i class="ti ti-users me-1"
+                                                ></i>Min {item.min_pax} pax</span
+                                            >
                                         </div>
                                         <div class="fw-bold" style="color: var(--travhub-base, #d11f1f);">
                                             {formatRp(Number(item.price_per_pax))}

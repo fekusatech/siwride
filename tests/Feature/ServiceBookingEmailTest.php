@@ -55,13 +55,14 @@ it('renders discount row in service payment reminder email only when voucher app
 
 it('sends service booking confirmation email to customer on webhook paid', function () {
     Mail::fake();
+    config(['services.xendit.webhook_token' => 'test-xendit-token']);
 
     $booking = DriverServiceBooking::factory()->create([
         'status' => DriverServiceBooking::STATUS_PENDING,
         'payment_status' => DriverServiceBooking::PAYMENT_PENDING,
     ]);
 
-    $this->postJson('/api/webhooks/xendit/invoice', [
+    $this->withHeader('x-callback-token', 'test-xendit-token')->postJson('/api/webhooks/xendit/invoice', [
         'status' => 'PAID',
         'external_id' => $booking->booking_code.'_'.time(),
     ])->assertOk();

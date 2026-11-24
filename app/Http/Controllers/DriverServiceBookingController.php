@@ -7,6 +7,8 @@ use App\Models\Customer;
 use App\Models\DriverService;
 use App\Models\DriverServiceBooking;
 use App\Models\Setting;
+use App\Services\DisplayCurrency;
+use App\Services\DokuCheckout;
 use App\Services\PackTierService;
 use App\Services\VoucherService;
 use App\Support\DriverReferralAttribution;
@@ -182,6 +184,11 @@ class DriverServiceBookingController extends Controller
 
     private function generateXenditPayment(DriverServiceBooking $booking, DriverService $service): string
     {
+        app(DisplayCurrency::class)->capture($booking, (string) $booking->dp_amount);
+        if (app(DokuCheckout::class)->enabled($booking)) {
+            return app(DokuCheckout::class)->create($booking, (string) $booking->dp_amount, route('driver-services.booking.success', $booking->booking_code));
+        }
+
         $xenditKey = Setting::getValue('xendit_secret_key') ?: config('services.xendit.secret_key');
         Configuration::setXenditKey($xenditKey);
 

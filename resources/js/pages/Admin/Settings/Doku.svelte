@@ -20,8 +20,9 @@
     <div class="py-3">
         <h4>DOKU Settings</h4>
         <p class="alert alert-info">
-            Aktivasi hanya mengaktifkan konfigurasi modul DOKU. Pembayaran tetap
-            menggunakan Xendit.
+            Aktivasi mengarahkan pembayaran booking web baru ke DOKU Checkout dalam IDR.
+            Jika dinonaktifkan, pembayaran menggunakan Xendit. Pembayaran lama tetap
+            diproses oleh provider asal. Konfigurasikan notification URL di dashboard DOKU.
         </p>
         <Form
             action={update.url()}

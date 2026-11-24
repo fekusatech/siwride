@@ -1,6 +1,7 @@
 @extends('emails.layout')
 
 @section('content')
+    @include('emails.currency-estimate', ['quote' => $booking->display_quote])
     <h2 style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 700; color: #1e293b; margin: 0 0 8px 0;">
         Booking Confirmed! 🎉
     </h2>

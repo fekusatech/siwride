@@ -1,4 +1,6 @@
 <script lang="ts">
+    import CurrencyPicker from '@/components/Template/CurrencyPicker.svelte';
+    import { formatMoney } from '@/lib/currency';
     import { router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Header from '@/components/Template/Header.svelte';
@@ -20,9 +22,7 @@
         }, 400);
     }
 
-    function formatRp(amount: number): string {
-        return 'Rp ' + amount.toLocaleString('id-ID');
-    }
+    const formatRp = formatMoney;
 </script>
 
 <AppHead title="Driver Services | Siwride" />
@@ -32,7 +32,9 @@
 <div class="page-wrapper">
     <Header />
 
-    <div style="padding: 60px 0 50px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+    <div
+        style="padding: 60px 0 50px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);"
+    >
         <div class="container">
             <h1 style="font-size: 34px; font-weight: 800; color: #fff; margin: 0 0 10px;">
                 Services from Our Drivers
@@ -45,14 +47,19 @@
 
     <section style="padding: 50px 0 100px; background: #f7f9fa;">
         <div class="container">
-            <div class="mb-4" style="max-width: 400px;">
-                <input
-                    type="text"
-                    class="form-control"
-                    placeholder="Search services..."
-                    bind:value={searchQuery}
-                    oninput={handleSearchInput}
-                />
+            <div
+                class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4"
+            >
+                <div style="width: 100%; max-width: 400px;">
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Search services..."
+                        bind:value={searchQuery}
+                        oninput={handleSearchInput}
+                    />
+                </div>
+                <CurrencyPicker />
             </div>
 
             {#if services.length === 0}
@@ -67,7 +74,9 @@
                                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
                                     <img src={service.image_url} alt={service.title} style="height: 200px; object-fit: cover;" />
                                     <div class="card-body">
-                                        <h5 class="fw-bold mb-1">{service.title}</h5>
+                                        <h5 class="fw-bold mb-1">
+                                            {service.title}
+                                        </h5>
                                         <div class="small text-muted mb-2">
                                             <i class="ti ti-steering-wheel me-1"></i>{service.driver?.name ?? 'Siwride Driver'}
                                         </div>

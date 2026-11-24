@@ -1,4 +1,5 @@
 <script lang="ts">
+    import CurrencyNotice from '@/components/Template/CurrencyNotice.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
     import AppHead from '@/components/AppHead.svelte';
     import { Link, router } from '@inertiajs/svelte';
@@ -29,6 +30,9 @@
 <AppHead title="Driver Service Booking Detail" />
 
 <AdminLayout>
+    {#if booking.display_quote}
+        <CurrencyNotice amount={booking.display_quote.base_amount} quote={booking.display_quote} />
+    {/if}
     <div class="py-3">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
