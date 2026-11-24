@@ -15,16 +15,16 @@ use App\Http\Controllers\Driver\WithdrawalController;
 use App\Http\Controllers\DriverProfileController;
 use App\Http\Controllers\DriverServiceBookingController;
 use App\Http\Controllers\DriverServiceListController;
-use App\Http\Controllers\RideSharingController;
-use App\Models\Activity;
-use App\Models\DriverService;
-use App\Models\RideSharingCity;
-use App\Models\VehicleCategory;
 use App\Http\Controllers\LocationSearchController;
 use App\Http\Controllers\PartnerApplyController;
 use App\Http\Controllers\PublicClaimController;
 use App\Http\Controllers\PublicPartnerController;
 use App\Http\Controllers\PublicPromoController;
+use App\Http\Controllers\RideSharingController;
+use App\Models\Activity;
+use App\Models\DriverService;
+use App\Models\RideSharingCity;
+use App\Models\VehicleCategory;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -178,6 +178,7 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/customer/reset-password', [CustomerAuthController::class, 'resetPassword']);
 });
 
+use App\Http\Controllers\Admin\DokuSettingController;
 use App\Http\Controllers\Admin\PackTierController;
 use App\Http\Controllers\Admin\RideSharing\CityController;
 use App\Http\Controllers\Admin\RideSharing\RouteController;
@@ -308,6 +309,9 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function () {
     Route::post('admin/zones/pricing/calculate', [ZonePricingRuleController::class, 'calculate'])->name('admin.zones.pricing.calculate');
     Route::resource('admin/zones/pricing', ZonePricingRuleController::class)->parameters(['pricing' => 'zonePricingRule'])->names('admin.zones.pricing');
     Route::resource('admin/zones', ZoneController::class)->names('admin.zones');
+
+    Route::get('admin/settings/doku', [DokuSettingController::class, 'edit'])->name('admin.settings.doku.edit');
+    Route::put('admin/settings/doku', [DokuSettingController::class, 'update'])->name('admin.settings.doku.update');
 
     Route::get('admin/settings/general', [SettingController::class, 'general'])->name('admin.settings.general');
     Route::post('admin/settings/general', [SettingController::class, 'updateGeneral'])->name('admin.settings.update-general');
